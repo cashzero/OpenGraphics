@@ -129,7 +129,7 @@ OpenLoco 現有命令列只有 `simulate <save> <ticks> <out>`（無頭模擬）
 
 ## 里程碑
 
-### M0 — 驗證管線與工具（所有後續工作的前提）
+### M0 — 驗證管線與工具（所有後續工作的前提）✅ 2026-11-19 完成
 
 目標：agent 可以不靠人，從來源檔一路做到「在 OpenLoco 裡看到截圖」。
 
@@ -141,10 +141,10 @@ OpenLoco 現有命令列只有 `simulate <save> <ticks> <out>`（無頭模擬）
 
 OpenLoco fork（D2）
 - [x] 在 GitHub 建立 fork（2026-11-19，https://github.com/cashzero/OpenLoco ）；`og/headless-screenshot`、`og/vanilla-alias` 已推上 fork 並合併進 `og-main`
-- [ ] 命令列 `headless-preview`：載入指定物件，輸出物件選擇視窗用的預覽圖 PNG
+- [x] 單一物件預覽：`screenshot --object <名稱>` 輸出物件選擇視窗用的預覽圖 PNG（2026-11-19，`og/object-preview`）
 - [x] 命令列 `screenshot`：載入存檔，依指定視角／縮放／旋轉輸出 PNG（可選 giant 全圖）（2026-11-19，本機分支；以 vanilla 情境實測）
 - [x] 不建立視窗、不需要顯示器即可執行：`SDL_VIDEO_DRIVER=offscreen SDL_AUDIO_DRIVER=dummy ALSOFT_DRIVERS=null` 即可，不需要改 drawing engine（2026-11-19）
-- [ ] 隔離環境：Linux 先用 `XDG_CONFIG_HOME`；長期加上 `--user-data-path` 參數
+- [x] 隔離環境：Linux 用 `XDG_CONFIG_HOME`；fork 加上 `OPENLOCO_USER_DIR` 環境變數（2026-11-19；Linux 已測，Windows／macOS 未測）
 - [x] ~~CMake 選項：物件來源可指向本機資料夾~~ → 不需要：OpenLoco 原本就支援 `OPENLOCO_DATA_DIR` 環境變數（2026-11-19）
 - [x] `simulate` 載入失敗時回傳非 0（上游會回傳 0）（2026-11-19，本機分支）
 - [x] 截圖寫入完整 256 色調色盤（上游只寫 246 色，遇到 placeholder 會 PNG ERROR）（2026-11-19，本機分支）
@@ -160,12 +160,12 @@ OpenLoco fork（D2）
 - [x] `install_test_env.py`：組出 OpenLoco 測試環境（正式物件優先，缺的用 placeholder；以 `OPENLOCO_DATA_DIR` 取代內建物件）（2026-11-19）
 - [x] `s5.py`：情境／存檔的必要物件 relink（vanilla → OG）（2026-11-19）
 - [x] `run_openloco.sh`、`v2_smoke.sh`：一個指令跑完 V2 冒煙測試（2026-11-19）
-- [ ] Blender 5.x 渲染 rig（`tools/blender/`）：從近期上游 `.blend` 逆向相機、燈光、解析度；確認 WSL2 下能 headless 渲染
-- [ ] 調色盤量化與 remap 遮罩處理
-- [ ] DAT 打包路線定案：ObjectEditor CLI 或 `dat.py` 自行打包
+- [x] Blender 5.x 渲染（`tools/blender/render_sprites.py`）：直接使用上游近期 `.blend` 內的 rig（Loco Graphics Helper 新版，逐格動畫 = sprite 順序）；WSL2 headless EEVEE 可用；原點偏移以 `OG_4F` 校正；依材質名稱產生公司色遮罩（2026-11-19）
+- [x] 調色盤量化與 remap 遮罩處理（`tools/quantize.py`，2026-11-19）
+- [x] DAT 打包路線定案：**`tools/pack.py`**（自行打包，不需要 ObjectEditor）；`OG_4F` 解出再打包後，遊戲內預覽逐像素相同（2026-11-19）
 
 端到端驗收
-- [ ] 拿一個上游物件（例如 `OG_4F`）走完 V1 + V2，截圖可由 agent 檢視
+- [x] 拿一個上游物件走完 V1 + V2，截圖可由 agent 檢視（2026-11-19：`OG_4F.blend` 全部 616 格 渲染 → 量化 → 打包 → lint → contact sheet → OpenLoco 物件預覽，與上游原檔幾乎相同）
   - 2026-11-19：V1 已完成（`OG_4F` contact sheet 含 remap 與 vanilla 對照）；V2 的 `screenshot` 已能拍 vanilla 情境，還缺含指定物件的測試存檔
 - [x] 拿 placeholder 走完 V1 + V2：`OG_CTRUCK1` contact sheet；vanilla 情境 Boulder Breakers 改用 OG + placeholder 後模擬 500 ticks 並截圖成功（2026-11-19）
 

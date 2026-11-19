@@ -49,39 +49,45 @@ build/
 
 Blender 5.2.3 位於 `~/.local/bin/blender`，以 `blender -b <file> --python <script> -- <args>` 執行 headless 作業。
 
-**建模迭代預覽**（🛠 M0 待建：`tools/blender/turntable.py`）
+**sprite 渲染**（✅ 2026-11-19：`tools/blender/render_sprites.py`）
 ```bash
-blender -b objects/…/OG_X.blend --python tools/blender/turntable.py -- --out build/render/OG_X/turntable
+blender -b objects/…/OG_X.blend --python tools/blender/render_sprites.py -- \
+  --out build/render/OG_X [--frames 0-7 | --frames 0,40,100] [--samples 16] [--no-mask]
 ```
-以較高解析度輸出 8 個角度，給 agent 判斷造型、比例與細節，**在正式渲染 sprite 之前**先修好模型。
+- **使用 `.blend` 內現成的 rig**：上游近期的 `.blend` 是用 Loco Graphics Helper 的新版（物件帶有 `loco_graphics_helper_*` 屬性）製作，每個 sprite 角度烘焙成一格動畫，**影格順序 = image table 順序**（例：`OG_4F.blend` 影格 0–615 = 616 張 sprite）。相機為正交 `Camera Medium Curve`（`ortho_scale` 19、俯仰 60.718°／方位 45°），4 盞 SUN 燈（`Light Primary`／`Back`／`Left`／`Upper Highlights`），EEVEE、AgX、透明背景，影格 84×84。
+- **WSL2 可 headless 用 EEVEE**（Mesa 軟體 GL，`libEGL warning` 可忽略）：第一格約 28 秒（含 shader 編譯），之後每格約 1.1 秒；遮罩 pass 另計。`OG_4F` 全部 616 格 + 遮罩實測 16.6 分鐘（遮罩 1 取樣時；改成 16 取樣後會再久一些）。
+- **找不到的貼圖**（例如路徑寫成 `//C1Noisemap.png` 或 `D:\…`）自動改指向 repo 的 `textures/`；已打包進 `.blend` 的貼圖不動。
+- **原點**：世界原點經相機投影的位置，加上 `--origin-offset`（預設 `0 2`）。這個值是以 `OG_4F.blend` 校正的：7 類 sprite 與上游 DAT 比對，dx 恆為 0、dy 恆為 2。
+- **公司色遮罩**（預設開啟）：依材質名稱判斷（上游慣例）：`Company Color 1`／`Recolorable 1` = primary，`Company Color 2`／`Recolorable 2` = secondary。正常影格渲染完後，材質換成純色發光、色彩管理改 Standard，再渲染一輪輸出 `NNNN_mask.png`。**沒有遮罩時，光影會讓公司色區域被量化成一般顏色，公司色就失效**（實測）。遮罩 pass 也要反鋸齒（`--mask-samples`，預設 16）：只用 1 取樣時，公司色邊緣會留下一般紫色細線（`OG_4F` #200–207 實測 48 個像素 → 16 取樣後 0 個，與上游原檔相同）。
+- 輸出：`NNNN.png`（RGBA）、`NNNN_mask.png`、`render.json`（每格原點）。
+- 驗證紀錄（2026-11-19，M0 端到端驗收）：`OG_4F.blend` 全部 616 格經 P1→P2→P3 打包成 `OGR4F`，lint 0 錯誤；616 張 sprite 的尺寸與偏移和上游 DAT 相差都不超過 1 像素；contact sheet 的公司色變體正確；在 OpenLoco 中的物件預覽與上游原檔幾乎相同（`build/screenshots/preview/e2e_compare.png`）。
 
-**sprite 渲染**（🛠 M0 待建：`tools/blender/render_sprites.py`）
-```bash
-blender -b objects/…/OG_X.blend --python tools/blender/render_sprites.py -- --type vehicle --out build/render/OG_X
-```
-渲染 rig 規格：
-- 正交相機、Locomotion 的等角視角、旋轉數依物件類型與 vanilla 模板決定。
-- 參考上游近期的 `.blend`（例如 `objects/GreatBritainExpansion/Vehicle/Train/OG_MK4/OG_MK4.blend`：EEVEE、`Camera Medium Curve`、`Light Primary`／`Light Back`／`Light Left`／`Light Upper Highlights`）逆向出相機角度、燈光與解析度。官方 add-on 只支援 Blender 2.79，不使用。
-- 輸出 RGBA（透明背景）＋ remap 遮罩 pass（標記 primary／secondary 公司色區域）。
-- WSL2 下 EEVEE 背景渲染可能需要 GPU／GL；不可行時改用 Cycles（CPU），並在本節記錄結論。
+**新建模型**：沒有現成 rig 的新 `.blend`，先從上游近期的 `.blend` 複製相機、燈光與渲染設定（或直接以上游檔案為起點修改），再依物件類型設定逐格動畫。各物件類型的影格／sprite 排列規則待 M3 依類型整理。
+
+🛠 之後再做：`tools/blender/turntable.py`（較高解析度輸出 8 個角度，給 agent 在正式渲染前檢查造型）。
 
 ## P2 量化
 
-🛠 M0 待建：`tools/quantize.py`（需要 `.venv` 裡的 Pillow）
+✅ 2026-11-19：`tools/quantize.py`（需要 `.venv` 裡的 Pillow）
 ```bash
-.venv/bin/python tools/quantize.py build/render/OG_X -o build/sprites/OG_X
+.venv/bin/python tools/quantize.py build/render/OG_X -o build/sprites/OG_X [--no-remap-colours]
 ```
-- 調色盤：`palettes/locopal.act`（256×RGB）。index 0 = 透明。（`tools/dat.py` 的 `write_indexed_png` 可直接寫出索引色 PNG。）
-- 遮罩內的像素依亮度對應到 remap index：primary `0x07–0x09`、`0xF6–0xFE`；secondary `0xCA–0xD5`。遮罩外的像素**不得**落在 remap index 上。
-- 輸出 `0.png…N.png` 與 `sprites.json`（格式見 `objects/Common/Land/OG_VOID/sprites.json`）。
+- 調色盤：`palettes/locopal.act`。OpenLoco 可繪製的顏色是 index 10–245（`Graphics/Gfx.cpp` 的 `updatePalette(…, 10, 236)`）；0 = 透明。
+- 一般像素：最接近的顏色（redmean 加權距離），候選為 10–245，排除 secondary remap `0xCA–0xD5` 與未使用的 `0xF5`；預設另加入 remap 色（色鍵）。
+- 遮罩區域（通道值 >= `--mask-threshold`，預設 48，讓反鋸齒邊緣也算進去）：依亮度對應到 remap 色階（兩組色階在調色盤中都是由暗到亮）：primary `0x07–0x09`、`0xF6–0xFE`；secondary `0xCA–0xD5`。
+- 每格裁切到不透明範圍，並把原點換算成 G1 的 `xOffset`／`yOffset`。輸出 `0.png…N.png`（索引色）與 `sprites.json`。
 
 ## P3 打包
 
-DAT 打包路線在 M0 定案，二選一：
-- **A**：OpenLoco ObjectEditor（.NET，5.12.0 起有基本 CLI，本機尚未安裝 .NET）。
-- **B**：🛠 `tools/dat.py build`：以模板物件（結構、屬性、字串）＋ `build/sprites/<NAME>/` 產生 DAT，自動填入內部名稱、source = 3 與 checksum。
-
-產物先放 `build/dat/<NAME>/`，通過 V1 後才複製到 `objects/…/<NAME>/`。
+✅ 2026-11-19 定案：**路線 B**，`tools/pack.py`（不需要 ObjectEditor）。
+```bash
+.venv/bin/python tools/pack.py --template <模板.dat> --sprites build/sprites/OG_X \
+  --name OGXXXXXX [--display "遊戲內名稱"] [--allow-count-change] -o build/dat/OG_X/OG_X.dat
+```
+- 模板提供結構、屬性與其他字串（vanilla、上游 OG 或自己的物件都可以）；sprite 以 RLE 重新編碼（G1 flags 5），保留 zoom／duplicate 旗標。
+- 預設 sprite 數量必須與模板相同；寫出後自動重新讀取，驗證 checksum 與每張 sprite 的像素。
+- 驗證紀錄：把 `OG_4F` 全部 616 張 sprite 解出再打包，OpenLoco 中的物件預覽與原檔**逐像素相同**。
+- 產物先放 `build/dat/<NAME>/`，通過 V1 後才複製到 `objects/…/<NAME>/`。
 
 ---
 
@@ -189,7 +195,7 @@ python3 tools/install_test_env.py --with-placeholders --relink
 產生的隔離環境（`build/openloco-env/`）：
 - `data/objects/`：本 repo 的 243 個物件 + 367 個 placeholder。OpenLoco 用環境變數 `OPENLOCO_DATA_DIR` 指向 `build/openloco-env/data`，**取代** build 內建的上游 v0.1.12 物件，不會產生重複（不需要改 OpenLoco）。
 - `data/language`：symlink 到 OpenLoco build 的語言檔。
-- `OpenLoco/`：使用者目錄（`XDG_CONFIG_HOME=build/openloco-env`），每次重建時刪除物件索引快取 `plugin.dat`。
+- `OpenLoco/`：使用者目錄（`XDG_CONFIG_HOME=build/openloco-env`），每次重建時刪除物件索引快取 `plugin.dat`。fork 另支援 `OPENLOCO_USER_DIR` 直接指定使用者目錄（Linux 已測；Windows／macOS 用同樣的程式碼但未測）。
 - `--relink`：**只在測試副本中**依 `build/placeholders/alias.json` 把 vanilla 引用改指向 OG 名稱（2026-11-19：861 處），repo 內的檔案不變。脫離 vanilla 物件測試時必須加；理由見下方「已知問題」。
 
 `tools/run_openloco.sh <OpenLoco 參數…>` 會自動設好上述環境變數與無視窗設定，並在環境目錄裡執行（避免 `OpenLoco.lock` 落在 repo）。存檔路徑請用**絕對路徑**，否則 OpenLoco 會當成相對於 `Scenarios` 資料夾。
@@ -261,7 +267,12 @@ mkdir -p build/openloco-env
 - 輸出為 8-bit 索引色 PNG，可直接用看圖工具檢視。
 - 實作：`Ui::saveScreenshotToFile`（`src/OpenLoco/src/Ui/Screenshot.cpp`，改寫自 giant screenshot 與 `Scenario/ScenarioPreview.cpp`）、`OpenLoco::screenshotGame`（`OpenLoco.cpp`）、命令列解析（`CommandLine.cpp`、`App/src/Main.cpp`）。
 
-🛠 待建：`headless-preview`，輸出單一物件在物件選擇視窗裡的預覽圖。在那之前，要看物件在遊戲中的樣子，需先做一個含有該物件的測試存檔（M2 的 `tests/saves/`），再用 `screenshot` 拍。
+**單一物件預覽**（✅ 2026-11-19，fork `og/object-preview`，已合併進 `og-main`）：`screenshot` 加上 `--object <內部名稱>`，改為輸出該物件在物件選擇視窗裡的預覽圖（114×114，與遊戲內相同的繪製程式碼）。物件必須已安裝在測試環境裡（`install_test_env.py`；手動放進 `build/openloco-env/data/objects/` 時要刪掉 `plugin.dat` 讓索引重建）。
+```bash
+LOCO_DATA_DIR="$PWD/build/loco-noobjdata" tools/run_openloco.sh screenshot "$HOME/Locomotion/game/Scenarios/Boulder Breakers.SC5" 0 \
+  -o "$PWD/build/screenshots/preview/OG4F.png" --object OG4F
+```
+要看物件**放在地圖上**的樣子，仍需要含有該物件的測試存檔（M2 的 `tests/saves/`）。
 
 在 fork 功能涵蓋不到的情況，可人工透過 WSLg 執行遊戲，截圖會存到 `$XDG_CONFIG_HOME/OpenLoco/screenshots/`，agent 再讀取這些 PNG。
 

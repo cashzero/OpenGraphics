@@ -135,9 +135,9 @@ DAT 內會以 16-byte header 引用其他物件（車輛 → 軌道、蒸汽、�
 |---|---|---|
 | Blender 5.2.3 | `~/.local/bin/blender`（本機已安裝） | 建模與渲染。可 headless：`blender -b <file>.blend --python <script>.py` |
 | Blender MCP | Claude Code session 內可用 | 互動式檢查／修改正在開啟的 Blender 場景 |
-| OpenLoco Graphics Helper add-on | 未安裝；官方只支援 Blender 2.79 | 上游標準渲染流程。repo 內的 `.blend` 版本橫跨 2.79～5.2，近期的檔案（例如 `GreatBritainExpansion/Vehicle/Train/OG_MK4/OG_MK4.blend`）使用 EEVEE + `Camera Medium Curve`、`Light Primary` 等 rig 物件，可作為 5.x 渲染 rig 的逆向參考 |
-| `tools/`（本 repo） | ✅ `dat.py`、`lint.py`、`deps.py`、`inventory.py`、`preview.py`、`make_placeholders.py`、`install_test_env.py`、`s5.py`、`run_openloco.sh`、`v2_smoke.sh` | DAT 讀寫與 checksum、自動檢查、相依引用稽核、盤點、V1 contact sheet、placeholder、V2 測試環境與冒煙測試。用法見各檔開頭說明與 `docs/PIPELINE.md` |
-| OpenLoco ObjectEditor | 未安裝（需 .NET，本機無 `dotnet`） | 打包 DAT 的備選路線：開啟 vanilla 物件 → 從資料夾匯入 sprites → 改名稱／source → 另存。2.0 起跨平台，5.12.0 起有基本 CLI（用法待確認） |
+| OpenLoco Graphics Helper add-on | 未安裝（官方版只支援 Blender 2.79；上游近期的 `.blend` 是用新版移植製作的） | 不需要：`tools/blender/render_sprites.py` 直接渲染 `.blend` 內已烘焙好的 rig（相機、燈光、逐格動畫） |
+| `tools/`（本 repo） | ✅ P1 `blender/render_sprites.py`、P2 `quantize.py`、P3 `pack.py`；V1 `lint.py`、`preview.py`、`dat.py`、`deps.py`、`inventory.py`；V2 `install_test_env.py`、`run_openloco.sh`、`v2_smoke.sh`、`s5.py`；`make_placeholders.py` | 整條製作與驗證管線。用法見各檔開頭說明與 `docs/PIPELINE.md` |
+| OpenLoco ObjectEditor | 未安裝；**不需要**（P3 已定案用 `tools/pack.py`） | 只在需要互動式檢視或編輯物件屬性時參考 |
 | Python 3 | `/usr/bin/python3`；`.venv/`（Pillow，以 `uv venv .venv && uv pip install --python .venv/bin/python pillow` 建立） | `tools/` 中只有 `preview.py` 需要 Pillow（用 `.venv/bin/python` 執行），其餘只用標準函式庫 |
 | OpenLoco 原始碼 | `../OpenLoco`：fork https://github.com/cashzero/OpenLoco （`origin`），官方為 `upstream`；工作分支 `og-main` | 格式權威參考（見下表），也是 V2 遊戲內驗證要 build 的對象 |
 | OpenLoco build | ✅ `../OpenLoco/build/posix/Release/OpenLoco`（`posix` preset + 系統套件，build 自 `og-main`：多了 headless `screenshot` 命令與 vanilla→OG 別名層） | V2 遊戲內驗證。執行時一律加 `--locomotion_path`、用隔離環境與無視窗設定，否則會跳出視窗卡住（見 `docs/PIPELINE.md` V2） |
@@ -168,8 +168,8 @@ OpenLoco 原始碼參考點（路徑相對於 `../OpenLoco/src/`）：
 4. **製作來源檔**：
    - 3D：寫 bpy 腳本產生模型 → 存 `OG_<NAME>.blend`（相對路徑貼圖）→ turntable 預覽，**看過圖、修好造型**再往下走。
    - 像素圖：產生 PNG → 量化到 Loco 調色盤 → 檢查 remap 區域。
-5. **渲染與量化**：`docs/PIPELINE.md` P1、P2。數量與順序對齊 vanilla 模板。
-6. **打包 DAT**：`docs/PIPELINE.md` P3。設定內部名稱、source = 3、遊戲內名稱與屬性。
+5. **渲染與量化**：`docs/PIPELINE.md` P1、P2（`blender -b … --python tools/blender/render_sprites.py -- --out build/render/<NAME>` → `.venv/bin/python tools/quantize.py`）。影格順序 = sprite 順序。
+6. **打包 DAT**：`docs/PIPELINE.md` P3（`.venv/bin/python tools/pack.py --template … --sprites … --name OG… --display …`）。模板提供結構與屬性；內部名稱、source = 3、checksum 自動處理。
 7. **V1 素材驗證**：`docs/PIPELINE.md` V1。lint 全部通過，並**親自看過**從最終 DAT 解出的 contact sheet。`FORK.md` 狀態改為 `v1-passed`，寫下驗證紀錄。
 8. **V2 遊戲內驗證**：`docs/PIPELINE.md` V2。重新組測試環境後跑 `tools/v2_smoke.sh`（確認物件能載入、模擬不崩潰），再用 `tools/run_openloco.sh screenshot` 拍出含有該物件的畫面並**親自看過**。`FORK.md` 狀態改為 `in-game-tested`。
 9. **Commit**：刪除 `.gitkeep`，只 commit 該物件資料夾。
