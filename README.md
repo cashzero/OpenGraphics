@@ -28,7 +28,7 @@ Of course, if someone is able to set up a modern Blender render pipeline in Blen
 - We need new assests distinct from vanilla and from real-life. We should be able to say "this object **looks like it was based on** X" or "this object **has elements from** X and from Y", NOT "this object **is** X".
 - All assets required to create the final sprite graphics need to be included in this repository. For 3D-rendered vehicles, this includes models, textures, UV maps, etc. If you are hand-painting the pixelart, for example for a building, then you would upload just the PNG files.
 - Do not copy real life products (including companies, vehicles, buildings, etc). Look at how other games parody real life for inspiration; Planet Coaster and OpenTTD are good examples of what is accepted.
-- AI-generated content of any kind is not allowed (textures, models, names, etc).
+- ~~AI-generated content of any kind is not allowed (textures, models, names, etc).~~ **Fork policy (cashzero/OpenGraphics):** AI-generated and AI-assisted content is allowed in this fork. All other requirements still apply. See [AGENTS.md](AGENTS.md).
 - Needs to maintain the same rough visual features as the original Locomotion objects, as well as being roughly the same size.
   - Do not make a 1-1 recreation of the vanilla object. We want to be able to use both vanilla and OG versions of an object together in the same game, and be visually distinct enough to tell them apart.
   - Do not make a 1-1 recreation of a real-world train, bus, truck, or any other object. We want to completely avoid copyright/trademake infringement issues so exercising creative freedom is good here.

@@ -1,1 +1,5 @@
 objectIndex.json
+build/
+*.blend1
+.venv/
+__pycache__/
