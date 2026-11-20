@@ -25,10 +25,11 @@
 | 狀態 | 數量 |
 |---|---|
 | 已有 OG 版本（上游完成） | 178 |
-| placeholder 資料夾（待製作） | 367 |
+| fork 自製（M2，2026-11-19） | 28 |
+| placeholder 資料夾（待製作） | 339 |
 | 不在範圍內 | 4（`AIRPORT4`、`HPORT2`、`SHINKT0`、`SHINKF0`，見下方說明） |
 
-尚未完成的類型（已完成 / placeholder）：
+尚未完成的類型（已完成 / placeholder；M2 之前的數字，M2 新增的 28 個 fork 物件見下方 M2 段落，最新數字以 `python3 tools/inventory.py` 為準）：
 
 | 類型 | 完成 | 待做 | 類型 | 完成 | 待做 |
 |---|---|---|---|---|---|
@@ -52,8 +53,8 @@
 | 必選類型 | OG 狀態 |
 |---|---|
 | region、scaffolding、interfaceSkin、vehicle、land、water、townNames、streetLight、snow、hillShapes、road（雙向通用道路） | ✅ 已有 |
-| building | ⚠️ 只有 3 個（噴泉、公園、電塔），通過驗證但城鎮無法正常成長 |
-| **currency、climate、levelCrossing、industry** | ❌ 沒有 → **M2 的硬性阻擋項** |
+| building | ✅ 上游 3 個（噴泉、公園、電塔）+ fork 5 個（住宅 3、商業 2，M2） |
+| currency、climate、levelCrossing、industry | ✅ fork 自製（M2：`OG_CURRDOLL`、`OG_CLIM3`、`OG_LCROSS4`、`OG_COALMINE`／`OG_COALPS`） |
 
 ### 相依引用稽核（`python3 tools/deps.py`）
 
@@ -64,6 +65,16 @@
 - `OG_REGUS` 引用大量 vanilla 建築、產業、樹木與車輛。
 
 → 光是補齊物件還不夠，**必須處理引用**（見決策 D1）。
+
+### 已知限制（M2 之後）
+
+- placeholder g1：調色盤對照表（公司色、半透明）、文字顏色表，以及地形遮罩（地塊過渡 `surfaceSmooth*`、懸崖面 `cliffEdge*Mask*`、部分積雪 `snowMaskCoverage*`）已改為**依幾何／調色盤計算**（M2），地圖上不再有灰色方塊。主選單按鈕、logo、工具圖示、格線與建造選取框等仍是灰色方塊；M4 換成正式美術。
+- OpenLoco 在 GUI 開新遊戲時預設選 `OGREGUS`（上游物件），它的 willLoad 清單引用 157 個 vanilla 物件，會連帶選進大量 placeholder 建築／產業。只用 OG 物件的開新遊戲要選 `OG_REGUK`（`tools/newgame_check.sh` 就是這樣做）。是否把 fork 的預設 region 改成 `OGREGUK` 待決定。
+- 開新遊戲的存檔中，placeholder 只剩 24 個：音效 21 個（車輛引用的 `SNDCH*`／`SNDD*`／`SNDW*`）、competitor、`ROADTRAM`、`TREX3R` 各 1 個。
+- 尚未在地圖上看過：號誌與平交道（新遊戲沒有鐵路）、蒸汽／排氣／火花（沒有車輛運行）；音效沒有試聽（headless 不播放）。這些物件只通過 V1 與物件預覽，`FORK.md` 有註明。
+- `OG_STEAM` 引用 vanilla 音效 `SNDCH1A`…`SNDCH1DS`（8 個，尚無 OG 版本）。
+- 只用發行內容時（沒有 placeholder），標題地圖與新遊戲缺少尚無 OG 版本的類型（M3）。
+- OpenLoco fork 的 CMake 仍下載上游 `objects.zip`，還沒有下載本 fork 的 `objects.zip`／`base.zip`（決策 D5）。
 
 ### 已知的上游問題
 
@@ -87,7 +98,7 @@
 
 語言字串由 OpenLoco 的 `data/language/*.yml` 提供，不依賴 vanilla。
 
-OpenLoco 現有命令列只有 `simulate <save> <ticks> <out>`（無頭模擬）與 `compare`，**沒有無頭截圖**；遊戲內有 giant screenshot（`Ui/Screenshot.cpp`）可供改寫。
+上游 OpenLoco 的命令列只有 `simulate <save> <ticks> <out>`（無頭模擬）與 `compare`，沒有無頭截圖；fork 的 `og-main` 已加上 `screenshot`、`new-game` 等指令（見 `PIPELINE.md` V2）。
 
 ### 開發環境現況
 
@@ -99,7 +110,7 @@ OpenLoco 現有命令列只有 `simulate <save> <ticks> <out>`（無頭模擬）
 | OpenLoco `simulate` 冒煙測試（隔離環境、無視窗） | ✅ 2026-11-19，vanilla 情境 500 ticks |
 | OpenLoco 靜態發佈版（`linux-vcpkg-static`） | ⏸ 暫緩，發佈時再處理（見 `PIPELINE.md` V2） |
 | `.NET`（ObjectEditor） | ❌ 未安裝 |
-| Pillow | ❌ 未安裝（應裝在 `.venv`） |
+| Pillow | ✅ 2026-11-19，裝在 `.venv`（`uv`） |
 | Locomotion 正版資料 | ✅ 2026-11-19 從使用者的 ISO 解到 `$HOME/Locomotion/game`（`LOCO_DATA_DIR`） |
 | WSLg 顯示（`DISPLAY=:0`） | ✅ 可供人工互動測試 |
 
@@ -111,7 +122,7 @@ OpenLoco 現有命令列只有 `simulate <save> <ticks> <out>`（無頭模擬）
 - [x] 安裝 vcpkg 的 `alsa` 套件需要的 autotools（2026-11-19，使用者以 sudo 安裝）
 - [x] 改走 `posix` preset，以系統套件安裝 OpenLoco 相依函式庫（2026-11-19；vcpkg 靜態 build 暫緩）
 - [x] 提供 Locomotion 正版資料（2026-11-19，使用者提供 ISO，解到 `$HOME/Locomotion/game`，設為 `LOCO_DATA_DIR`）。**只用於開發期量測**（g1 圖片尺寸、物件結構模板、sprite 數量），任何 vanilla 內容都不會 commit，最終成品也不需要它。
-- [ ] 在 GitHub 建立 OpenLoco 的 fork（決策 D2），並告知 repo 名稱
+- [x] 在 GitHub 建立 OpenLoco 的 fork（決策 D2），並告知 repo 名稱（2026-11-19，https://github.com/cashzero/OpenLoco ）
 
 ---
 
@@ -120,7 +131,7 @@ OpenLoco 現有命令列只有 `simulate <save> <ticks> <out>`（無頭模擬）
 | # | 議題 | 狀態 | 內容 |
 |---|---|---|---|
 | D1 | vanilla 引用怎麼處理 | **已決定 A**（2026-11-19）；已實作於 fork `og/vanilla-alias`，並合併進 `og-main`。實測：OG 物件引用 vanilla 時，拿掉 vanilla 就會 crash；加上別名層後，原版情境在沒有 `ObjData` 的環境下能正常載入 | **A**：在 OpenLoco fork 加入「vanilla → OG 別名層」：找不到 vanilla 物件時，依對照表改載入 OG 物件。對照表由本 repo 自動產生。優點：不需要改上游 DAT（不與 sync 衝突），同時解決情境檔、title.dat、舊存檔引用 vanilla 的問題。**B**：寫工具改寫 DAT 內的引用，每次 sync 後重跑。缺點：修改上游物件、sync 時衝突、情境檔仍然引用 vanilla。 |
-| D2 | OpenLoco 引擎修改 | **已決定**（2026-11-19） | fork：https://github.com/cashzero/OpenLoco 。`../OpenLoco` 的 remote：`origin` = fork、`upstream` = 官方。分支：`master` 追上游，功能開在 `og/*`，整合在 `og-main`（目前含 `og/headless-screenshot`、`og/vanilla-alias`）。 |
+| D2 | OpenLoco 引擎修改 | **已決定**（2026-11-19） | fork：https://github.com/cashzero/OpenLoco 。`../OpenLoco` 的 remote：`origin` = fork、`upstream` = 官方。分支：`master` 追上游，功能開在 `og/*`，整合在 `og-main`（目前含 `og/headless-screenshot`、`og/vanilla-alias`、`og/object-preview`、`og/standalone`、`og/new-game`）。 |
 | D3 | 非物件素材（g1、音訊、標題、情境）放在哪 | **已決定**（2026-11-19，採用建議；已建立 `base/README.md`） | 建議本 repo 新增頂層 `base/`（`base/g1/`、`base/sfx/`、`base/music/`、`base/title/`、`base/scenarios/`），與 `objects/` 一起由 CI 打包。上游沒有這些資料夾，sync 衝突風險低。 |
 | D4 | placeholder 怎麼產生 | **已依建議實作，待確認**（2026-11-19：`tools/make_placeholders.py`） | 建議先以本機 vanilla 資料作為「結構與尺寸模板」產生（不 commit 產物，只 commit 產生工具）；長期改為直接依 OpenLoco 原始碼的結構定義產生，讓 CI 也能產生。 |
 | D5 | 發行方式 | 待決定 | 建議：本 repo 推 tag 發布 `objects.zip`（之後加上 `base.zip`），OpenLoco fork 的 `CMakeLists.txt` 改指向本 fork 的 release URL 與 SHA256。 |
@@ -169,33 +180,41 @@ OpenLoco fork（D2）
   - 2026-11-19：V1 已完成（`OG_4F` contact sheet 含 remap 與 vanilla 對照）；V2 的 `screenshot` 已能拍 vanilla 情境，還缺含指定物件的測試存檔
 - [x] 拿 placeholder 走完 V1 + V2：`OG_CTRUCK1` contact sheet；vanilla 情境 Boulder Breakers 改用 OG + placeholder 後模擬 500 ticks 並截圖成功（2026-11-19）
 
-### M1 — 可啟動（standalone boot）
+### M1 — 可啟動（standalone boot）✅ 2026-11-19 完成
 
-- [ ] 從本機 vanilla `g1.DAT` 匯出**純 metadata**（每張圖的寬、高、偏移、flags，不含像素）存成 `docs/g1-catalog.json`，並依 `ImageIds.h` 分類用途
-- [ ] g1 placeholder 產生器：4122 張圖，尺寸／偏移正確，內容為可辨識的佔位圖
-- [ ] OpenLoco fork：沒有 Locomotion 時改用 OpenGraphics 的 g1；缺少 CSS、音樂、title、教學檔時安靜略過
+- [x] 從本機 vanilla `g1.DAT` 匯出**純 metadata**（每張圖的寬、高、偏移、flags，不含像素）存成 `docs/g1-catalog.json`，並依 `ImageIds.h` 分類用途（2026-11-19，`tools/g1.py catalog`：4122 張、2707 個具名 index、4 套字型）
+- [x] g1 placeholder 產生器（2026-11-19，`tools/g1.py build`，只需 catalog、不需 vanilla）：方塊佔位圖；字型以 DejaVu 畫出，主選單文字可讀；調色盤用 `palettes/locopal.act`
+- [x] OpenLoco fork（`og/standalone`，已合併進 `og-main`，2026-11-19）：找不到 Locomotion 時改用 `<data 目錄>/base`（`OPENLOCO_STANDALONE=1` 可強制）；沒有 `title.dat` 時以已安裝物件生成標題地圖；沒有 `Scenarios` 不再中止；缺少的音樂／環境音只警告一次；CSS1 音效缺少時原本就會略過
 - [x] OpenLoco fork：別名層（D1-A）（2026-11-19）。讀取 `<objects 目錄>/aliases.yml`，由 `deps.py --aliases-yml`（只含 repo 物件）或 `make_placeholders.py`（含 placeholder）產生；`OPENLOCO_PREFER_OPENGRAPHICS=1` 可在有 vanilla 時強制使用 OG
-- [ ] CI：發行包含 `aliases.yml`（與 `objects.zip` 一起）
-- [ ] OpenLoco fork：預設 region 改為 `OGREGUS`
-- [ ] 驗收：隔離環境、無 Locomotion，headless 截圖到主選單
+- [x] CI：`objects.zip` 內含 `aliases.yml`；另產生 `base.zip`（`Data/g1.DAT` placeholder）；release 附上兩者的 SHA256（2026-11-19，已在本機模擬 CI 步驟驗證）
+- [x] OpenLoco fork：預設 region 優先使用 `OGREGUS`（有安裝時），否則沿用 `REGUS`（再經別名層）（2026-11-19）
+- [x] 驗收：隔離環境、完全沒有 Locomotion 檔案（placeholder g1、無音訊、無 title、無物件、無情境），`--exit-after-frames` 截圖到主選單；只用發行內容（243 個 OG 物件、無 placeholder）也能開到主選單（2026-11-19）
 
-### M2 — 可玩的 sandbox（只用 OG 物件 + placeholder）
+### M2 — 可玩的 sandbox（只用 OG 物件 + placeholder）✅ 2026-11-19 完成
+
+28 個 fork 自製物件（名稱與設計概念待使用者確認，見各 `FORK.md`）。程序化物件由 `tools/gen/build_simple_objects.py` 產生，3D 物件由 `tools/gen/build_blender_objects.py`（Blender 靜態 rig）產生。所有引用都已改指向 OG 物件（`pack.py --relink`），只有 `OG_STEAM` 例外，見已知限制。
 
 硬性阻擋項（先做正式版）
-- [ ] currency ×1 以上（建議先做 `CURRDOLL`，`OG_REGUS` 有引用）
-- [ ] climate ×1 以上（建議先做 `CLIM3`，`OG_REGUS` 有引用）
-- [ ] levelCrossing ×1 以上（`LCROSS2`、`LCROSS4` 被引用）
-- [ ] industry：至少一條完整產業鏈（例如煤礦 → 發電廠，或農場 → 食品廠）
+- [x] currency ×1 以上：`OG_CURRDOLL`（2026-11-19）
+- [x] climate ×1 以上：`OG_CLIM3`（2026-11-19）
+- [x] levelCrossing ×1 以上：`OG_LCROSS4`（2026-11-19）
+- [x] industry：煤礦 → 發電廠，`OG_COALMINE`（Colliery）、`OG_COALPS`（Coal Power Plant）（2026-11-19）
 
 可玩性
-- [ ] 城鎮建築：住宅與商業各數種
-- [ ] steam：`EXH1`、`EXH2`、`SPARK1`、`STEAM`（大量車輛引用）
-- [ ] trackSignal ×1 以上、tree：每種 climate 數種
-- [ ] 高引用音效物件：`SNDTR1`、`SNDE1`、`SNDS1`、`SNDW7`、`SNDW8`
+- [x] 城鎮建築：住宅 3 種（`OG_BLDHOUS2`／`4`／`7`）、商業 2 種（`OG_BLDCTY1`／`3`）（2026-11-19）
+- [x] steam：`OG_STEAM`、`OG_EXH1`、`OG_EXH2`、`OG_SPARK1`（2026-11-19；尚未在地圖上看過，見已知限制）
+- [x] trackSignal：`OG_SIGS`；tree：溫帶 `OG_OAK`／`OG_BEECH`／`OG_BIRCH`、寒帶 `OG_SCPINE`／`OG_RFIR`、熱帶與沙漠 `OG_QPALM`／`OG_CACTUS1`（2026-11-19）
+- [x] 高引用音效物件：`OG_SNDTR1`、`OG_SNDE1`、`OG_SNDS1`、`OG_SNDW7`、`OG_SNDW8`（2026-11-19；程序合成，尚未試聽）
+- [x] region：`OG_REGUK`，willLoad 清單只保留已有 OG 版本的 88 個物件（`pack.py --og-only-will-load`），開新遊戲不會連帶選進 placeholder（2026-11-19）
+
+工具與引擎
+- [x] OpenLoco fork `og/new-game`：`new-game [ticks] -o <sv5> [--select 名稱,…]`（照正常開新遊戲的流程，亂數種子固定）、`screenshot --centre town:N|industry:名稱`（2026-11-19）
+- [x] placeholder g1 的調色盤對照表與地形遮罩改為計算產生（2026-11-19，`tools/g1.py`）
+- [x] `tools/newgame_check.sh`：新遊戲 → 模擬一年 → 物件來源統計（`s5.py info --origin`）→ 截圖（2026-11-19）
 
 驗收
-- [ ] 只啟用 OG 物件（缺的用 placeholder）建立新遊戲，通過物件選擇驗證
-- [ ] `simulate` 跑一個遊戲年不崩潰；截圖中核心物件不是 placeholder
+- [x] 只啟用 OG 物件（缺的用 placeholder）建立新遊戲，通過物件選擇驗證（2026-11-19：standalone，沒有任何 Locomotion 檔案）
+- [x] `simulate` 跑一個遊戲年不崩潰；截圖中核心物件不是 placeholder（2026-11-19：35,100 ticks；存檔 146 個物件中 placeholder 24 個，全是音效、competitor、`ROADTRAM`、`TREX3R`；煤礦、電廠、城鎮、樹的截圖已親自檢視）
 
 ### M3 — 物件全面覆蓋
 
