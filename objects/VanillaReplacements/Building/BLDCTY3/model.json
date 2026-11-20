@@ -1,0 +1,9 @@
+{
+  "parts": [
+    {"type": "ground", "tiles": 2, "mat": "pavement"},
+    {"type": "storey", "size": [1.70, 1.50], "mat": "concrete", "windows": [1, 8]},
+    {"type": "storey", "size": [1.70, 1.50], "mat": "concrete", "windows": [1, 8]},
+    {"type": "storey", "size": [1.62, 1.42], "mat": "concrete", "windows": [1, 8]},
+    {"type": "flatroof", "size": [1.62, 1.42], "mat": "concrete", "parapet": true, "units": 2}
+  ]
+}
