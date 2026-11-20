@@ -51,7 +51,7 @@ python3 tools/inventory.py                    # 依類型列出 已完成／fork
 python3 tools/inventory.py --list placeholder # 列出待做清單
 ```
 
-2026-11-19 快照：CD 版 vanilla 物件 545 個（不含範圍外的 4 個）中，上游完成 178、placeholder 367、fork 自製 0。全部 placeholder 都在 `VanillaReplacements/` 底下。另有擴充包資料夾 53 個。
+2026-11-19 快照（M2 完成後）：CD 版 vanilla 物件 545 個（不含範圍外的 4 個）中，上游完成 178、fork 自製 28、placeholder 339。全部 placeholder 都在 `VanillaReplacements/` 底下。另有擴充包資料夾 53 個。
 
 ### 1.2 CI 打包規則（會影響命名）
 
@@ -136,11 +136,11 @@ DAT 內會以 16-byte header 引用其他物件（車輛 → 軌道、蒸汽、�
 | Blender 5.2.3 | `~/.local/bin/blender`（本機已安裝） | 建模與渲染。可 headless：`blender -b <file>.blend --python <script>.py` |
 | Blender MCP | Claude Code session 內可用 | 互動式檢查／修改正在開啟的 Blender 場景 |
 | OpenLoco Graphics Helper add-on | 未安裝（官方版只支援 Blender 2.79；上游近期的 `.blend` 是用新版移植製作的） | 不需要：`tools/blender/render_sprites.py` 直接渲染 `.blend` 內已烘焙好的 rig（相機、燈光、逐格動畫） |
-| `tools/`（本 repo） | ✅ P1 `blender/render_sprites.py`、P2 `quantize.py`、P3 `pack.py`；V1 `lint.py`、`preview.py`、`dat.py`、`deps.py`、`inventory.py`；V2 `install_test_env.py`、`run_openloco.sh`、`v2_smoke.sh`、`s5.py`；`make_placeholders.py` | 整條製作與驗證管線。用法見各檔開頭說明與 `docs/PIPELINE.md` |
+| `tools/`（本 repo） | ✅ P1 `blender/render_sprites.py`、P2 `quantize.py`、P3 `pack.py`；V1 `lint.py`、`preview.py`、`dat.py`、`deps.py`、`inventory.py`；V2 `install_test_env.py`、`run_openloco.sh`、`v2_smoke.sh`、`newgame_check.sh`、`s5.py`；製作 `blender/static_rig.py`（建築／產業）、`gen/`（`build_simple_objects.py`、`build_blender_objects.py` 與各產生器）；`make_placeholders.py`；g1 `g1.py`（catalog／placeholder） | 整條製作與驗證管線。用法見各檔開頭說明與 `docs/PIPELINE.md` |
 | OpenLoco ObjectEditor | 未安裝；**不需要**（P3 已定案用 `tools/pack.py`） | 只在需要互動式檢視或編輯物件屬性時參考 |
 | Python 3 | `/usr/bin/python3`；`.venv/`（Pillow，以 `uv venv .venv && uv pip install --python .venv/bin/python pillow` 建立） | `tools/` 中只有 `preview.py` 需要 Pillow（用 `.venv/bin/python` 執行），其餘只用標準函式庫 |
 | OpenLoco 原始碼 | `../OpenLoco`：fork https://github.com/cashzero/OpenLoco （`origin`），官方為 `upstream`；工作分支 `og-main` | 格式權威參考（見下表），也是 V2 遊戲內驗證要 build 的對象 |
-| OpenLoco build | ✅ `../OpenLoco/build/posix/Release/OpenLoco`（`posix` preset + 系統套件，build 自 `og-main`：多了 headless `screenshot` 命令與 vanilla→OG 別名層） | V2 遊戲內驗證。執行時一律加 `--locomotion_path`、用隔離環境與無視窗設定，否則會跳出視窗卡住（見 `docs/PIPELINE.md` V2） |
+| OpenLoco build | ✅ `../OpenLoco/build/posix/Release/OpenLoco`（`posix` preset + 系統套件，build 自 `og-main`：headless `screenshot`／`--object`／`--centre town:N`／`industry:名稱`、`new-game`、`--exit-after-frames`、vanilla→OG 別名層、standalone 模式） | V2 遊戲內驗證。執行時一律加 `--locomotion_path`、用隔離環境與無視窗設定，否則會跳出視窗卡住（見 `docs/PIPELINE.md` V2） |
 | vanilla Locomotion 資料 | `LOCO_DATA_DIR=$HOME/Locomotion/game`（從使用者的 ISO 解出）；版權素材 | 開發期量測用（尺寸、sprite 數量、結構模板），以及 M1 之前執行 OpenLoco。**絕不 commit**、不可複製進任何 repo，最終成品也不能依賴它 |
 
 **相依套件原則**：工具與函式庫一律**優先使用現成的**（apt 套件、官方 release 執行檔）。只有在有明確理由時才自己從原始碼 build（例如需要的版本沒有現成的、要做靜態連結的發佈版、需要打 patch），並且事先說明理由。需要 sudo 時，一次列出完整的安裝指令給使用者，不要一個一個試錯。

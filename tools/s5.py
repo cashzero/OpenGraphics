@@ -2,6 +2,9 @@
 """S5 存檔／情境（.SV5/.SC5）工具。
 
   python3 tools/s5.py info <file>                        # 檔頭與必要物件清單
+  python3 tools/s5.py info <file> --origin [--max-placeholders N]
+      依類型統計必要物件來自 repo（objects/）還是 placeholder（build/placeholders/），
+      placeholder 超過 N 個（或有找不到來源的物件）時以 1 結束。
   python3 tools/s5.py relink <in> -o <out> --alias build/placeholders/alias.json
       把必要物件清單中的 vanilla 物件改指向 OG 名稱，產生「只用 OG 物件」的測試存檔。
       地圖資料以物件 slot index 引用物件，所以只換清單裡的 header 即可。
@@ -66,6 +69,45 @@ def file_checksum_ok(buf: bytes) -> bool:
     return (sum(buf[:-4]) & 0xFFFFFFFF) == struct.unpack_from("<I", buf, len(buf) - 4)[0]
 
 
+def _names_in(root: Path) -> set[tuple[int, str]]:
+    out = set()
+    for p in root.rglob("*"):
+        if p.suffix.lower() == ".dat" and p.is_file():
+            try:
+                o = dat.read_dat(p)
+            except Exception:  # noqa: BLE001  非物件 DAT（例如 g1）
+                continue
+            out.add((o.type_id, o.name_str.strip()))
+    return out
+
+
+def origin_report(heads: list[bytes], max_placeholders: int | None) -> int:
+    repo_root = Path(__file__).resolve().parents[1]
+    in_repo = _names_in(repo_root / "objects")
+    in_ph = _names_in(repo_root / "build" / "placeholders") - in_repo
+    by_type: dict[str, list] = {}
+    n_ph = n_other = 0
+    for h in heads:
+        t, name = h[0] & 0x3F, h[4:12].decode("latin1").strip()
+        row = by_type.setdefault(dat.OBJECT_TYPES[t], [0, [], []])
+        if (t, name) in in_repo:
+            row[0] += 1
+        elif (t, name) in in_ph:
+            row[1].append(name)
+            n_ph += 1
+        else:
+            row[2].append(name)
+            n_other += 1
+    for t, (r, ph, other) in sorted(by_type.items()):
+        extra = f"  placeholder：{' '.join(ph)}" if ph else ""
+        extra += f"  來源不明：{' '.join(other)}" if other else ""
+        print(f"  {t:14} repo {r:3}｜placeholder {len(ph):3}{extra}")
+    print(f"合計 {len(heads)} 個物件：repo {len(heads) - n_ph - n_other}、placeholder {n_ph}、來源不明 {n_other}")
+    if n_other or (max_placeholders is not None and n_ph > max_placeholders):
+        return 1
+    return 0
+
+
 def cmd_info(args) -> int:
     buf = Path(args.file).read_bytes()
     info = locate(buf)
@@ -75,6 +117,8 @@ def cmd_info(args) -> int:
     if args.verbose:
         for h in heads:
             print(f"  {dat.OBJECT_TYPES[h[0] & 0x3F]:13} {h[4:12].decode('latin1').strip():9} source={(h[0] >> 6) & 3}")
+    if args.origin:
+        return origin_report(heads, args.max_placeholders)
     return 0
 
 
@@ -124,6 +168,8 @@ def main(argv=None) -> int:
     p = sub.add_parser("info")
     p.add_argument("file")
     p.add_argument("-v", "--verbose", action="store_true")
+    p.add_argument("--origin", action="store_true", help="統計物件來自 repo 還是 placeholder")
+    p.add_argument("--max-placeholders", type=int, help="搭配 --origin：placeholder 超過此數量就以 1 結束")
     p.set_defaults(func=cmd_info)
     p = sub.add_parser("relink")
     p.add_argument("file")

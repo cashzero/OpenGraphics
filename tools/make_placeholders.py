@@ -75,9 +75,7 @@ def placeholder_images(table: dat.ImageTable, remap_band: bool = True) -> tuple[
 
 
 def silence_sound(obj: dat.DatObject, data: bytes) -> bytes:
-    off = obj.strings_offset()
-    _entries, end = dat.parse_string_table(data, off)
-    hdr = end + 8                                   # unknown u32 + pcmDataAndHeaderLength u32
+    hdr = dat.sound_data_offset(obj.type_name, data)
     length, = struct.unpack_from("<I", data, hdr + 8)
     bits, = struct.unpack_from("<H", data, hdr + 12 + 14)
     pcm_start = hdr + 0x1E

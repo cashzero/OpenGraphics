@@ -11,6 +11,12 @@
 - sprite 一律以 RLE 編碼（G1 flags = hasTransparency | isRLECompressed），保留 sprites.json 中的
   hasZoomSprites / noZoomDraw / duplicatePrevious 旗標與 zoomOffset。
 - 預設 sprite 數量必須與模板相同（--allow-count-change 可放寬，例如車輛屬性改變時）。
+- 沒有圖片的物件（climate、scenarioText…）可省略 --sprites。
+- --wav <檔案.wav>：音效物件換成新的 PCM（WAV 的取樣率／位元／聲道寫進 WAVEFORMATEX）。
+- --set <型別>@<offset>=<值>：修改固定結構中的數值，例如 --set u8@3=90（型別 u8/i8/u16/i16/u32/i32）。
+- --relink：把模板中引用的 vanilla 物件改指向 repo 裡**已有的 OG 物件**（AGENTS.md §2.2.1）；沒有 OG 版的維持原樣，由別名層處理。
+- --og-only-will-load（region 專用，需搭配 --relink）：region 的 willLoad 清單（選取 region 時會一併選取的物件）
+  只保留已改指向 OG 的項目，其餘刪除，避免開新遊戲時連帶選進 placeholder。
 - 寫出後會重新讀取驗證：checksum、解碼後像素與輸入一致。
 """
 from __future__ import annotations
@@ -19,6 +25,7 @@ import argparse
 import json
 import struct
 import sys
+import wave
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -93,10 +100,66 @@ def encode_rle(w: int, h: int, px: bytes) -> bytes:
     return data
 
 
+SET_FORMATS = {"u8": "<B", "i8": "<b", "u16": "<H", "i16": "<h", "u32": "<I", "i32": "<i"}
+
+
+def apply_sets(data: bytes, sets: list[str], struct_size: int) -> bytes:
+    d = bytearray(data)
+    for spec in sets:
+        typ, rest = spec.split("@", 1)
+        off, val = rest.split("=", 1)
+        fmt = SET_FORMATS[typ]
+        off = int(off, 0)
+        if off + struct.calcsize(fmt) > struct_size:
+            raise ValueError(f"--set {spec}：超出固定結構範圍（{struct_size} bytes）")
+        struct.pack_into(fmt, d, off, int(val, 0))
+    return bytes(d)
+
+
+def replace_sound(type_name: str, data: bytes, wav_path: str) -> bytes:
+    if type_name != "sound":
+        raise ValueError("--wav 只能用在 sound 物件")
+    with wave.open(wav_path, "rb") as w:
+        ch, width, rate, frames = w.getnchannels(), w.getsampwidth(), w.getframerate(), w.getnframes()
+        pcm = w.readframes(frames)
+    hdr = dat.sound_data_offset(type_name, data)
+    old_len, = struct.unpack_from("<I", data, hdr + 8)
+    _e, end = dat.parse_string_table(data, dat.STRUCT_SIZES[type_name])
+    old_total, = struct.unpack_from("<I", data, end + 4)
+    d = bytearray(data[:hdr + 0x1E])
+    struct.pack_into("<I", d, hdr + 8, len(pcm))
+    bits = 8 * width
+    struct.pack_into("<HHIIHHH", d, hdr + 12, 1, ch, rate, rate * ch * width, ch * width, bits, 0)
+    struct.pack_into("<I", d, end + 4, old_total - old_len + len(pcm))
+    tail = data[hdr + 0x1E + old_len:]
+    return bytes(d) + pcm + tail
+
+
+def filter_region_will_load(data: bytes) -> tuple[bytes, int, int]:
+    """region：固定結構 → 名稱字串表 → cargo header × data[0x08] → willLoad header…0xFF → image table。"""
+    _e, off = dat.parse_string_table(data, dat.STRUCT_SIZES["region"])
+    off += data[0x08] * 16
+    start = off
+    kept: list[bytes] = []
+    dropped = 0
+    while data[off] != 0xFF:
+        header = data[off:off + 16]
+        if (header[0] >> 6) & 3 == 3:
+            kept.append(header)
+        else:
+            dropped += 1
+        off += 16
+    return data[:start] + b"".join(kept) + data[off:], len(kept), dropped
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--template", required=True)
-    ap.add_argument("--sprites", required=True)
+    ap.add_argument("--sprites", help="sprites 資料夾（有圖片的物件必填）")
+    ap.add_argument("--wav", help="音效物件的新 PCM（WAV 檔）")
+    ap.add_argument("--set", action="append", default=[], help="修改固定結構數值，例如 u8@3=90，可重複")
+    ap.add_argument("--relink", action="store_true", help="vanilla 引用改指向 repo 中已有的 OG 物件")
+    ap.add_argument("--og-only-will-load", action="store_true", help="region：willLoad 只保留 OG 物件（需 --relink）")
     ap.add_argument("--name", required=True, help="8 字元以內的內部名稱，例如 OGCTRUC1")
     ap.add_argument("--display", help="遊戲內名稱（所有語言都改成這個）；不指定則沿用模板")
     ap.add_argument("--allow-count-change", action="store_true")
@@ -105,12 +168,16 @@ def main(argv=None) -> int:
 
     tpl = dat.read_dat(args.template)
     table = tpl.image_table()
-    if table is None:
-        sys.exit(f"模板 {args.template} 沒有 image table")
-    sprites_dir = Path(args.sprites)
-    meta = json.loads((sprites_dir / "sprites.json").read_text())
-    if len(meta) != len(table.entries) and not args.allow_count_change:
-        sys.exit(f"sprite 數量 {len(meta)} 與模板 {len(table.entries)} 不同（確定要改請加 --allow-count-change）")
+    if table is None and args.sprites:
+        sys.exit(f"模板 {args.template} 沒有 image table，不能指定 --sprites")
+    if table is not None and not args.sprites:
+        sys.exit(f"模板 {args.template} 有 image table，必須指定 --sprites")
+    meta = []
+    sprites_dir = Path(args.sprites) if args.sprites else None
+    if sprites_dir:
+        meta = json.loads((sprites_dir / "sprites.json").read_text())
+        if len(meta) != len(table.entries) and not args.allow_count_change:
+            sys.exit(f"sprite 數量 {len(meta)} 與模板 {len(table.entries)} 不同（確定要改請加 --allow-count-change）")
 
     palette = dat.load_palette()
     entries: list[dat.G1Entry] = []
@@ -133,9 +200,29 @@ def main(argv=None) -> int:
     if args.display:
         text = args.display.encode("latin1")
         data = dat.replace_first_string_table(tpl, lambda _s: text)
-        obj = dat.DatObject(None, tpl.flags, tpl.name, 0, tpl.encoding, data)
-        table = dat.find_image_table(data, obj.strings_offset() or 0)
-    data = dat.replace_image_table(data, table.offset, entries, bytes(image_data))
+    if args.set:
+        data = apply_sets(data, args.set, dat.STRUCT_SIZES[tpl.type_name])
+    if args.wav:
+        data = replace_sound(tpl.type_name, data, args.wav)
+    if args.relink:
+        import make_placeholders
+        import repo
+        vanilla = repo.vanilla_objects()
+        v2og = {(n.encode("latin1").ljust(8), dat.OBJECT_TYPES.index(t)): og.encode("latin1").ljust(8)
+                for (n, t), (og, _t) in repo.vanilla_to_og(repo.repo_dats(), vanilla).items()}
+        known = {}
+        for (n, t) in vanilla:
+            known.setdefault(dat.OBJECT_TYPES.index(t), set()).add(n.encode("latin1").ljust(8))
+        data, changed, unresolved = make_placeholders.relink(data, known, v2og)
+        print(f"relink：改指向 {changed} 處；沒有 OG 版而保留 vanilla 引用：{', '.join(sorted(unresolved)) or '無'}")
+    if args.og_only_will_load:
+        if tpl.type_name != "region" or not args.relink:
+            sys.exit("--og-only-will-load 只適用於 region，且需要 --relink")
+        data, kept, dropped = filter_region_will_load(data)
+        print(f"willLoad：保留 {kept} 個 OG 物件，刪除 {dropped} 個沒有 OG 版的引用")
+    if sprites_dir:
+        table = dat.find_image_table(data, dat.STRUCT_SIZES[tpl.type_name])
+        data = dat.replace_image_table(data, table.offset, entries, bytes(image_data))
 
     name = args.name.encode("latin1")
     if len(name) > 8:
@@ -149,8 +236,9 @@ def main(argv=None) -> int:
     chk = dat.read_dat(out)
     assert chk.checksum_ok(), "checksum 驗證失敗"
     ct = chk.image_table()
-    assert ct is not None and len(ct.entries) == len(entries)
-    for i, exp in enumerate(expected):
+    if sprites_dir:
+        assert ct is not None and len(ct.entries) == len(entries)
+    for i, exp in enumerate(expected if sprites_dir else []):
         w, h, _x, _y, px, al = dat.decode_sprite(ct, i)
         if exp is None:
             continue

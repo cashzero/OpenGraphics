@@ -444,6 +444,14 @@ def replace_image_table(data: bytes, table_offset: int, entries: list[G1Entry], 
     return data[:table_offset] + build_image_table(entries, image_data)
 
 
+def sound_data_offset(type_name: str, data: bytes) -> int:
+    """音效物件中 SoundObjectData（0x1E bytes）的起點（Objects/SoundObject.cpp load）：
+    固定結構 → 字串表 → numUnkStructs(u32) → pcmDataAndHeaderLength(u32) → numUnkStructs × 16 → SoundObjectData → PCM。"""
+    _e, end = parse_string_table(data, STRUCT_SIZES[type_name])
+    num_unk, = struct.unpack_from("<I", data, end)
+    return end + 8 + 16 * num_unk
+
+
 def og_internal_name(vanilla_name: str, prefix: str = "OG") -> bytes:
     """依 README 規則由 vanilla 名稱產生 8 字元內部名稱：保留結尾數字，從前面截斷。
     例：LIVESTCK→OGLIVEST、CATTLE1→OGCATTL1、BLDALP11→OGBLDA11。"""

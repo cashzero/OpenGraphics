@@ -71,12 +71,20 @@ def object_folders() -> list[ObjectFolder]:
 
 
 def vanilla_objects() -> dict[tuple[str, str], str]:
-    """{(name, type): 說明}。優先讀 OpenLoco 原始碼的 _vanillaObjects，否則讀 LOCO_DATA_DIR/ObjData。"""
+    """{(name, type): 說明}。依序讀：OpenLoco 原始碼的 _vanillaObjects、docs/vanilla-objects.json、LOCO_DATA_DIR/ObjData。"""
     result: dict[tuple[str, str], str] = {}
     if OPENLOCO_OBJECT_CPP.exists():
         src = OPENLOCO_OBJECT_CPP.read_text(encoding="utf-8", errors="replace")
         for name, typ, desc in re.findall(r'\{\s*"([^"]{8})",\s*ObjectType::(\w+)\s*\},?\s*(?://\s*"([^"]*)")?', src):
             result[(name.rstrip(), typ)] = desc
+        if result:
+            return result
+    # CI 等沒有 OpenLoco 原始碼的環境：讀 repo 內的清單（由 OpenLoco 原始碼匯出的 metadata）
+    listed = REPO_ROOT / "docs" / "vanilla-objects.json"
+    if listed.exists():
+        import json
+        for o in json.loads(listed.read_text(encoding="utf-8"))["objects"]:
+            result[(o["name"], o["type"])] = o.get("desc", "")
         if result:
             return result
     loco = os.environ.get("LOCO_DATA_DIR")

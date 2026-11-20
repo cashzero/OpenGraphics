@@ -6,6 +6,7 @@
 產生：
   <env>/data/language -> OpenLoco build 的 data/language（symlink）
   <env>/data/objects/    本 repo 的物件（+ placeholder），取代 build 內建的上游 v0.1.12 物件
+  <env>/data/base/       （--with-base）standalone 用的基礎資料，結構同 Locomotion 安裝目錄（Data/g1.DAT…）
   <env>/OpenLoco/        使用者目錄（XDG_CONFIG_HOME=<env>），每次清掉物件索引快取 plugin.dat
 執行 OpenLoco 時設定 OPENLOCO_DATA_DIR=<env>/data、XDG_CONFIG_HOME=<env>（見 PIPELINE.md）。
 
@@ -37,6 +38,8 @@ def main(argv=None) -> int:
     ap.add_argument("--with-placeholders", action="store_true")
     ap.add_argument("--placeholders", default=str(repo.REPO_ROOT / "build" / "placeholders"))
     ap.add_argument("--relink", action="store_true")
+    ap.add_argument("--with-base", action="store_true",
+                    help="把 build/placeholders/base/（placeholder g1 等）放進 data/base/，供 standalone 模式使用")
     ap.add_argument("--openloco-data", default=str(OPENLOCO_DATA), help="OpenLoco build 的 data 目錄（取 language）")
     args = ap.parse_args(argv)
 
@@ -110,6 +113,16 @@ def main(argv=None) -> int:
         rows += [(m["type"], m["vanilla"], m["og"]) for m in manifest]
     n_alias = repo.write_aliases_yml(obj_dir / "aliases.yml", rows)
     print(f"別名表：{obj_dir / 'aliases.yml'}（{n_alias} 筆）")
+
+    base_dst = data_dir / "base"
+    if base_dst.exists():
+        shutil.rmtree(base_dst)
+    if args.with_base:
+        base_src = Path(args.placeholders) / "base"
+        if not (base_src / "Data" / "g1.DAT").exists():
+            sys.exit(f"找不到 {base_src / 'Data' / 'g1.DAT'}（先執行 .venv/bin/python tools/g1.py build -o {base_src / 'Data' / 'g1.DAT'}）")
+        shutil.copytree(base_src, base_dst)
+        print(f"standalone base：{base_dst}")
 
     print(f"安裝到 {obj_dir}：repo 物件 {stats['repo']} 個、placeholder {stats['placeholder']} 個"
           + (f"；測試副本中改指向 {stats['relinked_refs']} 個 vanilla 引用" if args.relink else ""))

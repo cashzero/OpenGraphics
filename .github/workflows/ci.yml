@@ -22,10 +22,26 @@ jobs:
                   cp -f "$dat_file" "$dst_dir/$filename"
               done
           done
+      # fork：vanilla → OpenGraphics 別名表，給 OpenLoco fork 的別名層使用（ROADMAP D1-A）
+      - name: Generate Object Aliases
+        run: python3 tools/deps.py --aliases-yml artifacts/objects/aliases.yml
       - name: Package Objects
         run: cd artifacts/objects; zip ../../objects.zip ./* -r; cd ../..
-      - name: Hash Objects
-        run: echo "SHA256=$(sha256sum objects.zip | cut -d " " -f 1)" >> $GITHUB_OUTPUT
+      # fork：standalone 用的基礎資料（ROADMAP D3、M1）。目前 g1 為依 docs/g1-catalog.json 產生的 placeholder
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build Base Data
+        run: |
+          sudo apt-get install -y --no-install-recommends fonts-dejavu-core
+          python -m pip install pillow
+          python tools/g1.py build -o artifacts/base/Data/g1.DAT
+          cd artifacts/base; zip ../../base.zip -r .; cd ../..
+      - name: Hash Packages
+        run: |
+          echo "SHA256=$(sha256sum objects.zip | cut -d " " -f 1)" >> $GITHUB_OUTPUT
+          echo "BASE_SHA256=$(sha256sum base.zip | cut -d " " -f 1)" >> $GITHUB_OUTPUT
         id: hash
       - name: Upload artifacts (CI)
         uses: actions/upload-artifact@v7
@@ -33,9 +49,19 @@ jobs:
           path: objects.zip
           archive: false
           if-no-files-found: error
+      - name: Upload base artifacts (CI)
+        uses: actions/upload-artifact@v7
+        with:
+          path: base.zip
+          archive: false
+          if-no-files-found: error
       - name: Release
         uses: softprops/action-gh-release@v3
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          body: SHA256:${{ steps.hash.outputs.SHA256 }}
-          files: objects.zip
+          body: |
+            objects.zip SHA256:${{ steps.hash.outputs.SHA256 }}
+            base.zip SHA256:${{ steps.hash.outputs.BASE_SHA256 }}
+          files: |
+            objects.zip
+            base.zip

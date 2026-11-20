@@ -66,6 +66,26 @@ blender -b objects/…/OG_X.blend --python tools/blender/render_sprites.py -- \
 
 🛠 之後再做：`tools/blender/turntable.py`（較高解析度輸出 8 個角度，給 agent 在正式渲染前檢查造型）。
 
+### 靜態物件與程序化物件（✅ 2026-11-19，M2）
+
+**建築與產業（Blender 靜態 rig）**：`tools/gen/build_blender_objects.py`
+```bash
+LOCO_DATA_DIR=$HOME/Locomotion/game .venv/bin/python tools/gen/build_blender_objects.py [--reuse-render] [BLDHOUS2 COALMINE …]
+```
+- 每個物件的設定（模板、內部名稱、顯示名稱、模型）寫在腳本的 `OBJECTS`。模型可以是物件資料夾裡的 `model.json`（交給 `tools/blender/models/building.py` 參數化建模：ground／walls／storey／gable／flatroof 部件），也可以是 `model.py`（自由 bpy 腳本，例如 `Industry/COALMINE/model.py`）。共用的尺寸常數與建模函式在 `tools/blender/kit.py`（`TILE` = 10.236 單位、`PX_PER_Z`、材質、box／cylinder／lathe／gable_roof／ground_plate…）。
+- `tools/blender/static_rig.py` 建立乾淨場景、上游同款相機與燈光，**每個部件都在 z=0 渲染**（OpenLoco 依模板的部件高度往上疊），4 個旋轉（畫面上順時針），影格順序 = `part*4 + rot`；公司色遮罩 pass 同 P1。
+- 部件高度、部件數、變化組合由 `tools/objinfo.py` 從模板讀出，產業另外加上 21 張地面圖塊（`tools/gen/industry_ground.py`，坡形取 `OG_GRASS1` 的 19 種坡形）。
+- 量化用 `--no-remap-colours`：靜態 rig 有遮罩，不需要色鍵（色鍵會把一般顏色的雜訊吸成公司色）。
+- `--reuse-render`：模型沒改時只重新量化與打包（渲染 2×2 建築約 3 分鐘、電廠約 7 分鐘）。
+- 每次建置都會用 `static_rig.py --save-blend` 把模型存成物件資料夾裡的 `OG_<NAME>.blend`（所有部件沿 X 軸並排、不渲染、壓縮、不產生 `.blend1`），滿足 AGENTS.md §2.3「3D 物件必須 commit `.blend`」。材質全是程序化節點，沒有外部貼圖路徑。
+
+**程序化物件**：`tools/gen/build_simple_objects.py`
+```bash
+LOCO_DATA_DIR=$HOME/Locomotion/game .venv/bin/python tools/gen/build_simple_objects.py [CURRDOLL OAK …]
+```
+- 產生器在 `tools/gen/`：`currency.py`（貨幣圖示，text remap 色）、`steam.py`（蒸汽／排氣／火花）、`lcross_signs.py`（平交道警示牌）、`signal.py`（臂板號誌，8 視角 × 動畫格）、`tree.py`（闊葉、針葉、棕櫚、仙人掌；四季、積雪、枯萎與陰影）、`sound.py`（22050 Hz 16-bit mono 合成音）、`region_image.py`（region 預覽圖，由 repo 內 OG 物件的 sprite 拼成）。
+- 產生的 PNG／`sprites.json`／WAV 放在物件資料夾（commit），再以 `pack.py --relink` 打包；`FORK.md` 只在不存在時寫入。
+
 ## P2 量化
 
 ✅ 2026-11-19：`tools/quantize.py`（需要 `.venv` 裡的 Pillow）
@@ -88,6 +108,11 @@ blender -b objects/…/OG_X.blend --python tools/blender/render_sprites.py -- \
 - 預設 sprite 數量必須與模板相同；寫出後自動重新讀取，驗證 checksum 與每張 sprite 的像素。
 - 驗證紀錄：把 `OG_4F` 全部 616 張 sprite 解出再打包，OpenLoco 中的物件預覽與原檔**逐像素相同**。
 - 產物先放 `build/dat/<NAME>/`，通過 V1 後才複製到 `objects/…/<NAME>/`。
+- 其他選項（2026-11-19，M2）：
+  - `--set u8@3=60`：修改固定結構中的數值（可重複；型別 u8/i8/u16/i16/u32/i32）。
+  - `--wav <檔案>`：音效物件換成新的 PCM。
+  - `--relink`：模板中引用的 vanilla 物件改指向 repo 裡**已有**的 OG 物件（AGENTS.md §2.2.1）；沒有 OG 版的保留原名，由別名層處理，並列在輸出中。
+  - `--og-only-will-load`（region 專用，需搭配 `--relink`）：willLoad 清單只保留 OG 物件。region 被選取時，willLoad 裡的物件會一併被選取，留著 vanilla 名稱就會連帶選進 placeholder。
 
 ---
 
@@ -224,6 +249,34 @@ python3 tools/s5.py relink "$LOCO_DATA_DIR/Scenarios/Boulder Breakers.SC5" \
 - `OPENLOCO_PREFER_OPENGRAPHICS=1`：即使裝了 vanilla 物件也優先使用 OG（預設行為不變，仍優先 vanilla）。
 - 因為有別名層，`install_test_env.py --relink` 與 `s5.py relink` 已不是必要步驟，只在測試上游版 OpenLoco 時使用。
 
+### Standalone（不使用 Locomotion）測試
+
+✅ 2026-11-19（fork `og-main`）：
+```bash
+.venv/bin/python tools/g1.py build -o build/placeholders/base/Data/g1.DAT    # placeholder g1（只需 docs/g1-catalog.json）
+python3 tools/install_test_env.py --with-placeholders --with-base             # 放進 build/openloco-env/data/base
+STANDALONE=1 tools/run_openloco.sh --exit-after-frames 300 -o "$PWD/build/screenshots/m1/standalone.png"
+```
+- `--exit-after-frames N -o <png>`：照正常流程執行遊戲（標題畫面、主選單），畫完 N 個畫面後把**整個螢幕（含 UI）**存成 PNG 並結束。這是檢查主選單、視窗等 UI 的方法。
+- `STANDALONE=1`：`run_openloco.sh` 不傳 `--locomotion_path`，改設 `OPENLOCO_STANDALONE=1`，OpenLoco 使用 `$OPENLOCO_DATA_DIR/base`。不設定時，找不到 Locomotion 也會自動改用 base（已實測，且不會把 base 路徑寫進設定檔）。
+- 沒有 `title.dat` 時，標題地圖由引擎依已安裝的物件生成（預設物件 + 每種必選類型各一 + 全部地形／樹／建築／圍牆／道路，積雪最少的氣候、平緩丘陵、夏天）。
+- 只要驗證「發行內容」時，`install_test_env.py` 不加 `--with-placeholders`。
+
+### 開新遊戲驗收（ROADMAP M2）
+
+✅ 2026-11-19（fork `og/new-game`）：一個指令跑完 M2 驗收，約 20 秒。
+```bash
+tools/newgame_check.sh                         # 預設：OG_REGUK + M2 核心物件
+SELECT=OGREGUK,OGCOALMI MAX_PLACEHOLDERS=30 tools/newgame_check.sh
+```
+1. 重建 placeholder g1、組測試環境（`--with-placeholders --with-base`），之後全部以 standalone 模式執行（沒有任何 Locomotion 檔案）。
+2. `new-game 0 -o new.SV5 --select <名稱,…>`：照正常開新遊戲的流程（`EditorController` 預設地形 → `Scenario::start`），亂數種子固定，同樣的物件會產生同一張地圖。指定物件時**不預先選取預設物件**（否則 OpenLoco 會先選 `OGREGUS`，region 只能選一個），先選指定的物件，其餘必選類型自動各補一個；log 必須有 `Object selection valid`，不能有 `could not be selected`。
+3. `simulate` 35,100 ticks（一個遊戲年，1 日 ≈ 96 ticks）。
+4. `python3 tools/s5.py info after.SV5 --origin --max-placeholders N`：依類型統計存檔用到的物件來自 repo 還是 placeholder；有來源不明的物件，或 placeholder 超過 N 個就失敗。
+5. 截圖 `industry:OGCOALMI industry:OGCOALPS town:0 town:3`（`SHOTS` 可改），輸出到 `build/screenshots/newgame/`，**agent 必須親自看圖**：核心物件不可以是橘色格紋的 placeholder。
+
+地圖上看不到的物件（號誌、平交道：新遊戲沒有鐵路；蒸汽：沒有車輛運行）用物件預覽（`screenshot --object`）補看，並在 `FORK.md` 註明哪些部分還沒驗證。
+
 ### 截圖對照的注意事項
 
 - **部分情境開局時才隨機生成地形**（沒有「地形已生成」旗標，例如 Aerophobia），同一個情境每次載入的地形都不同，不能拿來對照。Boulder Breakers 的地形是預先做好的，可以直接對照。
@@ -262,8 +315,8 @@ mkdir -p build/openloco-env
 (cd build/openloco-env && timeout 180 "$OPENLOCO_BIN" --locomotion_path "$LOCO_DATA_DIR" \
   screenshot "$LOCO_DATA_DIR/Scenarios/Boulder Breakers.SC5" 0 -o ../screenshots/smoke/giant.png --giant --zoom 3)
 ```
-- 語法：`screenshot <存檔或情境> [ticks] -o <png> [--size WxH] [--zoom 0-3] [--rotation 0-3] [--centre x,y] [--giant]`
-- `--centre` 是**格子座標**；未指定時用存檔記錄的主視角，再不行用地圖中心。`--rotation` 依序檢查四個方向。
+- 語法：`screenshot <存檔或情境> [ticks] -o <png> [--size WxH] [--zoom 0-3] [--rotation 0-3] [--centre x,y|town:N|industry:名稱] [--giant]`
+- `--centre` 可以是**格子座標**、`town:N`（第 N 個城鎮）或 `industry:<內部名稱>`（第一個使用該物件的產業，例如 `industry:OGCOALMI`，2026-11-19）；未指定時用存檔記錄的主視角，再不行用地圖中心。`--rotation` 依序檢查四個方向。
 - 輸出為 8-bit 索引色 PNG，可直接用看圖工具檢視。
 - 實作：`Ui::saveScreenshotToFile`（`src/OpenLoco/src/Ui/Screenshot.cpp`，改寫自 giant screenshot 與 `Scenario/ScenarioPreview.cpp`）、`OpenLoco::screenshotGame`（`OpenLoco.cpp`）、命令列解析（`CommandLine.cpp`、`App/src/Main.cpp`）。
 
@@ -302,6 +355,9 @@ python3 tools/make_placeholders.py --out build/placeholders [--loco-data "$LOCO_
 - 遊戲內名稱加上前綴 `[PH] `，在遊戲裡就看得出是 placeholder。
 - 屬性數值取自模板（D4）。相依引用一律指向 OG 名稱。
 - g1 placeholder（M1）：依 `docs/g1-catalog.json` 的尺寸與偏移產生 4122 張圖，夠大的圖上畫出 index。
+- g1 中**不是美術、而是資料**的圖，依調色盤或幾何計算（M2，2026-11-19，`tools/g1.py`）。這些圖做錯時，整張地圖都會壞掉：
+  - `paletteMap*`（公司色、半透明對照表）與 `text_palette`：沒有它們時，所有公司色與陰影都變成深灰色剪影。
+  - 地形遮罩 `surfaceSmooth*`（相鄰地塊貼圖的過渡帶）、`cliffEdge*Mask*`（懸崖面各段）、`snowMaskCoverage*`（部分積雪）。OpenLoco 以「g1 圖 AND 貼圖」繪製（`drawMaskedZoom`），所以必須是 0xFF／0 的未壓縮 bitmap；做成實心方塊時，相鄰地塊的岩石貼圖會整塊蓋上去。邊的編號（rotation 0）：0 左下、1 右下、2 左上、3 右上；坡形取 `OG_GRASS1`。驗證方式：同一個存檔分別用 vanilla g1 與 placeholder g1 截圖對照，除了雜點之外地形應該一致。
 - 音訊 placeholder：靜音，或由 fork 在缺檔時略過。
 
 ---

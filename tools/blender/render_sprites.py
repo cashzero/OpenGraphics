@@ -162,4 +162,5 @@ def main():
     print(f"[render_sprites] 完成 {len(frames)} 格 → {out}（{time.time() - t0:.1f}s）")
 
 
-main()
+if __name__ == "__main__":
+    main()
