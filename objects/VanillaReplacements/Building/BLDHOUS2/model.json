@@ -1,0 +1,9 @@
+{
+  "parts": [
+    {"type": "ground", "tiles": 1, "mat": "pavement"},
+    {"type": "walls", "size": [0.86, 0.52], "mat": "brick", "windows": [1, 4], "door": true},
+    {"type": "walls", "size": [0.86, 0.52], "mat": "brick", "windows": [1, 4]},
+    {"type": "walls", "size": [0.86, 0.52], "mat": "brick", "windows": [1, 4]},
+    {"type": "gable", "size": [0.92, 0.58], "along": "x", "chimney": true}
+  ]
+}
