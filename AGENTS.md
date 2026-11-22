@@ -51,7 +51,7 @@ python3 tools/inventory.py                    # 依類型列出 已完成／fork
 python3 tools/inventory.py --list placeholder # 列出待做清單
 ```
 
-2026-11-19 快照（M2 完成後）：CD 版 vanilla 物件 545 個（不含範圍外的 4 個）中，上游完成 178、fork 自製 28、placeholder 339。全部 placeholder 都在 `VanillaReplacements/` 底下。另有擴充包資料夾 53 個。
+2026-11-22 快照（M3 完成後）：CD 版 vanilla 物件 545 個（不含範圍外的 4 個）中，上游完成 178、fork 自製 322、placeholder 45（全部是 ScenarioText，M6）。全部 placeholder 都在 `VanillaReplacements/` 底下。另有擴充包資料夾 53 個。
 
 ### 1.2 CI 打包規則（會影響命名）
 
@@ -69,6 +69,7 @@ python3 tools/inventory.py --list placeholder # 列出待做清單
 - DAT 內部名稱（header 的 8 字元，不足補空白）：
   - 以 `OG` 開頭；超過 8 字元就從尾端前面刪字，但**保留結尾的數字**以免撞名。
   - 範例（上游既有）：`LIVESTCK→OGLIVEST`、`CATTLE1→OGCATTL1`、`TRSTAT2→OGTRSTA2`、`BLDALP11→OGBLDA11`。
+  - 結尾是「數字＋字母」時整段保留，避免撞名：`SNDCH1A→OGSNDC1A`、`SNDCH1AS→OGSND1AS`、`TREX3RL→OGTRE3RL`（`tools/dat.py og_internal_name`）。
   - 依本 fork 政策，**刻意與上游未來會用的名稱相同**，好讓上游版本自然取代。
 - 遊戲內顯示名稱：原創或諧仿（parody），不可與 vanilla 或真實產品同名。參考 OpenTTD 的命名風格。
 - 非 vanilla 的新物件（擴充包）：沿用上游慣例，檔名 `OGE_*`、內部名稱 `EX*`，放在對應 Pack 資料夾。
@@ -136,7 +137,7 @@ DAT 內會以 16-byte header 引用其他物件（車輛 → 軌道、蒸汽、�
 | Blender 5.2.3 | `~/.local/bin/blender`（本機已安裝） | 建模與渲染。可 headless：`blender -b <file>.blend --python <script>.py` |
 | Blender MCP | Claude Code session 內可用 | 互動式檢查／修改正在開啟的 Blender 場景 |
 | OpenLoco Graphics Helper add-on | 未安裝（官方版只支援 Blender 2.79；上游近期的 `.blend` 是用新版移植製作的） | 不需要：`tools/blender/render_sprites.py` 直接渲染 `.blend` 內已烘焙好的 rig（相機、燈光、逐格動畫） |
-| `tools/`（本 repo） | ✅ P1 `blender/render_sprites.py`、P2 `quantize.py`、P3 `pack.py`；V1 `lint.py`、`preview.py`、`dat.py`、`deps.py`、`inventory.py`；V2 `install_test_env.py`、`run_openloco.sh`、`v2_smoke.sh`、`newgame_check.sh`、`s5.py`；製作 `blender/static_rig.py`（建築／產業）、`gen/`（`build_simple_objects.py`、`build_blender_objects.py` 與各產生器）；`make_placeholders.py`；g1 `g1.py`（catalog／placeholder） | 整條製作與驗證管線。用法見各檔開頭說明與 `docs/PIPELINE.md` |
+| `tools/`（本 repo） | ✅ P1 `blender/render_sprites.py`、P2 `quantize.py`、P3 `pack.py`；V1 `lint.py`、`preview.py`、`dat.py`、`deps.py`、`inventory.py`；V2 `install_test_env.py`、`run_openloco.sh`、`v2_smoke.sh`、`newgame_check.sh`、`s5.py`；製作 `blender/static_rig.py`（建築／產業／碼頭／機場）、`blender/vehicle_rig.py`（車輛、火車站）、`blender/models/ops.py`（幾何指令）、`gen/`（`build_simple_objects.py`、`build_blender_objects.py`、`build_vehicles.py`、`build_stations.py` 與各產生器、配方，見 `docs/PIPELINE.md`）；檢查 `stack_preview.py`；`make_placeholders.py`；g1 `g1.py`（catalog／placeholder） | 整條製作與驗證管線。用法見各檔開頭說明與 `docs/PIPELINE.md` |
 | OpenLoco ObjectEditor | 未安裝；**不需要**（P3 已定案用 `tools/pack.py`） | 只在需要互動式檢視或編輯物件屬性時參考 |
 | Python 3 | `/usr/bin/python3`；`.venv/`（Pillow，以 `uv venv .venv && uv pip install --python .venv/bin/python pillow` 建立） | `tools/` 中只有 `preview.py` 需要 Pillow（用 `.venv/bin/python` 執行），其餘只用標準函式庫 |
 | OpenLoco 原始碼 | `../OpenLoco`：fork https://github.com/cashzero/OpenLoco （`origin`），官方為 `upstream`；工作分支 `og-main` | 格式權威參考（見下表），也是 V2 遊戲內驗證要 build 的對象 |

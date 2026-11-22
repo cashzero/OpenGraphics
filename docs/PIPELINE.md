@@ -86,6 +86,26 @@ LOCO_DATA_DIR=$HOME/Locomotion/game .venv/bin/python tools/gen/build_simple_obje
 - 產生器在 `tools/gen/`：`currency.py`（貨幣圖示，text remap 色）、`steam.py`（蒸汽／排氣／火花）、`lcross_signs.py`（平交道警示牌）、`signal.py`（臂板號誌，8 視角 × 動畫格）、`tree.py`（闊葉、針葉、棕櫚、仙人掌；四季、積雪、枯萎與陰影）、`sound.py`（22050 Hz 16-bit mono 合成音）、`region_image.py`（region 預覽圖，由 repo 內 OG 物件的 sprite 拼成）。
 - 產生的 PNG／`sprites.json`／WAV 放在物件資料夾（commit），再以 `pack.py --relink` 打包；`FORK.md` 只在不存在時寫入。
 
+### M3 新增的產生器（2026-11-20）
+
+所有 3D 物件都改用「幾何指令」：配方模組產生 JSON 指令（box／cyl／gable／hip／lathe／seg／loft／tube…），由 `tools/blender/models/ops.py` 在 Blender 端畫出（材質表 `MATS`，`company`／`company2` = 公司色）。
+
+| 類別 | 建置指令 | 配方／產生器 | rig |
+|---|---|---|---|
+| 建築 | `build_blender_objects.py BLDxxx` | `building_table.py`（名稱、概念、配方）→ `building_recipes.py`（依部件高度與變化組合分析角色：地面／底層／標準層／特色層／屋頂） | `static_rig.py` |
+| 產業 | `build_blender_objects.py COALMINE …` | `industry_recipes.py`（每個產業一個函式，含動畫部件）、`industry_fields.py`（田地／地面 21 張 × 階段 × 角度） | `static_rig.py` |
+| 碼頭、機場 | `build_blender_objects.py SHIPST1 AIRPORT1 …` | `port_recipes.py`（依建築位置與移動節點推得跑道方向與建築正面）；預覽圖依建築位置把整座機場拼起來縮小 | `static_rig.py` |
+| 車輛 | `build_vehicles.py CTRUCK1 …` | `vehicle_table.py`（名稱、概念、配方）→ `vehicle_recipes.py`（卡車、公車、船、飛機、蒸汽機車…）；影像清單依模板的 body／bogie 結構（旋轉數、坡度、動畫、貨物、煞車燈）產生 | `vehicle_rig.py` |
+| 火車站 | `build_stations.py TRSTAT1 …` | 檔內設計；半透明玻璃遮罩由 `iso.py` 投影 | `vehicle_rig.py`（`unit = tile`，原點 = 圖塊角落） |
+| 軌道、第三軌／齒軌、電車軌 | `build_simple_objects.py TRACKNG …` | `track_iso.py`：依 `data/track_geometry.json`（`extract_track_geometry.py` 從 OpenLoco 原始碼抽出的片段圖塊、中心線、影像編號）逐格繪製道碴／枕木／鋼軌 | 無（像素繪製） |
+| 號誌、平交道 | `build_simple_objects.py SIGxxx LCROSSx` | `signal_iso.py`、`lcross_iso.py`（共用 `iso.py` 的等角像素畫布） | 無 |
+| 競爭者頭像、貨幣、樹、音效 | `build_simple_objects.py COMPx …` | `portrait.py`、`currency.py`（字形）、`tree.py --preset`、`sound.py`（螺旋槳、噴射、蒸汽、柴油、喇叭…） | 無 |
+
+- `vehicle_rig.py` 以**動畫模式**渲染：每張影像一個影格，各狀態（車身、貨物、動畫格）的根物件以關鍵影格切換位置與方向，比逐張呼叫 `render()` 快約 3.6 倍。
+- **記憶體**：Blender（EEVEE + Mesa d3d12）每渲染一格約多佔 20 MB 且不會釋放，所以 `build_vehicles.py` 每 24 格、`build_blender_objects.py` 每 6 個部件換一個新的 Blender 行程（每個行程峰值約 1.3 GB）。**一次只跑一個 Blender**（批次要依序排隊，不要平行；16 GB 的機器同時開多個會耗盡記憶體）。
+- 雙 GPU：Mesa d3d12 無法指定第二張卡（兩張同名，只有名稱比對的環境變數），而且瓶頸是每格的 CPU 開銷，不是 GPU。
+- 檢查工具：`tools/stack_preview.py`（建築／產業依變化組合堆疊的預覽，含公司色）。
+
 ## P2 量化
 
 ✅ 2026-11-19：`tools/quantize.py`（需要 `.venv` 裡的 Pillow）

@@ -18,18 +18,18 @@
 
 ---
 
-## 現況快照（2026-11-19）
+## 現況快照（2026-11-22，M3 完成後）
 
 ### 物件覆蓋（對照 OpenLoco `_vanillaObjects`，共 549 個）
 
 | 狀態 | 數量 |
 |---|---|
 | 已有 OG 版本（上游完成） | 178 |
-| fork 自製（M2，2026-11-19） | 28 |
-| placeholder 資料夾（待製作） | 339 |
+| fork 自製 | 322（M2 28 個 + M3 294 個） |
+| placeholder 資料夾（待製作） | 45（全部是 ScenarioText，M6） |
 | 不在範圍內 | 4（`AIRPORT4`、`HPORT2`、`SHINKT0`、`SHINKF0`，見下方說明） |
 
-尚未完成的類型（已完成 / placeholder；M2 之前的數字，M2 新增的 28 個 fork 物件見下方 M2 段落，最新數字以 `python3 tools/inventory.py` 為準）：
+M2 之前的分類數字（保留作為紀錄；最新數字以 `python3 tools/inventory.py` 為準）：
 
 | 類型 | 完成 | 待做 | 類型 | 完成 | 待做 |
 |---|---|---|---|---|---|
@@ -66,14 +66,13 @@
 
 → 光是補齊物件還不夠，**必須處理引用**（見決策 D1）。
 
-### 已知限制（M2 之後）
+### 已知限制（M3 之後）
 
 - placeholder g1：調色盤對照表（公司色、半透明）、文字顏色表，以及地形遮罩（地塊過渡 `surfaceSmooth*`、懸崖面 `cliffEdge*Mask*`、部分積雪 `snowMaskCoverage*`）已改為**依幾何／調色盤計算**（M2），地圖上不再有灰色方塊。主選單按鈕、logo、工具圖示、格線與建造選取框等仍是灰色方塊；M4 換成正式美術。
-- OpenLoco 在 GUI 開新遊戲時預設選 `OGREGUS`（上游物件），它的 willLoad 清單引用 157 個 vanilla 物件，會連帶選進大量 placeholder 建築／產業。只用 OG 物件的開新遊戲要選 `OG_REGUK`（`tools/newgame_check.sh` 就是這樣做）。是否把 fork 的預設 region 改成 `OGREGUK` 待決定。
-- 開新遊戲的存檔中，placeholder 只剩 24 個：音效 21 個（車輛引用的 `SNDCH*`／`SNDD*`／`SNDW*`）、competitor、`ROADTRAM`、`TREX3R` 各 1 個。
-- 尚未在地圖上看過：號誌與平交道（新遊戲沒有鐵路）、蒸汽／排氣／火花（沒有車輛運行）；音效沒有試聽（headless 不播放）。這些物件只通過 V1 與物件預覽，`FORK.md` 有註明。
-- `OG_STEAM` 引用 vanilla 音效 `SNDCH1A`…`SNDCH1DS`（8 個，尚無 OG 版本）。
-- 只用發行內容時（沒有 placeholder），標題地圖與新遊戲缺少尚無 OG 版本的類型（M3）。
+- OpenLoco 在 GUI 開新遊戲時預設選 `OGREGUS`（上游物件），它的 willLoad 清單直接寫 vanilla 名稱，經別名層對應到 OG 物件（M3 之後已全部有 OG 版）。是否把 fork 的預設 region 改成 `OGREGUK` 待決定。
+- 尚未在地圖上看過（新遊戲不會自動蓋鐵路、車站、機場，也沒有車輛運行）：軌道、軌道附加物、電車軌、號誌、平交道、車站、機場、碼頭、車輛、蒸汽／排氣；這些只通過 V1、物件選擇預覽與載入／模擬測試。要看放在地圖上的樣子需要含這些物件的測試存檔（或人工透過 WSLg 建造後截圖）。
+- 音效（M2 的 5 個 + M3 的 34 個）是程序合成，headless 不播放，沒有試聽。
+- ScenarioText 45 個沒有 OG 版本（M6）。
 - OpenLoco fork 的 CMake 仍下載上游 `objects.zip`，還沒有下載本 fork 的 `objects.zip`／`base.zip`（決策 D5）。
 
 ### 已知的上游問題
@@ -216,15 +215,24 @@ OpenLoco fork（D2）
 - [x] 只啟用 OG 物件（缺的用 placeholder）建立新遊戲，通過物件選擇驗證（2026-11-19：standalone，沒有任何 Locomotion 檔案）
 - [x] `simulate` 跑一個遊戲年不崩潰；截圖中核心物件不是 placeholder（2026-11-19：35,100 ticks；存檔 146 個物件中 placeholder 24 個，全是音效、competitor、`ROADTRAM`、`TREX3R`；煤礦、電廠、城鎮、樹的截圖已親自檢視）
 
-### M3 — 物件全面覆蓋
+### M3 — 物件全面覆蓋 ✅ 2026-11-22 完成
 
-依類別分批，每批一個分支：
-- [ ] Vehicle：Truck 24、Aircraft 19、Ship 10、Bus 3、Train 3
-- [ ] Building 剩餘、Industry 剩餘
-- [ ] Tree 剩餘、TrainSignal 剩餘、Track／TrackExtra／Road 剩餘
-- [ ] Airport 4、Dock 1、TrainStation 3
-- [ ] Competitor 38、Currency 剩餘、Climate 剩餘、Region 2
-- [ ] 驗收：`deps.py` 報告中沒有任何 vanilla 引用（或全部由別名層涵蓋）
+294 個 fork 自製物件（名稱與設計概念待使用者確認，見各 `FORK.md`）。產生方式見 `docs/PIPELINE.md`「M3 新增的產生器」。完成後 CD 版 vanilla 物件 545 個中，只剩 ScenarioText 45 個（M6）沒有 OG 版本。
+
+- [x] Vehicle：Truck 24、Aircraft 19、Ship 10、Bus 3、Train 3（`tools/gen/build_vehicles.py`，2026-11-22）
+- [x] Building 剩餘 68、Industry 剩餘 20（`build_blender_objects.py` + 配方模組，2026-11-20）
+- [x] Tree 剩餘 32、TrainSignal 剩餘 9、LevelCrossing 剩餘 3、Steam `WWAKE1`；Track `TRACKNG`、TrackExtra `TREX3RL`／`TREXRACK`、Road `ROADTRAM`（`tools/gen/track_iso.py`，依 OpenLoco 的片段幾何程序化繪製）（2026-11-20）
+- [x] Airport 4、Dock 1（`port_recipes.py`）、TrainStation 3（`build_stations.py`，含半透明玻璃雨棚）（2026-11-20）
+- [x] Competitor 38、Currency 剩餘 12、Climate 剩餘 5、Region `REGALP`（`OG_REGUK` 也重新打包，willLoad 擴充到 240 個 OG 物件）（2026-11-22）
+- [x] 提前完成 M5 的 Sound 物件 34 個（車輛會引用；程序合成，尚未試聽）
+- [x] 驗收：`deps.py` 掃描 565 個 DAT，引用到的 222 個 vanilla 物件全部已有 OG 版本（由別名層涵蓋）；fork 自製物件本身沒有任何 vanilla 引用（2026-11-22）
+- [x] V2：`tools/newgame_check.sh`（standalone，`OG_REGUK`）開新遊戲 → 模擬一年不崩潰，存檔 285 個物件全部來自 repo、placeholder 0 個；255 個 fork 物件的物件選擇預覽（`screenshot --object`）全部載入成功並已檢視（2026-11-20）
+
+修正
+- `CURRDOLL`：M2 版誤把 5 張影像畫成硬幣圖示，改為貨幣符號字形（0 small、1 medium、2 bold、3 large）。
+- 內部名稱規則：結尾是「數字＋字母」時整段保留（`SNDCH1A→OGSNDC1A`），原本 8 個 `SNDCH1*` 音效會撞名。
+- `pack.py --relink`：物件引用自己的 vanilla 名稱時改成新名稱（第一次打包時 repo 裡還沒有自己的 OG 版）。
+- 建置時記憶體：Blender 每渲染一格約多佔 20 MB 且不釋放，改為分段渲染、一次只跑一個 Blender（`docs/PIPELINE.md`）。
 
 ### M4 — 正式 g1 基礎圖形
 
