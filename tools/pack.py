@@ -13,6 +13,8 @@
 - 預設 sprite 數量必須與模板相同（--allow-count-change 可放寬，例如車輛屬性改變時）。
 - 沒有圖片的物件（climate、scenarioText…）可省略 --sprites。
 - --wav <檔案.wav>：音效物件換成新的 PCM（WAV 的取樣率／位元／聲道寫進 WAVEFORMATEX）。
+- --string <N>=<文字>：把第 N 個字串表（0 = 名稱）所有語言都改成這段文字；模板字串開頭的格式控制碼
+  （0x80–0x9F，例如 competitor 名字前的 0x88）會保留。可重複。
 - --set <型別>@<offset>=<值>：修改固定結構中的數值，例如 --set u8@3=90（型別 u8/i8/u16/i16/u32/i32）。
 - --relink：把模板中引用的 vanilla 物件改指向 repo 裡**已有的 OG 物件**（AGENTS.md §2.2.1）；沒有 OG 版的維持原樣，由別名層處理。
 - --og-only-will-load（region 專用，需搭配 --relink）：region 的 willLoad 清單（選取 region 時會一併選取的物件）
@@ -162,6 +164,7 @@ def main(argv=None) -> int:
     ap.add_argument("--og-only-will-load", action="store_true", help="region：willLoad 只保留 OG 物件（需 --relink）")
     ap.add_argument("--name", required=True, help="8 字元以內的內部名稱，例如 OGCTRUC1")
     ap.add_argument("--display", help="遊戲內名稱（所有語言都改成這個）；不指定則沿用模板")
+    ap.add_argument("--string", action="append", default=[], metavar="N=TEXT", help="改寫第 N 個字串表（可重複）")
     ap.add_argument("--allow-count-change", action="store_true")
     ap.add_argument("-o", "--output", required=True)
     args = ap.parse_args(argv)
@@ -200,6 +203,16 @@ def main(argv=None) -> int:
     if args.display:
         text = args.display.encode("latin1")
         data = dat.replace_first_string_table(tpl, lambda _s: text)
+    for spec in args.string:
+        idx, _, text = spec.partition("=")
+        new = text.encode("latin1")
+
+        def keep_prefix(old, new=new):
+            k = 0
+            while k < len(old) and 0x80 <= old[k] <= 0x9F:
+                k += 1
+            return old[:k] + new
+        data = dat.replace_string_table(data, tpl.type_name, int(idx), keep_prefix)
     if args.set:
         data = apply_sets(data, args.set, dat.STRUCT_SIZES[tpl.type_name])
     if args.wav:
@@ -210,6 +223,8 @@ def main(argv=None) -> int:
         vanilla = repo.vanilla_objects()
         v2og = {(n.encode("latin1").ljust(8), dat.OBJECT_TYPES.index(t)): og.encode("latin1").ljust(8)
                 for (n, t), (og, _t) in repo.vanilla_to_og(repo.repo_dats(), vanilla).items()}
+        # 物件引用自己（模板的 vanilla 名稱）時，直接改成這次打包的新名稱：第一次打包時 repo 裡還沒有自己的 OG 版
+        v2og[(tpl.name, tpl.type_id)] = args.name.encode("latin1").ljust(8)
         known = {}
         for (n, t) in vanilla:
             known.setdefault(dat.OBJECT_TYPES.index(t), set()).add(n.encode("latin1").ljust(8))

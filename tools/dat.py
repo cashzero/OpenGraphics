@@ -432,6 +432,16 @@ def replace_first_string_table(obj: DatObject, transform) -> bytes:
     return obj.data[:off] + new + obj.data[end:]
 
 
+def replace_string_table(data: bytes, type_name: str, index: int, transform) -> bytes:
+    """把第 index 個字串表（0 = 名稱）每個語言的字串以 transform(bytes)->bytes 改寫。"""
+    off = STRUCT_SIZES[type_name]
+    for _ in range(index):
+        _e, off = parse_string_table(data, off)
+    entries, end = parse_string_table(data, off)
+    new = build_string_table([(lang, transform(text)) for lang, text in entries])
+    return data[:off] + new + data[end:]
+
+
 def build_image_table(entries: list[G1Entry], image_data: bytes) -> bytes:
     out = struct.pack("<II", len(entries), len(image_data))
     for e in entries:
@@ -454,8 +464,10 @@ def sound_data_offset(type_name: str, data: bytes) -> int:
 
 def og_internal_name(vanilla_name: str, prefix: str = "OG") -> bytes:
     """依 README 規則由 vanilla 名稱產生 8 字元內部名稱：保留結尾數字，從前面截斷。
-    例：LIVESTCK→OGLIVEST、CATTLE1→OGCATTL1、BLDALP11→OGBLDA11。"""
-    m = re.search(r"\d+$", vanilla_name)
+    例：LIVESTCK→OGLIVEST、CATTLE1→OGCATTL1、BLDALP11→OGBLDA11。
+    結尾是「數字＋字母」時整段保留（否則 SNDCH1A／SNDCH1AS／SNDCH1B… 會全部變成 OGSNDCH1）：
+    SNDCH1A→OGSNDC1A、SNDCH1AS→OGSND1AS、TREX3RL→OGTRE3RL。"""
+    m = re.search(r"\d+[A-Z]*$", vanilla_name)
     digits = m.group(0) if m else ""
     stem = vanilla_name[:len(vanilla_name) - len(digits)] if digits else vanilla_name
     room = 8 - len(prefix) - len(digits)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """蒸汽／排氣／火花的煙團動畫（steam 物件）。依模板每格的尺寸產生一團由小變大、最後消散的煙。
 
-  python3 tools/gen/steam.py --template <模板.DAT> --style exhaust|steam|spark --seed 1 -o <資料夾>
+  python3 tools/gen/steam.py --template <模板.DAT> --style exhaust|steam|spark|wake --seed 1 -o <資料夾>
 """
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ STYLES = {
     "exhaust": (0x0A, (2, 7), 0.80),   # 深灰柴油排氣
     "steam": (0x0A, (6, 11), 0.85),    # 淺灰白蒸汽
     "spark": (0x82, (7, 11), 0.22),    # 藍白電弧火花（稀疏亮點）
+    "wake": (0x0A, (8, 11), 0.60),     # 船尾浪花：白色泡沫環（外緣較密），逐格擴大後消散
 }
 
 
@@ -31,7 +32,7 @@ def blob(w: int, h: int, progress: float, style: str, rng: random.Random) -> byt
             d = math.hypot((x - cx) / rx, (y - cy) / ry)
             if d > 1.0:
                 continue
-            p = density * (1.0 - 0.55 * d)
+            p = density * ((0.35 + 0.65 * d) if style == "wake" else (1.0 - 0.55 * d))
             if rng.random() > p:
                 continue
             # 上方較亮、下方較暗；邊緣較淡

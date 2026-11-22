@@ -100,6 +100,7 @@ def main():
                     help="預設 (0, 1)：以 1×1 地面板對 vanilla 校正（64×32、偏移 -32,-17）")
     ap.add_argument("--rotation-sign", type=float, default=-1.0, help="旋轉方向；-1 以 vanilla BLDCTY12 校正（畫面上順時針：右→下→左→上）")
     ap.add_argument("--no-mask", action="store_true")
+    ap.add_argument("--json-name", default="render.json", help="影格清單檔名（分段渲染時每段各寫一個）")
     args = ap.parse_args(argv)
 
     heights = [int(h) for h in args.heights.split(",")]
@@ -175,9 +176,10 @@ def main():
             bpy.data.objects.remove(o, do_unlink=True)
         print(f"[static_rig] part {p} 完成（{time.time() - t0:.1f}s）")
 
-    with open(os.path.join(out, "render.json"), "w") as fp:
+    with open(os.path.join(out, args.json_name), "w") as fp:
         json.dump(spec, fp, indent=2)
     print(f"[static_rig] 完成 {len(spec['frames'])} 格 → {out}（{time.time() - t0:.1f}s）")
 
 
-main()
+if __name__ == "__main__":      # 也可被 tools/blender/vehicle_rig.py 匯入（共用相機與燈光）
+    main()
