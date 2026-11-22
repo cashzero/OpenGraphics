@@ -1,0 +1,42 @@
+[
+  {
+    "path": "0.png",
+    "x": 0,
+    "y": 0,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "1.png",
+    "x": 0,
+    "y": 0,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "2.png",
+    "x": 0,
+    "y": 0,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "3.png",
+    "x": 0,
+    "y": 1,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "4.png",
+    "x": 0,
+    "y": 1,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  }
+]
