@@ -11,8 +11,11 @@
 | `title/` | `Data/title.dat`（標題畫面背景存檔） | M6 |
 | `scenarios/` | `Scenarios/*.SC5`（只用 OG 物件的情境） | M6 |
 
-目前內容（2026-11-19）：
-- `g1`：還沒有正式美術。placeholder 由 `tools/g1.py build` 依 `docs/g1-catalog.json` 產生（不需要 vanilla 檔案），CI 打包成 `base.zip` 的 `Data/g1.DAT`。
+目前內容（2026-11-22）：
+- `g1/`（M4，2026-11-22）：正式美術，依類別分子目錄（`fonts/`、`title/`、`logo/`、`overlays/`、`markers/`、`arrows/`、`effects/`、`ui/`），
+  每個子目錄是 PNG（調色盤索引）+ `sprites.json`（`[{index, path, x, y}]`，index = g1 影像編號），由 `tools/gen/g1_*.py` 產生。
+  `tools/g1.py build` 依 `docs/g1-catalog.json` 組出 `g1.DAT`：有正式美術的用正式美術，調色盤／對照表／地形遮罩依計算產生，
+  沒有名稱（OpenLoco 不引用）的影像為 1×1 透明。不需要 vanilla 檔案，CI 打包成 `base.zip` 的 `Data/g1.DAT`。
 - OpenLoco fork 會把 `<data 目錄>/base` 當成 standalone 的「Locomotion 安裝目錄」，所以 `base.zip` 解開後的結構要和 Locomotion 相同（`Data/g1.DAT`、`Data/CSS1.DAT`…）。
 
 規則：

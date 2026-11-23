@@ -106,6 +106,29 @@ LOCO_DATA_DIR=$HOME/Locomotion/game .venv/bin/python tools/gen/build_simple_obje
 - 雙 GPU：Mesa d3d12 無法指定第二張卡（兩張同名，只有名稱比對的環境變數），而且瓶頸是每格的 CPU 開銷，不是 GPU。
 - 檢查工具：`tools/stack_preview.py`（建築／產業依變化組合堆疊的預覽，含公司色）。
 
+### g1 基礎圖形（M4，2026-11-22）
+
+```bash
+.venv/bin/python tools/gen/g1_fonts.py      # 4 套點陣字型（medium 一般／粗體、small、large）
+.venv/bin/python tools/gen/g1_title.py      # 主選單：程序星球（旋轉、建造動畫）、星光／磁片／學士帽
+.venv/bin/python tools/gen/g1_logo.py       # 標題 logo（Blender：tools/blender/logo_rig.py，一次一個 Blender）
+.venv/bin/python tools/gen/g1_overlays.py   # 施工選取框、集貨範圍、格線、橋影（× 19 坡形）
+.venv/bin/python tools/gen/g1_markers.py    # 高度標記、路線編號圓圈
+.venv/bin/python tools/gen/g1_arrows.py     # 施工箭頭、單行道箭頭、地圖外空格
+.venv/bin/python tools/gen/g1_effects.py    # 煙、爆炸、火球、水花、撞車碎片
+.venv/bin/python tools/gen/g1_ui.py         # 視窗元件、分頁與工具圖示、進度條、新聞紙背景
+.venv/bin/python tools/g1.py build -o build/placeholders/base/Data/g1.DAT   # 組出 g1.DAT（預設讀 base/g1）
+```
+- 每個產生器輸出 `base/g1/<類別>/`（PNG + `sprites.json`），並在 `build/preview/` 產生預覽圖。
+- 換色規則（字形的三個色號、按鈕／分頁／視窗框以視窗色換色、選取框的標記色號 + `paletteMapUnk21–2B`）寫在各產生器開頭與 `tools/g1.py`。
+- **UI 截圖**（OpenLoco fork `og/window-capture`）：`--open-window` 在截圖前 30 個畫面開啟指定視窗：
+  ```bash
+  STANDALONE=1 tools/run_openloco.sh "$PWD/build/tests/newgame/after.SV5" --exit-after-frames 200 \
+    --open-window objects,options -o "$PWD/build/screenshots/m4/ui.png"
+  ```
+  可用名稱：options、audio、objects、company、finances、companies、towns、industries、stations、trains、terraform、trees、
+  map、music、messages、about、shortcuts、landscape、construction、roadconstruction（見 OpenLoco.cpp `openWindowsByName`）。
+
 ## P2 量化
 
 ✅ 2026-11-19：`tools/quantize.py`（需要 `.venv` 裡的 Pillow）
