@@ -17,6 +17,7 @@
         依地塊幾何計算（坡形取 repo 內 OG_GRASS1 的 19 種坡形 alpha，邊的編號與高度依 OpenLoco PaintSurface.cpp）。
       - 字型字形（characters_*）：用 DejaVu 字型畫出對應字元，像素用 text remap index 1（遊戲會換成文字顏色）。
       - 其他圖：深色外框 + 灰色底的方塊，尺寸、偏移、flags 與 vanilla 相同。
+      - base/g1/**/sprites.json 列出的 index 以正式美術取代（M4；PNG 由 tools/gen/g1_*.py 產生）。
 
 g1 檔案格式（OpenLoco Graphics/Gfx.cpp loadG1）：G1Header{numEntries, totalSize} + G1Element32 × N + 圖像資料。
 """
@@ -98,11 +99,82 @@ def palette_map(name: str, palette) -> bytes:
                 cache[key] = nearest(palette, tuple(min(255, (src[k] * (1 - alpha) + tint[k] * alpha) * light) for k in range(3)))
             m[i] = cache[key]
         return bytes(m)
+    if base in SELECTION_MAPS or base in EFFECT_MAPS:
+        return special_map(base, palette)
     try:
         for k, idx in enumerate(PRIMARY_REMAP):
             m[idx] = colour_shade(base, k)
     except KeyError:
-        pass                                   # Unk*／Clear：恆等對照
+        pass                                   # 其餘 Unk*／Clear：恆等對照
+    return bytes(m)
+
+
+# ---- 用途已查明的 Unk 對照表（OpenLoco Paint/PaintSurface.cpp、Gfx.cpp、Station.cpp、Widget.cpp）---------
+# 地圖選取框（PaintSurface.cpp paintSurface*Selection）以 ImageId(圖, ExtColour) 繪製：像素 = 對照表[來源]，0 = 不畫。
+# 選取框圖（tools/gen/g1_overlays.py）用 12 個「標記色號」（primary remap 的 12 階）把圖塊分區：
+#   角／全格（constructionSelectionCorners）C0–C3、邊（Edges）E0–E3、四分之一（Quads）Q0–Q3；
+# 每張對照表只讓被選中的那一區顯示成亮色，其餘標記變成 0（不畫）。
+# 這幾張表也可能被產業陰影（Colours::getShadow(產業顏色)，半透明 dst 模式）用到，所以其他色號一律做成變暗。
+MARK_C = PRIMARY_REMAP[0:4]
+MARK_E = PRIMARY_REMAP[4:8]
+MARK_Q = PRIMARY_REMAP[8:12]
+SELECTION_MAPS = {  # 名稱: (顯示的標記, 顏色)
+    "Unk21": ([MARK_C[0]], "yellow"), "Unk22": ([MARK_C[1], MARK_E[0]], "yellow"),
+    "Unk23": ([MARK_C[2], MARK_E[1]], "yellow"), "Unk24": ([MARK_C[3], MARK_E[2]], "yellow"),
+    "Unk25": (MARK_C + [MARK_E[3]], "yellow"),             # 也是整格選取（paintSurfaceFullTileSelection）
+    "Unk26": (MARK_C, "blue"),                              # 水面整格選取
+    "Unk2B": (MARK_C, "orange"),
+    "Unk27": ([MARK_Q[0]], "yellow"), "Unk28": ([MARK_Q[1]], "yellow"),
+    "Unk29": ([MARK_Q[2]], "yellow"), "Unk2A": ([MARK_Q[3]], "yellow"),
+}
+# 其他效果：(模式, 參數)；src = 改寫來源色（ImageId(圖, ExtColour)），dst = 半透明疊在畫面上（withTranslucency）
+EFFECT_MAPS = {
+    "Unk2C": ("ghost", None),                  # 施工預覽（src）：淡藍灰
+    "Unk31": ("tint", ((150, 185, 235), 0.5, 1.05)),   # 施工預覽（設定 constructionMarker，dst）
+    "Unk2E": ("tint", ((140, 200, 215), 0.30, 1.08)),  # translucentGlass1（車站玻璃，不可換色時）
+    "Unk2F": ("tint", ((120, 175, 200), 0.45, 1.05)),  # translucentGlass2
+    "Unk30": ("tint", ((170, 215, 225), 0.22, 1.12)),  # translucentGlass0（地圖格線）
+    "Unk32": ("tint", ((20, 25, 40), 0.42, 1.0)),      # 建築／產業陰影
+    "Unk33": ("tint", ((0, 0, 0), 0.2, 1.0)),          # 半透明分頁
+    "Unk34": ("tint", ((10, 10, 20), 0.5, 1.0)),       # 半透明視窗底（主選單按鈕等）
+    "Unk74": ("burnt", None),                  # 特殊狀態車輛（src）：偏暗、去飽和
+}
+
+
+def special_map(base: str, palette) -> bytes:
+    m = list(range(256))
+    cache = {}
+
+    def mapped(i, f):
+        key = palette[i]
+        if key not in cache:
+            cache[key] = nearest(palette, tuple(max(0, min(255, v)) for v in f(key)))
+        return cache[key]
+    if base in SELECTION_MAPS:
+        show, colour = SELECTION_MAPS[base]
+        cache.clear()
+        for i in range(1, 256):
+            m[i] = mapped(i, lambda c: tuple(v * 0.62 for v in c))
+        for mk in MARK_C + MARK_E + MARK_Q:
+            m[mk] = 0
+        for mk in show:
+            m[mk] = colour_shade(colour, 9)
+        m[0] = 0
+        return bytes(m)
+    mode, arg = EFFECT_MAPS[base]
+    for i in range(1, 256):
+        if mode == "ghost":
+            lum = 0.3 * palette[i][0] + 0.59 * palette[i][1] + 0.11 * palette[i][2]
+            m[i] = mapped(i, lambda c, lum=lum: (95 + 0.55 * lum, 120 + 0.55 * lum, 160 + 0.45 * lum))
+            cache.clear()
+        elif mode == "burnt":
+            lum = 0.3 * palette[i][0] + 0.59 * palette[i][1] + 0.11 * palette[i][2]
+            m[i] = mapped(i, lambda c, lum=lum: (0.55 * lum + 8, 0.5 * lum + 6, 0.48 * lum + 6))
+            cache.clear()
+        else:
+            tint, alpha, light = arg
+            m[i] = mapped(i, lambda c: tuple((c[k] * (1 - alpha) + tint[k] * alpha) * light for k in range(3)))
+    m[0] = 0
     return bytes(m)
 
 
@@ -111,7 +183,8 @@ def text_palette(n: int) -> bytes:
     out = bytearray()
     for c in range(n):
         name = COLOURS[c % len(COLOURS)][0]
-        out += bytes([colour_shade(name, 6), colour_shade(name, 2), colour_shade(name, 9), 0])
+        # 主色、外框（字形 index 2）、外框／右下陰影（index 3）；兩個外框都用深色，地圖上的城鎮名才清楚
+        out += bytes([colour_shade(name, 6), colour_shade(name, 1), colour_shade(name, 0), 0])
     return bytes(out)
 
 
@@ -340,10 +413,28 @@ class GlyphRenderer:
         return bytes(C_TEXT if v >= 110 else 0 for v in data)
 
 
+BASE_G1 = REPO / "base" / "g1"
+
+
+def load_overrides(root: Path) -> dict[int, tuple[int, int, int, int, bytes]]:
+    """base/g1/**/sprites.json（[{index, path, x, y}]，PNG 為調色盤索引、0 = 透明）→ {index: (w, h, x, y, pixels)}。"""
+    import pack  # 需要 Pillow
+    palette = dat.load_palette()
+    out = {}
+    for meta in sorted(root.glob("**/sprites.json")):
+        for m in json.loads(meta.read_text(encoding="utf-8")):
+            w, h, px = pack.load_indices(meta.parent / m["path"], palette)
+            if m["index"] in out:
+                sys.exit(f"g1 index {m['index']} 重複：{meta}")
+            out[m["index"]] = (w, h, m["x"], m["y"], px)
+    return out
+
+
 def cmd_build(args) -> int:
     cat = json.loads(Path(args.catalog).read_text(encoding="utf-8"))
     palette = dat.load_palette()
     glyphs = GlyphRenderer()
+    overrides = load_overrides(Path(args.base)) if args.base else {}
     entries = []
     blob = bytearray()
     cache: dict[tuple, int] = {}
@@ -371,6 +462,18 @@ def cmd_build(args) -> int:
             blob += mask
             continue
         keep = f & (dat.G1_HAS_ZOOM | dat.G1_NO_ZOOM_DRAW | dat.G1_DUPLICATE_PREVIOUS)
+        if not name and e["i"] not in overrides and args.base:
+            # 沒有名稱的影像：OpenLoco 的 ImageIds.h 沒有引用（vanilla 遺留的圖、第 5 套字型、各種尺寸變體…），
+            # 縮小版（0–303）在正式版也不再使用 → 1×1 透明（M4）
+            entries.append(dat.G1Entry(len(blob), 1, 1, 0, 0, dat.G1_HAS_TRANSPARENCY, 0))
+            blob += b"\x00"
+            continue
+        if e["i"] in overrides:                            # 正式美術（base/g1）
+            ow, oh, ox, oy, data = overrides[e["i"]]
+            # 不提供縮小版：縮小顯示時由 OpenLoco 直接跳格取樣（同地形遮罩）
+            entries.append(dat.G1Entry(len(blob), ow, oh, ox, oy, (keep & ~dat.G1_HAS_ZOOM) | dat.G1_HAS_TRANSPARENCY, 0))
+            blob += data
+            continue
         if "char" in e:
             data = glyphs.render(e["char"], w, h, cat["fonts"][e["group"]]["weight"])
             key = None
@@ -406,6 +509,7 @@ def main(argv=None) -> int:
     p = sub.add_parser("build")
     p.add_argument("--catalog", default=str(DEFAULT_CATALOG))
     p.add_argument("-o", "--output", required=True)
+    p.add_argument("--base", default=str(BASE_G1), help="正式美術目錄（base/g1）；空字串 = 全部用 placeholder")
     p.set_defaults(func=cmd_build)
     args = ap.parse_args(argv)
     return args.func(args)
