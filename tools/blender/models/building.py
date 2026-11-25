@@ -60,11 +60,24 @@ def make_part(kit, index):
             kit.box(0.5, 0.5, H, (sx * 0.25, sy * 0.15, 0), kit.brick())
     elif t == "flatroof":
         sx, sy = cfg["size"][0] * T, cfg["size"][1] * T
-        kit.box(sx, sy, H * 0.25, (0, 0, 0), _mat(kit, cfg.get("mat", "concrete")))
+        dark = kit.material("Dark Roof", (0.20, 0.20, 0.20), rough=0.85, noise=0.45)
+        wall_m = _mat(kit, cfg.get("mat", "concrete"))
+        kit.box(sx, sy, H * 0.22, (0, 0, 0), dark)
         if cfg.get("parapet"):
-            kit.box(sx, sy, H * 0.35, (0, 0, 0), kit.material("Company Color 1 Trim", (0.5, 0.5, 0.5)))
-            kit.box(sx * 0.94, sy * 0.94, H * 0.36, (0, 0, 0), _mat(kit, cfg.get("mat", "concrete")))
+            pt = T * 0.06
+            ph = H * 0.38
+            trim = kit.material("Company Color 1 Trim", (0.5, 0.5, 0.5))
+            kit.box(sx, pt, ph, (0, -sy / 2 + pt / 2, 0), wall_m)
+            kit.box(sx, pt, ph, (0, sy / 2 - pt / 2, 0), wall_m)
+            kit.box(pt, sy, ph, (-sx / 2 + pt / 2, 0, 0), wall_m)
+            kit.box(pt, sy, ph, (sx / 2 - pt / 2, 0, 0), wall_m)
+            kit.box(sx + 0.06, 0.08, H * 0.09, (0, -sy / 2 - 0.01, ph * 0.72), trim)
+            kit.box(sx + 0.06, 0.08, H * 0.09, (0, sy / 2 + 0.01, ph * 0.72), trim)
+            kit.box(0.08, sy + 0.06, H * 0.09, (-sx / 2 - 0.01, 0, ph * 0.72), trim)
+            kit.box(0.08, sy + 0.06, H * 0.09, (sx / 2 + 0.01, 0, ph * 0.72), trim)
+        kit.box(sx * 0.34, sy * 0.28, H * 0.62, (sx * 0.16, sy * 0.12, H * 0.20), wall_m)
+        kit.box(sx * 0.36, sy * 0.30, H * 0.10, (sx * 0.16, sy * 0.12, H * 0.80), dark)
         for k in range(cfg.get("units", 0)):
-            kit.box(sx * 0.18, sy * 0.14, H * 0.55, ((k - 0.5) * sx * 0.3, sy * 0.15, H * 0.25), kit.steel())
+            kit.box(sx * 0.16, sy * 0.12, H * 0.42, ((k - 0.5) * sx * 0.26 - sx * 0.15, -sy * 0.18, H * 0.20), kit.steel())
     else:
         raise ValueError(f"未知部件類型 {t}")

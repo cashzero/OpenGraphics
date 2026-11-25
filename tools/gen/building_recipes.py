@@ -194,8 +194,8 @@ def roof(o: Ops, kind, cx, cy, sx, sy, h, m, over=0.04, chim=None, dormers=0, al
     elif kind in ("hip", "pyramid"):
         o.hip((cx, cy, 0), (sx + 2 * over, sy + 2 * over, h * 0.85), m, k=0.0 if kind == "pyramid" else 0.45)
     elif kind == "flat":
-        o.box((cx, cy, 0), (sx, sy, h * 0.25), m)
-        parapet(o, cx, cy, sx, sy, 0, h * 0.45, m)
+        o.box((cx, cy, 0), (sx, sy, min(h * 0.25, 2.0)), "darkconcrete")
+        parapet(o, cx, cy, sx, sy, 0, min(h * 0.55, 3.6), m)
     elif kind == "mansard":
         o.box((cx, cy, 0), (sx + 0.02, sy + 0.02, 1.2), "white")
         o.hip((cx, cy, 1.0), (sx, sy, h * 0.7), m, k=0.85)
@@ -324,7 +324,13 @@ def block(part, sub, fam, level, h, P, large):
         roof(o, rk, cx, cy, sx, sy, rh, P.get("roofmat", "slate"), over=0.02, chim=P.get("chimneys"),
              dormers=P.get("dormers", 0))
         if rk == "flat" and P.get("tank"):
-            o.box((cx + sx * 0.2, cy + sy * 0.15, 0), (0.12, 0.12, h * 0.9), "darkwood")
+            # 樓梯機房＋木造屋頂水塔＋空調冷卻機組（取代原本單支細柱）
+            o.box((cx - sx * 0.14, cy + sy * 0.14, 1.5), (sx * 0.34, sy * 0.28, min(h * 0.55, 11.0)), P.get("roofmat", "stone"))
+            o.box((cx - sx * 0.14, cy + sy * 0.14, 1.5 + min(h * 0.55, 11.0)), (sx * 0.36, sy * 0.30, 1.2), "darkconcrete")
+            o.cyl((cx + sx * 0.22, cy + sy * 0.14, 1.5), min(sx, sy) * 0.11, min(h * 0.22, 4.5), "darksteel", v=8)
+            o.cyl((cx + sx * 0.22, cy + sy * 0.14, 1.5 + min(h * 0.22, 4.5)), min(sx, sy) * 0.13, min(h * 0.38, 8.5), "darkwood", v=12)
+            o.cyl((cx + sx * 0.22, cy + sy * 0.14, 1.5 + min(h * 0.60, 13.0)), min(sx, sy) * 0.14, 3.0, "slate", v=12, rt=0.02)
+            o.box((cx + sx * 0.18, cy - sy * 0.22, 1.5), (0.14, 0.11, min(h * 0.25, 4.5)), "steel")
         return o
     o.box((cx, cy, 0), (sx, sy, h), mat if sub != "feature" else P.get("feature_mat", mat))
     if sub == "base" and P.get("shops"):
@@ -372,7 +378,9 @@ def office(part, sub, fam, level, h, P, large):
         n = max(1, round(height / fh))
         if style == "ribbon":
             for r in range(n):
-                ribbon(o, cx, cy, sx_, sy_, z0 + r * height / n + height / n * 0.3, height / n * 0.5, P.get("glass", "glass"))
+                ribbon(o, cx, cy, sx_, sy_, z0 + r * height / n + height / n * 0.28, height / n * 0.52, P.get("glass", "glass"))
+            # 細結構柱切割帶狀窗，避免外觀變成單調的黑白斑馬條紋
+            mullions(o, cx, cy, sx_, sy_, z0, height, max(3, round(sx_ / 0.24)), P.get("piers", m))
         elif style == "glass":
             ribbon(o, cx, cy, sx_, sy_, z0 + 0.3, height - 0.6, P.get("glass", "blueglass"))
             mullions(o, cx, cy, sx_, sy_, z0, height, max(3, round(sx_ / 0.12)), P.get("frame", "steel"))
@@ -418,12 +426,15 @@ def office(part, sub, fam, level, h, P, large):
     crown = P.get("crown", "flat")
     z = 0.0
     if crown == "flat" or h < 18:
-        o.box((cx, cy, 0), (sx, sy, min(h, 3.0)), mat)
-        parapet(o, cx, cy, sx, sy, 0, min(h, 4.0), P.get("trim", mat))
+        # 凹入深色柏油礫石屋頂甲板＋淺色女兒牆＋樓梯機房／空調冷卻機組（對照原版城市大樓屋頂細節）
+        o.box((cx, cy, 0), (sx, sy, min(h, 2.2)), "darkconcrete")
+        parapet(o, cx, cy, sx, sy, 0, min(h, 4.2), P.get("trim", mat), t=0.045)
         if h >= 8:
-            o.box((cx + sx * 0.15, cy + sy * 0.1, 0), (sx * 0.35, sy * 0.3, h * 0.75), P.get("plant", "darkconcrete"))
-            for k in range(P.get("units", 2)):
-                o.box((cx - sx * 0.25 + k * 0.12, cy - sy * 0.2, 0), (0.08, 0.06, min(h, 6.0)), "steel")
+            o.box((cx + sx * 0.16, cy + sy * 0.12, 2.0), (sx * 0.36, sy * 0.30, h * 0.65), P.get("plant", "stone"))
+            o.box((cx + sx * 0.16, cy + sy * 0.12, 2.0 + h * 0.65), (sx * 0.38, sy * 0.32, 1.2), "darkconcrete")
+            o.cyl((cx - sx * 0.22, cy + sy * 0.18, 2.0), min(sx, sy) * 0.11, min(h * 0.55, 7.5), "darksteel", v=12)
+            for k in range(max(2, P.get("units", 2))):
+                o.box((cx - sx * 0.26 + k * 0.15, cy - sy * 0.20, 2.0), (0.10, 0.08, min(h * 0.45, 5.0)), "steel")
         return o
     # 高塔頂：先蓋幾層樓（逐級退縮），再加頂飾
     cap = {"pyramid": 0.38, "spire": 0.45, "setback": 0.25, "antenna": 0.35, "deco": 0.5, "dome": 0.4,
@@ -441,20 +452,25 @@ def office(part, sub, fam, level, h, P, large):
     if crown == "pyramid":
         o.hip((cx, cy, z), (sx * k + 0.04, sy * k + 0.04, cap), P.get("roofmat", "copper"), k=0.0)
     elif crown == "dome":
-        r = min(sx, sy) * k * 0.38
-        o.cyl((cx, cy, z), r * 1.05, cap * 0.3, mat, v=24)
-        o.lathe((cx, cy, z + cap * 0.3), [(r, 0), (r * 0.92, cap * 0.25), (r * 0.7, cap * 0.45), (r * 0.35, cap * 0.62),
-                                          (0.0, cap * 0.68)], P.get("roofmat", "copper"))
-        o.cyl((cx, cy, z + cap * 0.95), 0.012, cap * 0.05, "gold", v=6)
+        o.box((cx, cy, z), (sx * k, sy * k, 1.4), "darkconcrete")
+        parapet(o, cx, cy, sx * k, sy * k, z, 3.2, P.get("trim", mat), t=0.045)
+        r = min(sx, sy) * k * 0.34
+        o.cyl((cx, cy, z + 1.4), r * 1.08, cap * 0.30, "stone", v=16)
+        o.cyl((cx, cy, z + 1.4 + cap * 0.08), r * 1.10, cap * 0.16, "glass", v=16)
+        o.lathe((cx, cy, z + 1.4 + cap * 0.30), [(r, 0), (r * 0.92, cap * 0.24), (r * 0.7, cap * 0.44), (r * 0.35, cap * 0.60),
+                                                 (0.0, cap * 0.66)], P.get("roofmat", "copper"), seg=16)
+        o.cyl((cx, cy, z + 1.4 + cap * 0.94), 0.014, cap * 0.08, "gold", v=6)
     elif crown == "clock":
         w = min(sx, sy) * k * 0.4
-        o.box((cx, cy, z), (sx * k, sy * k, 1.5), P.get("trim", mat))
+        o.box((cx, cy, z), (sx * k, sy * k, 1.5), "darkconcrete")
+        parapet(o, cx, cy, sx * k, sy * k, z, 3.0, P.get("trim", mat), t=0.04)
         o.box((cx, cy, z), (w, w, cap * 0.55), mat)
         for side in SIDES:
             face_box(o, cx, cy, w, w, side, 0, w * 0.6, cap * 0.28, w * 0.6 * 22, "white")
         o.hip((cx, cy, z + cap * 0.55), (w * 1.1, w * 1.1, cap * 0.45), P.get("roofmat", "copper"), k=0.0)
     else:                                                     # setback / antenna / spire / deco
-        o.box((cx, cy, z), (sx * k, sy * k, 2.0), P.get("trim", mat))
+        o.box((cx, cy, z), (sx * k, sy * k, 1.5), "darkconcrete")
+        parapet(o, cx, cy, sx * k, sy * k, z, 3.2, P.get("trim", mat), t=0.04)
         if crown == "setback":
             o.box((cx, cy, z), (sx * k * 0.5, sy * k * 0.5, cap * 0.8), P.get("plant", "darkconcrete"))
         elif crown == "antenna":
@@ -561,20 +577,31 @@ def castle(heights, P):
 def concert_hall(sub, h, P):
     o = Ops()
     if sub == "ground":
-        o.ground(2, "pavement")
-        o.box((0, -0.82, 0), (1.4, 0.2, 0.6), "whiteconcrete")
+        o.ground(2, "gravel")
+        o.box((0, -0.82, 0), (1.42, 0.22, 0.6), "stone")
+        o.box((0, 0.05, 0), (1.62, 1.42, 0.35), "darkconcrete")
         return o
     if sub == "base":
-        o.box((0, 0.05, 0), (1.5, 1.3, h), "whiteconcrete")
-        ribbon(o, 0, 0.05, 1.5, 1.3, h * 0.1, h * 0.8, "blueglass")
-        mullions(o, 0, 0.05, 1.5, 1.3, 0, h, 10, "white")
-        o.box((0, -0.65, h * 0.85), (1.2, 0.2, 1.0), "company")
+        o.box((0, 0.05, 0), (1.52, 1.32, h - 1.2), "sandstone")
+        o.box((0, 0.05, h - 1.2), (1.44, 1.24, 1.2), "darkconcrete")
+        parapet(o, 0, 0.05, 1.52, 1.32, h - 1.8, 2.2, "stone", t=0.05)
+        ribbon(o, 0, 0.05, 1.52, 1.32, h * 0.14, h * 0.72, "blueglass")
+        mullions(o, 0, 0.05, 1.52, 1.32, 0, h - 0.8, 10, "stone")
+        o.box((0, -0.66, h * 0.80), (1.16, 0.22, 1.4), "company")
+        for x in (-0.48, 0.0, 0.48):
+            o.cyl((x, -0.72, 0), 0.022, h * 0.80, "stone", v=8)
         return o
-    # 波浪形大屋頂（兩片弧形殼）+ 舞台塔
-    o.box((0.3, 0.2, 0), (0.6, 0.6, h * 0.95), "whiteconcrete")
-    for k, (x, w) in enumerate(((-0.3, 0.8), (0.25, 0.9))):
-        prof = [(w * 0.5, 0), (w * 0.47, h * 0.25), (w * 0.38, h * 0.5), (w * 0.22, h * 0.68), (0.0, h * 0.72)]
-        o.lathe((x, 0.05, 0), prof, "copper" if k == 0 else "company", seg=28)
+    # 音樂廳屋頂：深色石材舞台飛塔＋銅綠拱形主廳圓頂與公司色門廳殼頂
+    o.box((0.30, 0.22, 0), (0.62, 0.56, h * 0.86), "stone")
+    o.box((0.30, 0.22, h * 0.86), (0.64, 0.58, 1.4), "darkconcrete")
+    parapet(o, 0.30, 0.22, 0.64, 0.58, h * 0.84, 2.2, "sandstone", t=0.04)
+    ribbon(o, 0.30, 0.22, 0.62, 0.56, h * 0.56, h * 0.18, "blueglass")
+    for k, (x, y, w, mh) in enumerate(((-0.28, 0.08, 0.84, 0.78), (0.20, -0.18, 0.62, 0.58))):
+        r = w * 0.5
+        o.cyl((x, y, 0), r * 1.03, h * 0.12, "stone", v=24)
+        prof = [(r, 0), (r * 0.94, h * mh * 0.30), (r * 0.76, h * mh * 0.62), (r * 0.42, h * mh * 0.86), (0.0, h * mh)]
+        o.lathe((x, y, h * 0.12), prof, "copper" if k == 0 else "company", seg=24)
+        o.cyl((x, y, h * 0.12 + h * mh - 0.5), 0.02, 2.8, "gold", v=8)
     return o
 
 

@@ -14,3 +14,4 @@
 ## 驗證紀錄
 - 2026-11-19 V1：`tools/lint.py` 0 錯誤；contact sheet（含公司色變體與 vanilla 對照）已檢視
 - 2026-11-19 V2：`tools/newgame_check.sh` 通過（standalone 新遊戲物件選擇驗證、模擬一年不崩潰、存檔物件 placeholder 只剩音效等 24 個）；城鎮截圖 build/screenshots/newgame/town_*.png 與物件預覽 build/screenshots/m2/preview/ 已檢視
+- 2026-11-25 V1/V2：改為凹入深色屋頂甲板＋屋頂機房／水塔／冷卻機組，帶狀窗補上立面直柱；build/screenshots/polish3/shot3_city.png 檢視通過
