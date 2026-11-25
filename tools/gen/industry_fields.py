@@ -49,35 +49,66 @@ def shade(ramp, v):
 
 def crop_pixel(style, g, a, X, Y, t, rng):
     """回傳單一像素色號。t = 坡面明暗（0 暗 – 1 亮），X/Y = 世界座標（0–32）。"""
-    u = (Y if a == 0 else X) % 4.0                            # 壟：每 4 單位一行
-    row = u < 2.2
-    light = 2.5 * (t - 0.5)
+    u = (Y if a == 0 else X) % 4.0                            # 壟：每 4 單位一條清晰立體耕壟
+    v_along = (X if a == 0 else Y)
+    # 立體壟面光影：向陽坡（u ≈ 0.8）最亮、壟溝（u ≈ 3.1）深陰影，對照原版農田的清晰條紋質感
+    ridge_wave = math.sin((u / 4.0) * 2.0 * math.pi + 0.35)   # +1 壟脊、-1 壟溝
+    furrow = u >= 2.55                                        # 壟溝底帶
+    light = 2.4 * (t - 0.5)
+    # 沿壟方向微幅斑駁，避免完全機械的直線
+    patch = 0.45 * math.sin(v_along * 0.55 + (X + Y) * 0.22)
     if style in ("wheat", "maize"):
-        soil = shade(BROWN, 3 + light + (1.2 if not row else 0) + rng.uniform(-0.6, 0.6))
-        if g == 0:                                            # 剛翻的土
-            return shade(BROWN, (2.5 if row else 4.5) + light + rng.uniform(-0.6, 0.6))
-        if g == 7:                                            # 收割後的殘株
-            return shade(DKYEL, (5 if row else 3.5) + light + rng.uniform(-0.8, 0.8))
-        dens = {1: 0.25, 2: 0.55, 3: 0.85, 4: 1.0, 5: 1.0, 6: 1.0}[g]
-        cover = row or g >= 4
-        if not cover or rng.random() > dens:
+        soil_v = 3.2 + light + 1.55 * ridge_wave + patch * 0.5 + rng.uniform(-0.55, 0.55)
+        soil = shade(BROWN, soil_v)
+        if g == 0:                                            # 剛翻的土：立體明暗土壟
+            return shade(BROWN, 3.0 + light + 1.75 * ridge_wave + rng.uniform(-0.55, 0.55))
+        if g == 7:                                            # 收割後的殘株：乾草褐黃＋深壟溝
+            if furrow and rng.random() < 0.72:
+                return shade(BROWN, 2.2 + light + rng.uniform(-0.5, 0.5))
+            ramp = DKYEL if rng.random() < 0.7 else BROWN
+            return shade(ramp, 4.4 + light + 1.45 * ridge_wave + rng.uniform(-0.7, 0.7))
+        # 作物覆蓋隨成長階段從壟脊往壟溝擴張，壟溝始終保留陰影深度
+        dens = {1: 0.36, 2: 0.68, 3: 0.90, 4: 0.97, 5: 0.98, 6: 0.98}[g]
+        if furrow and g <= 3:
+            if rng.random() > (0.12 if g == 1 else 0.25 if g == 2 else 0.45):
+                return shade(BROWN, 1.8 + light + rng.uniform(-0.4, 0.4))
+        elif furrow and rng.random() < 0.30:
+            return shade(BROWN, 1.6 + light + rng.uniform(-0.4, 0.4))
+        if rng.random() > dens:
             return soil
         if style == "wheat":
-            ramp = {1: GREEN, 2: GREEN, 3: GREEN, 4: GRASS, 5: AVOCADO, 6: YELLOW}[g]
-            base = {1: 6, 2: 6, 3: 5, 4: 6, 5: 7, 6: 7}[g]
+            if g == 1:
+                ramp, base = OLIVE, 4.2
+            elif g == 2:
+                ramp, base = (OLIVE if rng.random() < 0.5 else GRASS), 4.0
+            elif g == 3:
+                ramp, base = GRASS, 4.0
+            elif g == 4:
+                ramp, base = (GRASS if rng.random() < 0.75 else OLIVE), 4.3
+            elif g == 5:                                      # 抽穗轉黃：橄欖黃＋暗黃交錯
+                ramp, base = (DKYEL if rng.random() < 0.55 else OLIVE), 5.0
+            else:                                             # 成熟金黃麥田：溫潤暗黃與稻草棕（避免螢光黃）
+                r = rng.random()
+                ramp, base = (DKYEL, 6.2) if r < 0.68 else ((BROWN, 6.2) if r < 0.88 else (YELLOW, 5.2))
         else:
-            ramp = {1: GREEN, 2: GREEN, 3: GRASS, 4: GRASS, 5: GRASS, 6: DKYEL}[g]
-            base = {1: 6, 2: 6, 3: 6, 4: 5, 5: 4, 6: 6}[g]
-        return shade(ramp, base + light + (0.8 if row else -0.8) + rng.uniform(-1, 1))
+            if g in (1, 2):
+                ramp, base = OLIVE, 4.0
+            elif g in (3, 4):
+                ramp, base = GRASS, 4.2
+            elif g == 5:
+                ramp, base = (GRASS if rng.random() < 0.6 else OLIVE), 3.8
+            else:                                             # 成熟玉米：深橄欖與金褐交錯
+                ramp, base = (DKYEL if rng.random() < 0.65 else BROWN), 5.5
+        return shade(ramp, base + light + 1.55 * ridge_wave + patch + rng.uniform(-0.85, 0.85))
     if style == "vines":
-        if row and rng.random() < 0.85 and (math.sin((X if a == 0 else Y) * 1.6) > -0.3):
-            if g == 1 and rng.random() < 0.18:
-                return shade(MPURPLE, 3 + rng.uniform(-1, 1))
-            return shade(GRASS, 4.5 + light + rng.uniform(-1, 1))
-        return shade(BROWN, 4 + light + rng.uniform(-0.6, 0.6))
+        if not furrow and rng.random() < 0.86 and (math.sin(v_along * 1.45) > -0.35):
+            if g == 1 and rng.random() < 0.20:
+                return shade(MPURPLE, 3.0 + light * 0.6 + rng.uniform(-0.8, 0.8))
+            return shade(GRASS, 3.8 + light + 1.3 * ridge_wave + rng.uniform(-0.9, 0.9))
+        return shade(BROWN, 3.0 + light + 1.2 * ridge_wave + rng.uniform(-0.55, 0.55))
     if style == "pasture":
-        ramp = GRASS if g < 2 else AVOCADO
-        return shade(ramp, 5 + light + rng.uniform(-1.2, 1.2))
+        ramp = GRASS if (g < 2 or rng.random() < 0.55) else OLIVE
+        return shade(ramp, 4.0 + light + 0.5 * patch + rng.uniform(-1.0, 1.0))
     if style == "ski":
         trail = abs(((X + Y * (0.6 if a % 2 else -0.6)) + a * 7) % 10 - 5) < 0.6
         return shade(BLACK, (9 if trail else 10.5) + light * 0.6 + rng.uniform(-0.4, 0.4))
