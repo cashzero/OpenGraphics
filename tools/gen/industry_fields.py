@@ -172,7 +172,7 @@ def forest_tree(e, g, snow, seed):
     ox = -e.x_offset
     oy = max(-e.y_offset, h - 4)
     H = max(14.0, (h - 6) * (0.64 + 0.32 * g / 5))
-    cfg = dict(tree3d.SPECIES["grandfir"], layers=4 + (g >= 2) + (g >= 4), width=0.82 + 0.04 * g)
+    cfg = dict(tree3d.SPECIES["grandfir"], whorls=9 + 2 * (g >= 2) + 2 * (g >= 4), width=0.84 + 0.04 * g)
     cloud = tree3d.make_cloud(cfg, 3, H, seed, snow)
     p, *_ = cloud.arrays()
     if len(p):
