@@ -44,16 +44,17 @@ def rgb(r, g, b):
 
 
 LEAF = {
-    "green": rgb(94, 134, 52),       # 命中 70–81 暖森綠（橡樹、榆樹、楓樹）
-    "darkgreen": rgb(50, 98, 42),    # 命中 142–153 / 70–81 深針葉綠（冷杉、紅檜、紫杉）
-    "conifer": rgb(44, 90, 38),      # 沉穩深杉綠，枝梢可吃到暖綠高光
-    "pine": rgb(60, 106, 46),        # 暖松針綠（蘇格蘭松、石松）
-    "avocado": rgb(118, 148, 64),    # 命中 70–81 / 82–93 淺橄欖綠（白樺、梣樹、垂柳）
-    "olive": rgb(104, 118, 52),      # 命中 22–33 / 82–93 沙漠橄欖綠
-    "gold": rgb(172, 158, 56),       # 命中 22–33 金黃葉（黃金刺槐、黃金扁柏）
-    "copper": rgb(118, 52, 42),      # 命中 58–69 紫銅山毛櫸
-    "seagreen": rgb(56, 108, 76),    # 命中 142–153 藍雲杉（微冷針葉綠，不落入泥青色）
-    "cactus": rgb(76, 112, 48),      # 仙人掌深橄欖綠
+    "green": rgb(102, 142, 58),      # 命中 70–81 暖陽森綠（橡樹、榆樹、楓樹）
+    "darkgreen": rgb(60, 110, 48),   # 命中 70–81 / 142–153 飽滿針葉綠（冷杉、紅檜、紫杉）
+    "conifer": rgb(54, 102, 44),     # 沉穩但不焦黑的杉綠，受光枝梢帶暖橄欖高光
+    "pine": rgb(92, 134, 58),        # 暖陽松針綠（蘇格蘭松／Shot 04 河岸松樹，命中 70–81 / 82–93）
+    "avocado": rgb(124, 156, 70),    # 命中 70–81 / 82–93 明亮橄欖綠（白樺、梣樹、垂柳）
+    "olive": rgb(112, 128, 58),      # 命中 22–33 / 82–93 沙漠橄欖綠
+    "gold": rgb(176, 162, 60),       # 命中 22–33 金黃葉（黃金刺槐、黃金扁柏）
+    "copper": rgb(126, 58, 46),      # 命中 58–69 紫銅山毛櫸
+    "seagreen": rgb(64, 118, 82),    # 命中 142–153 藍雲杉（微冷針葉綠，不落入泥青色）
+    "cactus": rgb(124, 152, 86),     # 沙漠日曬灰鼠尾草綠（命中 82–93，不再黑壓壓）
+    "desert_sage": rgb(140, 166, 94),# 約書亞樹／絲蘭／銀棕的日曬淺橄欖鼠尾草綠
 }
 SPRING = rgb(134, 162, 70)
 AUTUMN = {
@@ -65,11 +66,12 @@ AUTUMN = {
 }
 FLOWERS = {"cream": rgb(232, 222, 182), "white": rgb(236, 236, 226), "pink": rgb(222, 152, 170)}
 BARK = {
-    "brown": rgb(84, 66, 48),
-    "light": rgb(168, 164, 152),
-    "red": rgb(104, 58, 40),
-    "dark": rgb(52, 42, 34),
-    "grey": rgb(82, 78, 72),
+    "brown": rgb(108, 86, 62),
+    "light": rgb(174, 170, 158),
+    "red": rgb(132, 82, 54),
+    "dark": rgb(66, 54, 44),
+    "grey": rgb(96, 92, 84),
+    "desert_tan": rgb(158, 142, 114), # 日曬沙漠灰褐樹皮（約書亞樹／銀棕，不焦黑）
 }
 TWIG_DARK = rgb(52, 46, 40)          # 冬季細枝一律用深木褐／炭褐，避免白樺細枝變白雜訊
 SNOW = rgb(234, 240, 244)
@@ -452,16 +454,16 @@ def build_pine(cfg, season, rng, H, snow):
         branch_to(cloud, start, end, tr * 0.42, tr * 0.22, bark, rng, ao=0.78)
         if season == 4:
             continue
-        # 每枝頂端由 7 顆不規則細碎松針小叢組成，呈現鋸齒松針層理而非圓球
-        for j in range(7):
-            ang_p = j / 7 * 2 * math.pi + rng.random() * 0.5
-            rad_p = reach * (0.18 + 0.38 * rng.random())
-            off = np.array([math.cos(ang_p) * rad_p, math.sin(ang_p) * rad_p, rng.normal() * H * 0.014])
+        # 每枝頂端由 9 顆通透細碎的暖綠松針小叢組成（留出透光縫隙，對應原版 Shot 04 河岸松樹質感）
+        for j in range(9):
+            ang_p = j / 9 * 2 * math.pi + rng.random() * 0.55
+            rad_p = reach * (0.14 + 0.44 * rng.random())
+            off = np.array([math.cos(ang_p) * rad_p, math.sin(ang_p) * rad_p, rng.normal() * H * 0.016])
             c = end + off
-            r = H * (0.044 + 0.018 * rng.random()) * (1.06 - 0.18 * t)
-            leaf_tuft(cloud, c, r * 1.35, r * 1.35, r * 0.55,
-                      lambda kk: colfn(rng, kk), rng, 1.95, crown_c, H * 0.42,
-                      holes=0.16, jitter=0.48, snow_bias=0.18)
+            r = H * (0.036 + 0.016 * rng.random()) * (1.06 - 0.16 * t)
+            leaf_tuft(cloud, c, r * 1.32, r * 1.32, r * 0.56,
+                      lambda kk: colfn(rng, kk), rng, 1.48, crown_c, H * 0.42,
+                      holes=0.28, jitter=0.52, snow_bias=0.18)
 
     if snow:
         _snow(cloud, 0.48)
@@ -529,28 +531,52 @@ def build_weeping(cfg, season, rng, H, snow):
 
 
 def build_palm(cfg, season, rng, H, snow):
-    """棕櫚：高大品種（QPALM）為微彎環紋椰子樹；小尺寸品種（SPALM，≤24px）為沙漠低矮扇葉棕櫚叢。"""
+    """棕櫚：QPALM 為彎曲海岸椰子樹；SPALM（silverpalm）為纖細沙漠銀棕（細灰褐幹＋通透銀綠羽狀圓冠）。"""
     cloud = Cloud()
     base = LEAF[cfg.get("leaf", "green")]
-    if cfg.get("shape") == "fanpalm" or H <= 26:
-        # 低矮沙漠扇棕（SPALM 11×21）：短粗深褐基幹＋9 片向外展開的摺扇葉
-        cylinder(cloud, (0, 0, 0), (0, 0, H * 0.26), H * 0.08, H * 0.06, BARK["dark"], rng, density=3.0, ao=0.72)
-        hub = np.array([0, 0, H * 0.24])
-        for f in range(9):
-            a = f / 9 * 2 * math.pi + rng.random() * 0.25
-            elev = 0.28 + 0.48 * (f % 3) / 2.0
-            d = unit(np.array([math.cos(a), math.sin(a), elev]))
-            length = H * (0.48 + 0.20 * (f % 2))
-            m = 28
+    if cfg.get("shape") == "silverpalm":
+        # 沙漠銀棕（SPALM 11×21 → 40×73）：纖細微彎的日曬灰褐幹＋通透銀橄欖綠扇葉圓冠
+        lean = np.array([rng.normal() * H * 0.04, rng.normal() * H * 0.04, 0.0])
+        tr = max(0.75, H * 0.024)
+        segs = 8
+        prev = np.zeros(3)
+        bark = BARK["desert_tan"] if season != 4 else DEAD
+        for k in range(1, segs + 1):
+            t = k / segs
+            p = lean * (t * t) + np.array([0, 0, H * 0.62 * t])
+            col = bark * (0.86 if k % 2 else 1.06)
+            cylinder(cloud, prev, p, tr * (1.2 - 0.35 * t), tr * (1.1 - 0.35 * t), col, rng, density=2.2, ao=0.90)
+            prev = p
+        top = prev
+        if season == 4:
+            # 枯萎態：稀疏殘枝與少許灰褐殘葉
+            for f in range(6):
+                a = f / 6 * 2 * math.pi + rng.random() * 0.4
+                d = unit(np.array([math.cos(a), math.sin(a), 0.35]))
+                end = top + d * (H * 0.24)
+                branch_to(cloud, top, end, 0.45, 0.25, DEAD, rng, ao=0.85)
+                leaf_tuft(cloud, end, H * 0.06, H * 0.06, H * 0.05, lambda kk: np.tile(base * 0.72, (kk, 1)),
+                          rng, 0.7, top, H * 0.25, holes=0.35, jitter=0.45)
+            return cloud
+        # 14 片向外展開再微垂的銀橄欖綠羽狀棕櫚葉，留出通透縫隙
+        for f in range(14):
+            a = f / 14 * 2 * math.pi + rng.random() * 0.3
+            tier = (f % 3) / 2.0
+            d = np.array([math.cos(a), math.sin(a), 0.0])
+            length = H * (0.24 + 0.11 * (1.0 - 0.3 * tier))
+            lift = H * (0.14 + 0.18 * tier)
+            droop = H * (0.20 + 0.10 * (1.0 - tier))
+            m = max(14, int(length * 1.4))
             t = np.linspace(0, 1, m)
-            spine = hub + d * length * t[:, None] - np.array([0, 0, H * 0.20]) * (t * t)[:, None]
-            side = unit(np.cross(d, [0, 0, 1.0]) + 1e-6)
+            spine = top + d * (length * t)[:, None] + np.array([0, 0, 1]) * (lift * t - droop * t * t)[:, None]
+            side = np.cross(d, [0, 0, 1])
             for s in (-1, 0, 1):
-                w_fan = H * 0.075 * np.sin(np.pi * np.clip(t * 1.1, 0, 1))
-                pts = spine + side * (s * w_fan)[:, None]
-                nrm = unit(np.tile([math.cos(a) * 0.4, math.sin(a) * 0.4, 0.85], (m, 1)) + side * (s * 0.35))
-                ao = 0.52 + 0.48 * t
-                cloud.add(pts, nrm, np.clip(base * (0.94 + 0.12 * rng.normal(size=(m, 1))), 0, 1), ao, 0.45)
+                w_leaf = H * 0.048 * np.sin(np.pi * np.clip(t * 1.05, 0, 1))
+                pts = spine + side * (s * w_leaf)[:, None] + rng.normal(size=(m, 3)) * 0.35
+                nrm = unit(np.tile([math.cos(a) * 0.35, math.sin(a) * 0.35, 0.85], (m, 1)) + side * (s * 0.35))
+                ao = 0.62 + 0.38 * (0.4 + 0.6 * tier)
+                col = np.clip(base * (0.90 + 0.20 * rng.normal(size=(m, 1))), 0, 1)
+                cloud.add(pts, nrm, col, ao, 0.50)
         return cloud
 
     # 高大海岸棕櫚（QPALM）：優雅弧彎環紋樹幹＋11 片下垂羽狀大葉
@@ -586,16 +612,16 @@ def build_palm(cfg, season, rng, H, snow):
     return cloud
 
 
-# ---------------------------------------------------------------- 仙人掌（針對 18–21px 俐落輪廓特化）
+# ---------------------------------------------------------------- 仙人掌（修長纖細、日曬淡鼠尾草綠、三種分枝姿態）
 
 
 def build_cactus(cfg, season, rng, H, snow):
-    """仙人掌：巨柱（清晰彎肘雙臂＋深稜紋）、圓桶（多球簇＋頂花）、團扇（立體交錯扁莖節）。"""
+    """仙人掌（CACTUS1/2/3）：全部為修長纖細（莖寬僅 2–3px）的日曬鼠尾草綠巨柱仙人掌，三種不同彎臂造型。"""
     cloud = Cloud()
     base = LEAF[cfg.get("leaf", "cactus")]
-    kind = cfg.get("shape", "cactus")
+    kind = cfg.get("shape", "saguaro1")
 
-    def ribbed(a, b, r, ribs=7):
+    def ribbed(a, b, r, ribs=6):
         a, b = np.asarray(a, float), np.asarray(b, float)
         axis = b - a
         length = np.linalg.norm(axis)
@@ -605,108 +631,110 @@ def build_cactus(cfg, season, rng, H, snow):
         ref = np.array([1.0, 0, 0]) if abs(d[0]) < 0.9 else np.array([0, 1.0, 0])
         u = unit(np.cross(d, ref))
         v = np.cross(d, u)
-        k = int(3.5 * length * max(r, 0.9) * 2 * math.pi + 50)
+        k = int(4.5 * length * max(r, 0.7) * 2 * math.pi + 40)
         t = rng.random(k)
         ang = rng.random(k) * 2 * math.pi
-        rib = 1.0 + 0.14 * np.cos(ang * ribs)
+        rib = 1.0 + 0.12 * np.cos(ang * ribs)
         radial = np.cos(ang)[:, None] * u + np.sin(ang)[:, None] * v
         tang = np.cos(ang)[:, None] * v - np.sin(ang)[:, None] * u
-        nrm = unit(radial + 0.42 * np.sin(ang * ribs)[:, None] * tang)
+        nrm = unit(radial + 0.30 * np.sin(ang * ribs)[:, None] * tang)
         pts = a + t[:, None] * axis + radial * (r * rib)[:, None]
-        col = base * (0.80 + 0.32 * (np.cos(ang * ribs) > 0.45)[:, None])
-        cloud.add(pts, nrm, np.clip(col, 0, 1), 0.92, 0.0)
-        # 圓潤頂蓋
-        m = int(3.0 * math.pi * max(r, 0.9) ** 2 + 24)
+        col = base * (0.88 + 0.24 * (np.cos(ang * ribs) > 0.35)[:, None])
+        cloud.add(pts, nrm, np.clip(col, 0, 1), 0.96, 0.0)
+        m = int(3.0 * math.pi * max(r, 0.7) ** 2 + 18)
         uu = sphere_dirs(rng, m)
         uu = uu[(uu @ d) > 0]
-        cloud.add(b + uu * r, uu, base * 1.04, 0.96, 0.0)
+        cloud.add(b + uu * r, uu, base * 1.06, 0.98, 0.0)
 
-    if kind == "barrel":
-        for (ox, oy, sc) in ((-0.13, 0.05, 1.0), (0.15, -0.06, 0.78), (0.01, -0.14, 0.62)):
-            c = np.array([ox * H, oy * H, H * 0.26 * sc])
-            m = int(6 * math.pi * max(H * 0.24 * sc, 2.0) ** 2 + 80)
-            u = sphere_dirs(rng, m)
-            ang = np.arctan2(u[:, 1], u[:, 0])
-            rib = 1.0 + 0.11 * np.cos(ang * 10)
-            pts = c + u * np.array([H * 0.21 * sc, H * 0.21 * sc, H * 0.27 * sc]) * rib[:, None]
-            pts = pts[pts[:, 2] >= 0]
-            ang = ang[:len(pts)]
-            nrm = unit(pts - c)
-            col = base * (0.82 + 0.28 * (np.cos(ang * 10) > 0.4)[:, None])
-            cloud.add(pts, nrm, np.clip(col, 0, 1), 0.92, 0.0)
-            if season in (2, 3):
-                fl = c + np.array([0, 0, H * 0.27 * sc]) + rng.normal(size=(20, 3)) * H * 0.045
-                cloud.add(fl, np.tile([0, 0, 1.0], (20, 1)), rgb(232, 170, 52), 1.0, 0.0)
-    elif kind == "pear":
-        pads = [
-            ((0.0, 0.0, 0.18), 0.0, 0.17),
-            ((-0.14, 0.06, 0.44), 0.45, 0.15),
-            ((0.14, -0.05, 0.46), -0.55, 0.15),
-            ((-0.02, 0.02, 0.70), 0.15, 0.14),
-            ((0.16, 0.04, 0.74), -0.35, 0.12),
-        ]
-        for (x, y, z), turn, sz in pads:
-            c = np.array([x * H, y * H, z * H])
-            m = 160
-            a = rng.random(m) * 2 * math.pi
-            rho = np.sqrt(rng.random(m))
-            lx, lz = np.cos(a) * rho * H * sz, np.sin(a) * rho * H * (sz * 1.25)
-            face = np.array([math.cos(turn), math.sin(turn), 0])
-            right = np.array([-math.sin(turn), math.cos(turn), 0])
-            pts = c + lx[:, None] * right + lz[:, None] * np.array([0, 0, 1]) + face * (rng.normal(size=(m, 1)) * 0.45)
-            nrm = unit(np.tile(face * 0.65 + np.array([0, 0, 0.55]), (m, 1)) + np.cos(a)[:, None] * right * 0.4)
-            ao = 0.70 + 0.30 * (1.0 - 0.5 * rho)
-            cloud.add(pts, nrm, np.clip(base * (0.94 + 0.12 * rng.normal(size=(m, 1))), 0, 1), ao, 0.0)
-    else:  # 巨柱仙人掌（CACTUS1）：修長直立、左右高低錯落彎肘臂
-        r = max(1.05, H * 0.068)
-        ribbed((0, 0, 0), (0, 0, H * 0.94), r)
-        for side, h0, h1 in ((1, 0.34, 0.72), (-1, 0.48, 0.82)):
-            arm_r = max(0.85, r * 0.74)
-            # 沿畫面左右方向（X - Y 軸）展開手臂，讓等角視角一眼看出經典仙人掌剪影
-            dir_xy = unit(np.array([1.0, -1.0, 0.0])) * side
-            p0 = dir_xy * (r * 0.7) + np.array([0, 0, H * h0])
-            p1 = p0 + dir_xy * (H * 0.15) + np.array([0, 0, H * 0.05])
-            p2 = p1 + np.array([0, 0, H * (h1 - h0)])
-            ribbed(p0, p1, arm_r)
-            ribbed(p1, p2, arm_r)
+    def curved_arm(z0, z1, ang_xy, reach, arm_r):
+        dxy = np.array([math.cos(ang_xy), math.sin(ang_xy), 0.0])
+        p0 = np.array([0.0, 0.0, H * z0])
+        p1 = p0 + dxy * (H * reach * 0.72) + np.array([0.0, 0.0, H * 0.02])
+        p2 = p0 + dxy * (H * reach) + np.array([0.0, 0.0, H * 0.11])
+        p3 = p2 + np.array([0.0, 0.0, max(1.0, H * (z1 - z0 - 0.11))])
+        ribbed(p0, p1, arm_r)
+        ribbed(p1, p2, arm_r)
+        ribbed(p2, p3, arm_r)
+
+    # 纖細主莖：雙臂對齊世界座標 ±X 或 ±Y（僅微調 ±0.12 rad），確保等角投影 sx=X-Y 在 4 個旋轉方向
+    # 都對稱伸向主莖左右兩側（|sx| ≈ 1.0），絕不會在 rot=1/3 縮成筆直單桿
+    r = max(0.75, min(1.35, H * 0.044))
+    arm_r = max(0.65, r * 0.80)
+    if kind == "saguaro2":
+        # 雙臂一低一高不對稱展開
+        ribbed((0, 0, 0), (0, 0, H * 0.96), r)
+        curved_arm(0.28, 0.72, 0.08, 0.16, arm_r)
+        curved_arm(0.46, 0.88, math.pi - 0.10, 0.15, arm_r)
+    elif kind == "saguaro3":
+        # 雙臂交錯＋高位第三短臂（3D 輪廓在各角度皆生動自然）
+        ribbed((0, 0, 0), (H * 0.02, -H * 0.02, H * 0.95), r)
+        curved_arm(0.24, 0.64, math.pi / 2 + 0.10, 0.16, arm_r)
+        curved_arm(0.44, 0.84, -math.pi / 2 - 0.08, 0.15, arm_r)
+        curved_arm(0.56, 0.88, 0.06, 0.12, arm_r * 0.90)
+    else:
+        # 經典雙臂巨柱仙人掌
+        ribbed((0, 0, 0), (0, 0, H * 0.95), r)
+        curved_arm(0.32, 0.78, -0.08, 0.16, arm_r)
+        curved_arm(0.42, 0.84, math.pi + 0.10, 0.16, arm_r)
     return cloud
 
 
-# ---------------------------------------------------------------- 約書亞樹與絲蘭
+# ---------------------------------------------------------------- 約書亞樹與樹狀絲蘭
 
 
 def build_rosette(cfg, season, rng, H, snow):
-    """約書亞樹（粗獷分叉灰褐枝幹＋枝端深橄欖綠尖刺球）與絲蘭（緊密尖葉蓮座＋米白高花穗）。"""
+    """約書亞樹（日曬淺灰褐扭曲分叉樹幹＋枝端淺鼠尾草綠尖刺簇）與樹狀絲蘭（纖細直幹＋頂端淡銀綠尖葉蓮座）。"""
     cloud = Cloud()
-    base = LEAF[cfg.get("leaf", "olive")]
-    bark = BARK["brown"] * 0.92
+    base = LEAF[cfg.get("leaf", "desert_sage")]
+    bark = BARK["desert_tan"]
     tips = []
     if cfg.get("shape") == "joshua":
-        tr = max(1.0, H * 0.062)
-        trunk_top = np.array([0, 0, H * 0.42])
-        cylinder(cloud, (0, 0, 0), trunk_top, tr * 1.15, tr * 0.85, bark, rng, density=2.8, ao=0.85)
-        for k in range(5):
-            a = k / 5 * 2 * math.pi + 0.35 + rng.random() * 0.35
-            mid = trunk_top + np.array([math.cos(a) * H * 0.17, math.sin(a) * H * 0.17, H * 0.15])
-            end = mid + np.array([math.cos(a) * H * 0.06, math.sin(a) * H * 0.06, H * (0.16 + 0.10 * (k % 2))])
-            cylinder(cloud, trunk_top, mid, tr * 0.65, tr * 0.52, bark, rng, density=2.6, ao=0.82)
-            cylinder(cloud, mid, end, tr * 0.52, tr * 0.42, bark, rng, density=2.4, ao=0.82)
-            tips.append((end, H * 0.15))
+        # 約書亞樹（17×27 → 48×53）：日曬淺灰褐扭曲主幹，優雅分成 U 字型多叉彎枝，留出通透空隙
+        tr = max(0.95, H * 0.044)
+        p_base = np.array([0.0, 0.0, 0.0])
+        p_fork = np.array([rng.normal() * H * 0.02, rng.normal() * H * 0.02, H * 0.34])
+        cylinder(cloud, p_base, p_fork, tr * 1.15, tr * 0.88, bark, rng, density=2.8, ao=0.92)
+        # 3 條主彎臂（寬展 U 型弧度），每條再各分 2 條末枝
+        az0 = 0.45 + rng.random() * 0.4
+        for k in range(3):
+            a = az0 + k * (2 * math.pi / 3) + rng.normal() * 0.18
+            dxy = np.array([math.cos(a), math.sin(a), 0.0])
+            elbow = p_fork + dxy * (H * (0.20 + 0.06 * rng.random())) + np.array([0, 0, H * 0.16])
+            upper = elbow + dxy * (H * 0.06) + np.array([0, 0, H * (0.18 + 0.06 * rng.random())])
+            cylinder(cloud, p_fork, elbow, tr * 0.72, tr * 0.56, bark, rng, density=2.6, ao=0.90)
+            cylinder(cloud, elbow, upper, tr * 0.56, tr * 0.42, bark, rng, density=2.4, ao=0.92)
+            for s in (-1, 1):
+                sa = a + s * (0.65 + 0.25 * rng.random())
+                tip = upper + np.array([math.cos(sa) * H * 0.13, math.sin(sa) * H * 0.13, H * (0.12 + 0.08 * rng.random())])
+                cylinder(cloud, upper, tip, tr * 0.38, tr * 0.26, bark * 1.04, rng, density=2.2, ao=0.94)
+                tips.append((tip, H * 0.135))
+        # 每個末枝頂端長出通透的淺鼠尾草綠星狀尖葉簇
+        for c, length in tips:
+            for _ in range(46):
+                d = unit(rng.normal(size=3) + np.array([0, 0, 0.55]))
+                t = np.linspace(0, 1, max(4, int(length * 1.8) + 2))[:, None]
+                pts = c + d * (length * t)
+                nrm = np.tile(unit(d + np.array([0, 0, 0.45])), (len(pts), 1))
+                ao = 0.68 + 0.32 * t[:, 0]
+                col = np.clip(base * (0.86 + 0.26 * rng.random()), 0, 1)
+                cloud.add(pts, nrm, col, ao, 0.0)
     else:
-        tips.append((np.array([0, 0, H * 0.16]), H * 0.32))
-        stalk_top = np.array([0, 0, H * 0.96])
-        cylinder(cloud, (0, 0, H * 0.18), stalk_top, 0.55, 0.38, BARK["brown"], rng, density=2.5)
-        fl = stalk_top - np.array([0, 0, H * 0.20]) * rng.random((45, 1)) + rng.normal(size=(45, 3)) * np.array([H * 0.035, H * 0.035, 0])
-        cloud.add(fl, np.tile([0, 0, 1.0], (45, 1)), rgb(232, 228, 198), 0.98, 0.0)
-
-    for c, length in tips:
-        for _ in range(72):
-            d = unit(rng.normal(size=3) + np.array([0, 0, 0.45]))
-            t = np.linspace(0, 1, max(4, int(length * 2.2) + 2))[:, None]
-            pts = c + d * (length * t)
-            nrm = np.tile(unit(d + np.array([0, 0, 0.35])), (len(pts), 1))
-            ao = (0.48 + 0.52 * t[:, 0])
-            cloud.add(pts, nrm, np.clip(base * (0.88 + 0.24 * rng.random()), 0, 1), ao, 0.0)
+        # 樹狀絲蘭（YUKKA 8×11 → 26×32）：纖細直立褐幹（約 55% 高）＋頂端寬張的淡銀綠星狀尖葉叢
+        tr = max(0.65, H * 0.042)
+        top = np.array([0.0, 0.0, H * 0.56])
+        cylinder(cloud, (0, 0, 0), top, tr * 1.1, tr * 0.85, BARK["brown"] * 1.15, rng, density=2.8, ao=0.90)
+        # 兩叢略錯開的頂端尖葉蓮座（有如原版 YUKKA 的蓬鬆淺綠劍葉冠）
+        for off in ((0.0, 0.0, 0.0), (H * 0.05, -H * 0.04, H * 0.04)):
+            c = top + np.array(off)
+            length = H * 0.36
+            for _ in range(52):
+                d = unit(rng.normal(size=3) + np.array([0, 0, 0.35]))
+                t = np.linspace(0, 1, max(4, int(length * 2.0) + 2))[:, None]
+                pts = c + d * (length * t)
+                nrm = np.tile(unit(d + np.array([0, 0, 0.5])), (len(pts), 1))
+                ao = 0.65 + 0.35 * t[:, 0]
+                col = np.clip(base * (0.85 + 0.28 * rng.random()), 0, 1)
+                cloud.add(pts, nrm, col, ao, 0.0)
     return cloud
 
 
@@ -747,14 +775,14 @@ SPECIES = {
     "italiancypress": dict(build="column", leaf="conifer", width=0.55),
     "irishyew": dict(build="column", leaf="conifer", width=0.78),
     "hinoki": dict(build="column", leaf="gold", width=0.88),
-    # 棕櫚與沙漠植物（7 種）
+    # 棕櫚與沙漠植物（7 種：沙漠反光較亮，不焦黑）
     "palm": dict(build="palm", leaf="green"),
-    "silverpalm": dict(build="palm", leaf="olive", shape="fanpalm", no_stretch=True),
-    "cactus": dict(build="cactus", leaf="cactus", no_stretch=True),
-    "barrel": dict(build="cactus", leaf="cactus", shape="barrel", no_stretch=True),
-    "pricklypear": dict(build="cactus", leaf="olive", shape="pear", no_stretch=True),
-    "joshua": dict(build="rosette", leaf="olive", shape="joshua", no_stretch=True),
-    "yucca": dict(build="rosette", leaf="olive", shape="yucca", no_stretch=True),
+    "silverpalm": dict(build="palm", leaf="desert_sage", shape="silverpalm", desert=True),
+    "cactus": dict(build="cactus", leaf="cactus", shape="saguaro1", no_stretch=True, desert=True),
+    "barrel": dict(build="cactus", leaf="cactus", shape="saguaro2", no_stretch=True, desert=True),
+    "pricklypear": dict(build="cactus", leaf="cactus", shape="saguaro3", no_stretch=True, desert=True),
+    "joshua": dict(build="rosette", leaf="desert_sage", shape="joshua", desert=True),
+    "yucca": dict(build="rosette", leaf="desert_sage", shape="yucca", no_stretch=True, desert=True),
 }
 BUILDERS = {"deciduous": build_deciduous, "conifer": build_conifer, "pine": build_pine, "column": build_column, "weeping": build_weeping,
             "palm": build_palm, "cactus": build_cactus, "rosette": build_rosette}
@@ -800,8 +828,8 @@ def rotate_cloud(cloud, rot):
     return out
 
 
-def render(cloud, w, h, ox, oy):
-    """→ (w×h 調色盤 index, 0 = 透明)。高對比暖陽光影，不將陰影偏藍。"""
+def render(cloud, w, h, ox, oy, desert: bool = False):
+    """→ (w×h 調色盤 index, 0 = 透明)。高對比暖陽光影；沙漠植物帶沙地反光，避免陰影焦黑。"""
     p, n, c, ao, _ = cloud.arrays()
     if len(p) == 0:
         return np.zeros((h, w), dtype=np.uint8)
@@ -812,15 +840,18 @@ def render(cloud, w, h, ox, oy):
     ok = (x >= 0) & (x < w) & (y >= 0) & (y < h)
     x, y, depth, n, c, ao, pp = x[ok], y[ok], depth[ok], n[ok], c[ok], ao[ok], p[ok]
     lam = np.clip(n @ LIGHT, 0, 1)
-    # 整體受光面（左上）與背光面（右下）的體積明暗
     centre = pp.mean(0)
     flat = LIGHT * np.array([1, 1, 0])
     side = ((pp - centre) @ flat) / max(np.abs((pp - centre) @ flat).max(), 1e-6)
-    lightfac = 0.58 + 0.48 * np.clip((side + 0.55) / 1.35, 0, 1)
-    inten = np.clip((0.26 + 0.96 * lam) * ao * lightfac, 0.16, 1.36)
+    if desert:
+        lightfac = 0.76 + 0.34 * np.clip((side + 0.55) / 1.35, 0, 1)
+        inten = np.clip((0.54 + 0.76 * lam) * (0.55 + 0.45 * ao) * lightfac, 0.44, 1.42)
+    else:
+        # 暖陽光影：受光枝冠明亮清脆（真正命中 70–81 / 82–93 暖橄欖高光），暗部保有深森綠但不焦黑
+        lightfac = 0.68 + 0.50 * np.clip((side + 0.55) / 1.35, 0, 1)
+        inten = np.clip((0.36 + 1.08 * lam) * (0.45 + 0.55 * ao) * lightfac, 0.24, 1.48)
     col = c * inten[:, None]
-    # 受光頂緣帶自然暖黃綠高光；不再對陰影加藍色偏色
-    col += (np.array([0.075, 0.085, 0.012]) * (lam[:, None] ** 2.4) * ao[:, None])
+    col += (np.array([0.095, 0.115, 0.025]) * (lam[:, None] ** 2.0) * ao[:, None])
     order = np.argsort(depth)
     img = np.zeros((h, w, 3))
     mask = np.zeros((h, w), dtype=bool)
@@ -920,7 +951,7 @@ def build_frames(template: Path, cfg, seed: int):
             clouds[key] = fit_cloud(cfg, s, entries[k], sd, snow, ref, rot=r)[0]
         ox, oy = -e.x_offset, -e.y_offset
         if i < n_main:
-            px = render(clouds[key], e.width, e.height, ox, oy)
+            px = render(clouds[key], e.width, e.height, ox, oy, desert=bool(cfg.get("desert")))
         else:
             px = render_shadow(clouds[key], e.width, e.height, ox, oy, np.random.default_rng(seed + i))
         frames.append((e.width, e.height, e.x_offset, e.y_offset, px.tobytes()))

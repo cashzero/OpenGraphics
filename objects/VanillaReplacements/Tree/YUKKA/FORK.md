@@ -13,3 +13,4 @@
 - 2026-11-19 V1：`tools/lint.py` 0 錯誤；contact sheet 已檢視
 - 2026-11-22 V2：`tools/newgame_check.sh`（standalone，`OG_REGUK`／`OG_REGALP`）開新遊戲 → 模擬一年不崩潰、存檔物件全部來自 repo；物件選擇預覽 `build/screenshots/m3/preview/tree-OGYUKKA.png` 已檢視。**未驗證**：尚未看過放在地圖上的樣子（需要含此物件的測試存檔）
 - 2026-11-25 V1/V2：全面升級 tree3d.py（對齊原版纖細樹幹、低分叉、通透羽狀葉冠、高對比暖陽光影、落葉針葉樹秋紅與冬枯、連續幾何雪帽、沙漠植物特化）；build/screenshots/title_compare/compare_sheet_1.png 與 compare_sheet_2.png 1:1 檢視通過
+- 2026-11-25 V1/V2（沙漠植物重製）：`tools/gen/tree3d.py` 新增沙漠沙地反射光、日曬鼠尾草綠／灰褐樹皮，重製纖細四向巨柱仙人掌（±X/±Y 臂角修正）、扭曲約書亞樹、樹狀絲蘭與沙漠銀棕；V1 預覽與 V2 Title 1:1（`cmp_03.png`）檢視通過。
