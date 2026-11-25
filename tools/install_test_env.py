@@ -12,7 +12,7 @@
 
 --with-placeholders：repo 沒有的物件用 build/placeholders/objects/ 補上（先跑 make_placeholders.py）。
 --relink：把**測試副本**中的 vanilla 引用依 build/placeholders/alias.json 改指向 OG 名稱。
-          repo 內的檔案不會被修改。使用 OpenLoco fork 的別名層（og/vanilla-alias）時不需要。
+          repo 內的檔案不會被修改。使用 OpenLoco fork 的別名層時不需要。
 另外一律寫出 data/objects/aliases.yml，供 fork 的別名層使用。
 """
 from __future__ import annotations
@@ -39,7 +39,7 @@ def main(argv=None) -> int:
     ap.add_argument("--placeholders", default=str(repo.REPO_ROOT / "build" / "placeholders"))
     ap.add_argument("--relink", action="store_true")
     ap.add_argument("--with-base", action="store_true",
-                    help="把 build/placeholders/base/（placeholder g1 等）放進 data/base/，供 standalone 模式使用")
+                    help="把 build/placeholders/base/（g1.DAT 等）與 base/music/、base/sfx/ 的音訊放進 data/base/，供 standalone 模式使用")
     ap.add_argument("--openloco-data", default=str(OPENLOCO_DATA), help="OpenLoco build 的 data 目錄（取 language）")
     args = ap.parse_args(argv)
 
@@ -123,6 +123,12 @@ def main(argv=None) -> int:
             sys.exit(f"找不到 {base_src / 'Data' / 'g1.DAT'}（先執行 .venv/bin/python tools/g1.py build -o {base_src / 'Data' / 'g1.DAT'}）")
         shutil.copytree(base_src, base_dst)
         print(f"standalone base：{base_dst}")
+        import music  # noqa: E402（M5：OpenMSX MIDI + SoundFont + 曲名）
+        music.install(base_dst / "Data", music.load())
+        import sfx  # noqa: E402（M5：OpenSFX 音效 bank 與環境音）
+        sfx.install(base_dst / "Data", sfx.load())
+        import title  # noqa: E402（M6：標題畫面地圖與鏡頭清單；還沒 build 時略過）
+        title.install(base_dst / "Data")
 
     print(f"安裝到 {obj_dir}：repo 物件 {stats['repo']} 個、placeholder {stats['placeholder']} 個"
           + (f"；測試副本中改指向 {stats['relinked_refs']} 個 vanilla 引用" if args.relink else ""))

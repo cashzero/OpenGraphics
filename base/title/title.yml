@@ -1,0 +1,277 @@
+# OpenGraphics 標題畫面（ROADMAP M6）：python3 tools/title.py build 以 OpenLoco fork 的 build-scene 建造 → base/title/title.dat
+# 座標是格（tile），高度是級（16 世界單位）。地形見 tools/gen/title_heightmap.py；格式見 base/title/README.md。
+year: 1965
+seed: 7
+heightmap: heightmap.png
+sea_level: 4
+remove_generated_industries: true
+freeze_industries: true
+company_colours: [red, grey]   # 固定公司色（車輛、吊橋、站牌）；否則每次重建隨機選色
+title_sequence: true           # 存成標題畫面用的存檔（OpenLoco 只在標題模式載入）
+trees: {forests: 420, random: 9000, radius: [4, 18], density: [3, 7], altitude: [16, 100]}
+date: [1966, 10, 1]
+simulate: 5000
+objects:
+  # 地區、氣候、地表、城鎮名
+  - OGCLIM5
+  - OGREGUK
+  - OGETOWNN
+  # 交通設施
+  - OGTRACKS
+  - OGTRACKN
+  - OGTREXRA
+  - OGTREXCA
+  - OGTRSTA1
+  - OGTRSTA3
+  - OGTRSTA4
+  - OGSIGS
+  - OGSIGC4
+  - OGBRDGBR
+  - OGBRDGST
+  - OGBRDGSU
+  - OGBRDGGI
+  - OGTUNNE1
+  - OGTUNNE2
+  - OGLCROS2
+  - OGROADU1
+  - OGROADU2
+  - OGROADRG
+  - OGROADTM
+  - OGBUSSTO
+  - OGRDSTA1
+  - OGRDSTL1
+  - OGAIRPO1
+  - OGAIRPO2
+  - OGAIRPO3
+  - OGSHIPS1
+  # 車輛
+  - OGA4
+  - OGBLACK5
+  - OGA3
+  - OGJUBILE
+  - OGPCAR2
+  - OGMK1
+  - OGMK2
+  - OGCL37
+  - OGCL47
+  - OG114
+  - OGDEH46
+  - OGPCARSW
+  - OG707
+  - OGVISCOU
+  - OGDC3
+  - OGCOAL1
+  - OGHOPPE1
+  - OGHGE44
+  - OGSWISS3
+  - OGTRAM3
+  - OGRTMAST
+  - OGHTRUC2
+  - OGFTRUC2
+  - OGCTRUC2
+  # 建築、樹木、產業、圍牆（全部 OG 版）
+  - OGBLDAL1
+  - OGBLDA10
+  - OGBLDA11
+  - OGBLDAL2
+  - OGBLDAL3
+  - OGBLDAL4
+  - OGBLDAL5
+  - OGBLDAL6
+  - OGBLDAL7
+  - OGBLDAL8
+  - OGBLDAL9
+  - OGBLDCAS
+  - OGBLDCR1
+  - OGBLDCR2
+  - OGBLDCR3
+  - OGBLDCT1
+  - OGBLDC10
+  - OGBLDC11
+  - OGBLDC12
+  - OGBLDC13
+  - OGBLDC14
+  - OGBLDC15
+  - OGBLDC16
+  - OGBLDC17
+  - OGBLDC18
+  - OGBLDC19
+  - OGBLDCT2
+  - OGBLDC20
+  - OGBLDC21
+  - OGBLDC22
+  - OGBLDC23
+  - OGBLDC24
+  - OGBLDC25
+  - OGBLDC26
+  - OGBLDC27
+  - OGBLDC28
+  - OGBLDC29
+  - OGBLDCT3
+  - OGBLDCT4
+  - OGBLDCT5
+  - OGBLDCT6
+  - OGBLDCT7
+  - OGBLDCT8
+  - OGBLDCT9
+  - OGBLDFOU
+  - OGBLDHA1
+  - OGBLDH10
+  - OGBLDH11
+  - OGBLDH12
+  - OGBLDH13
+  - OGBLDH14
+  - OGBLDH15
+  - OGBLDH16
+  - OGBLDH17
+  - OGBLDH18
+  - OGBLDH19
+  - OGBLDH20
+  - OGBLDH21
+  - OGBLDH22
+  - OGBLDH23
+  - OGBLDH24
+  - OGBLDH25
+  - OGBLDHO2
+  - OGBLDHO3
+  - OGBLDHO4
+  - OGBLDHO6
+  - OGBLDHO7
+  - OGBLDHO8
+  - OGBLDHO9
+  - OGBLDLIG
+  - OGBLDOF1
+  - OGBLDPAR
+  - OGBLDPYL
+  - OGBLDSH1
+  - OGBLDTRA
+  - OGHQ1
+  - OGBEECH
+  - OGBIRCH
+  - OGBIRCH2
+  - OGBSPRUC
+  - OGCACTU1
+  - OGCACTU2
+  - OGCACTU3
+  - OGCHESTN
+  - OGCOPBEA
+  - OGDREDWO
+  - OGELM
+  - OGFRISIA
+  - OGGFIR
+  - OGHCYPRE
+  - OGHSTRAW
+  - OGICYPRE
+  - OGIYEW
+  - OGJAPCRA
+  - OGJOSHUA
+  - OGKBFIR
+  - OGLCEDAR
+  - OGNASH
+  - OGNMAPLE
+  - OGOAK
+  - OGPCYPRE
+  - OGQPALM
+  - OGRCEDAR
+  - OGRFIR
+  - OGROBINI
+  - OGSCPINE
+  - OGSCYPRE
+  - OGSMAPLE
+  - OGSNOWBE
+  - OGSPALM
+  - OGSVPINE
+  - OGWASH
+  - OGWILLOW
+  - OGYEW
+  - OGYUKKA
+  - OGBREWER
+  - OGCOALMI
+  - OGCOALPS
+  - OGFACTOR
+  - OGFARM
+  - OGFOODPR
+  - OGFOREST
+  - OGOILREF
+  - OGOILRIG
+  - OGOREMIN
+  - OGSAWMIL
+  - OGSKICEN
+  - OGSTEELM
+  - OGWINDMI
+  - OGBRWNWG
+  - OGBRWNWA
+  - OGFENCE1
+  - OGFENC1G
+  - OGSECFEN
+  - OGSECFEG
+  - OGSTONWG
+  - OGSTONWA
+ops:
+  - town: {at: [206, 140], size: 3}   # 1 秋季河谷北岸
+  # ---- 7 阿爾卑斯雪村：窄軌齒軌鐵道從山谷車站切穿山脊爬上雪村（城鎮之前蓋，城鎮會圍著車站長）
+  - clear: {area: [75, 84, 81, 114]}    # 沿線的樹會擋住列車
+  - track: {object: OGTRACKN, station: OGTRSTA1, mods: [OGTREXRA, OGTREXCA], start: [78, 118], z: 17, dir: 3, path: "ST*4:V7V F*30 ST*4:V7T"}
+  - train: {vehicles: [OGDEH46, OGPCARSW, OGPCARSW], at: V7V, reverse: true, orders: [V7V, V7T]}
+  - trees: {types: [OGRFIR, OGSCPINE], area: [70, 88, 75, 114], count: 70}    # 山谷兩側的針葉林（避開軌道 x 78）
+  - trees: {types: [OGRFIR, OGSCPINE], area: [81, 88, 86, 114], count: 70}
+  - town: {at: [75, 77], size: 2}     # 7 阿爾卑斯雪村
+  # ---- 6 農村：農場 → 食品加工廠，卡車沿鄉間道路運送穀物與牲畜（城鎮之前蓋）
+  - industry: {type: OGFARM, at: [170, 318]}
+  - industry: {type: OGFOODPR, at: [170, 352]}
+  - road: {object: OGROADU1, station: OGRDSTL1, start: [168, 316], dir: 1, path: "ST:V6F S:V6M F*34 ST:V6P"}
+  - vehicle: {vehicles: [OGHTRUC2], at: V6M, orders: [V6F, V6P]}
+  - simulate: 400                     # 讓第一台卡車先開走
+  - vehicle: {vehicles: [OGCTRUC2], at: V6M, orders: [V6F, V6P]}
+  - town: {at: [180, 330], size: 2}   # 6 農村
+  # ---- 3 市中心＋10 郊區：先蓋鐵路與車站，城市之後才放，讓城市圍著車站長出來
+  - track: {object: OGTRACKS, station: OGTRSTA4, start: [233, 293], z: 7, dir: 1, path: "ST*6:V3C S*20 L3 S*14 ST*5:V3S"}
+  - train: {vehicles: [OG114, OG114], at: V3C, reverse: true, orders: [V3C, V3S]}
+  - town: {at: [231, 300], size: 8}   # 3 市中心
+  - town: {at: [212, 330], size: 3}   # 10 郊區
+  - simulate: 20000                   # 讓城鎮長大一些再蓋交通設施
+  # ---- 1 秋季河谷：蒸汽列車過磚拱高架橋、鑽進山脊隧道
+  # 山脊：三層梯田（第一層 2 級崖面 = 隧道口；軌道淨空 2 級），頂面鋪回草地、種樹
+  - raise: {area: [197, 194, 215, 204], steps: 2}
+  - raise: {area: [199, 195, 213, 203], steps: 1}
+  - raise: {area: [201, 196, 211, 202], steps: 1}
+  - land: {type: OGGRASS1, area: [197, 194, 215, 204]}
+  - trees: {types: [OGSCPINE, OGOAK, OGBEECH, OGCHESTN, OGSMAPLE, OGLCEDAR], area: [197, 194, 215, 204], count: 160}
+  - track: {object: OGTRACKS, station: OGTRSTA3, bridge: OGBRDGBR, start: [206, 150], z: 12, dir: 1, path: "ST*4:V1N S*54 ST*4:V1S"}
+  - train: {vehicles: [OGA4, OGPCAR2, OGPCAR2, OGPCAR2], at: V1N, reverse: true, orders: [V1N, V1S]}
+  # ---- 2 河港城鎮：吊橋連接河口兩岸的城鎮，渡輪在橋下往返
+  - road: {object: OGROADU1, station: OGBUSSTO, bridge: OGBRDGSU, start: [285, 197], z: 14, dir: 1, path: "ST:V2N S:V2M F*5 S*20 F*2 ST:V2S"}
+  - town: {at: [276, 194], size: 3}          # 道路蓋好後才放北岸村子（城鎮擴張會整地）
+  - vehicle: {vehicles: [OGRTMAST], at: V2M, orders: [V2N, V2S]}
+  - town: {at: [292, 233], size: 5}          # 2 河港城鎮（南岸橋頭）
+  - dock: {type: OGSHIPS1, at: [290, 210], rot: auto, label: V2D1}
+  - dock: {type: OGSHIPS1, at: [294, 222], rot: auto, label: V2D2}
+  - vehicle: {vehicles: [OGFERRY1], at: V2D1, orders: [V2D1, V2D2]}
+  # ---- 4 機場：洲際機場與郊區的區域機場之間，三架客機往返
+  - airport: {type: OGAIRPO1, at: [272, 334], rot: 0, label: V4A}
+  - airport: {type: OGAIRPO3, at: [200, 346], rot: 0, label: V4B}
+  - vehicle: {vehicles: [OG707], at: V4A, orders: [V4A, V4B]}
+  - vehicle: {vehicles: [OGVISCOU], at: V4A, orders: [V4B, V4A]}
+  - vehicle: {vehicles: [OGDC3], at: V4B, orders: [V4B, V4A]}
+  - town: {at: [284, 332], size: 3}   # 機場旁的城鎮
+  # ---- 5 礦業線：煤礦 → 發電廠，柴油機車拉一列運煤車
+  - industry: {type: OGCOALMI, at: [130, 126]}
+  - industry: {type: OGCOALPS, at: [180, 126]}
+  - track: {object: OGTRACKS, station: OGTRSTA1, start: [132, 115], z: 11, dir: 2, path: "ST*6:V5M S*36 ST*6:V5P"}
+  - train: {vehicles: [OGCL37, OGCOAL1, OGCOAL1, OGCOAL1, OGCOAL1, OGCOAL1], at: V5M, reverse: true, orders: [V5M, V5P]}
+  # ---- 8 林場：森林 → 鋸木廠，平板卡車在谷地道路上運木材
+  - industry: {type: OGFOREST, at: [200, 30]}
+  - industry: {type: OGSAWMIL, at: [200, 62]}
+  - road: {object: OGROADU1, station: OGRDSTL1, start: [210, 30], z: 11, dir: 1, path: "ST:V8F S:V8M S*30 ST:V8S"}
+  - vehicle: {vehicles: [OGFTRUC2], at: V8M, orders: [V8F, V8S]}
+  - simulate: 400
+  - vehicle: {vehicles: [OGFTRUC2], at: V8M, orders: [V8F, V8S]}
+  # ---- 9 海岸鐵路：海崖上的單線鐵路連接兩個海邊小鎮，岬角上有燈塔
+  - clear: {area: [319, 36, 342, 110]}   # 鐵路與海之間是開闊的崖頂草地
+  - land: {type: OGGRASS1, area: [319, 36, 342, 110]}   # 清除後的地面是裸土，改回草地
+  - track: {object: OGTRACKS, station: OGTRSTA3, start: [320, 40], z: 11, dir: 1, path: "ST*5:V9A S*58 ST*5:V9B"}
+  - town: {at: [313, 46], size: 3}
+  - town: {at: [313, 104], size: 2}
+  - train: {vehicles: [OGBLACK5, OGPCAR2, OGPCAR2, OGPCAR2], at: V9A, reverse: true, orders: [V9A, V9B]}
+  - building: {type: OGBLDLIG, at: [335, 80]}
+  - trees: {types: [OGSCPINE, OGOAK], area: [324, 40, 340, 110], count: 22}   # 崖頂零星的樹
