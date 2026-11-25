@@ -77,12 +77,14 @@ def _mesh(name, verts, faces, kit, mat):
 
 
 def _poly_prism(name, pts2d, a0, a1, axis, kit, mat):
-    """平面多邊形擠出。axis = "z"：pts 為 (x, y)，沿 z 從 a0 到 a1；axis = "x"：pts 為 (y, z)，沿 x。"""
+    """平面多邊形擠出。axis = "z"：pts 為 (x, y)，沿 z 從 a0 到 a1；axis = "x"：pts 為 (y, z)，沿 x；axis = "y"：pts 為 (x, z)，沿 y。"""
     n = len(pts2d)
     if axis == "z":
         verts = [(x, y, a0) for x, y in pts2d] + [(x, y, a1) for x, y in pts2d]
-    else:
+    elif axis == "x":
         verts = [(a0, y, z) for y, z in pts2d] + [(a1, y, z) for y, z in pts2d]
+    else:
+        verts = [(x, a0, z) for x, z in pts2d] + [(x, a1, z) for x, z in pts2d]
     faces = [tuple(range(n))[::-1], tuple(range(n, 2 * n))]
     for i in range(n):
         j = (i + 1) % n
@@ -166,6 +168,9 @@ def run_op(kit, op, T=None, Z=None):
     if kind == "finx":
         x0, x1 = op["x"]
         return _poly_prism("finx", [(y * T, Z(z)) for y, z in op["p"]], x0 * T, x1 * T, "x", kit, m)
+    if kind == "finy":
+        y0, y1 = op["y"]
+        return _poly_prism("finy", [(x * T, Z(z)) for x, z in op["p"]], y0 * T, y1 * T, "y", kit, m)
     if kind == "prism":
         z0, z1 = op["z"]
         return _poly_prism("prism", [(x * T, y * T) for x, y in op["p"]], Z(z0), Z(z1), "z", kit, m)
