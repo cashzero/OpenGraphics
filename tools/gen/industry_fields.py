@@ -21,7 +21,8 @@ import sys
 from pathlib import Path
 
 import common
-import tree
+import numpy as np
+import tree3d
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import dat  # noqa: E402
@@ -115,20 +116,43 @@ def draw_animals(px, w, h, xo, yo, g, a):
 
 
 def forest_tree(e, g, snow, seed):
-    """林場的樹：階段 0–5 為成長中的冷杉，階段 6 為砍伐後的樹樁。"""
-    w, h, ox, oy = e.width, e.height, -e.x_offset, -e.y_offset
+    """林場的樹：階段 0–5 為成長中的冷杉（使用 tree3d 點雲算圖，與地圖上的針葉樹色調一致），階段 6 為砍伐後的樹樁。"""
+    w, h = e.width, e.height
     rng = random.Random(seed)
     if g >= 6 or h < 20:
         px = bytearray(w * h)
+        cx, cy = w / 2.0, h / 2.0
         for y in range(h):
             for x in range(w):
-                if ((x - ox) / 2.5) ** 2 + ((y - oy + 1) / 1.6) ** 2 <= 1:
-                    px[y * w + x] = BROWN + (7 if y < oy - 1 else 4)
-        for k in range(3):                                            # 散落的枝葉
+                dx, dy = (x - cx) / 2.8, (y - cy) / 2.0
+                if dx * dx + dy * dy <= 1.0:
+                    if snow and y <= cy:
+                        px[y * w + x] = BLACK + (10 if x < cx else 9)
+                    elif y < cy:
+                        px[y * w + x] = BROWN + (7 if x < cx else 6)  # 樹樁切面
+                    else:
+                        px[y * w + x] = BROWN + (4 if x < cx else 2)  # 樹皮側面
+        for _ in range(3):                                            # 散落的木屑與針葉
             x, y = rng.randrange(w), rng.randrange(h // 2, h)
-            px[y * w + x] = GRASS + 3
+            if not px[y * w + x]:
+                px[y * w + x] = BROWN + 4 if rng.random() < 0.5 else OLIVE + 3
         return bytes(px)
-    return tree.draw_preset(tree.PRESETS["grandfir"], w, h, ox, oy, 3, rng, snow)
+    # 樹幹底部放在圖塊中央（sy ≈ +14，對應 h - 4；與原版林場圖塊與階段 6 樹樁位置一致）
+    ox = -e.x_offset
+    oy = max(-e.y_offset, h - 4)
+    H = max(14.0, (h - 6) * (0.64 + 0.32 * g / 5))
+    cfg = dict(tree3d.SPECIES["grandfir"], layers=4 + (g >= 2) + (g >= 4), width=0.82 + 0.04 * g)
+    cloud = tree3d.make_cloud(cfg, 3, H, seed, snow)
+    p, *_ = cloud.arrays()
+    if len(p):
+        sx, sy = tree3d.project(p)
+        half = max(3.0, min(ox, w - ox) - 1.5)
+        fx = min(1.0, half / max(float(np.abs(sx).max()), 1e-6))
+        top_room = max(6.0, oy - 1.5)
+        fz = min(1.0, top_room / max(float(-sy.min()), 1e-6))
+        if fx < 1.0 or fz < 1.0:
+            cloud = tree3d.scale_cloud(cloud, fx, fz)
+    return tree3d.render(cloud, w, h, ox, oy).tobytes()
 
 
 def main() -> int:
