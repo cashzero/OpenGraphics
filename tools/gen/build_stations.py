@@ -16,6 +16,7 @@ SE = NE 繞圖塊中心轉 90°（(x, y) → (y, 32 − x)）。後側柱子畫�
 from __future__ import annotations
 
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -104,28 +105,65 @@ def front_pillars(ops, st, se):
         post(ops, x, 32 - st["pillar_y"], ph, st["roof_z"], st["pillar_r"], st["pillar"], se, square=st.get("square", True))
 
 
+def seg(ops, a, b, r, m, se=False):
+    ax, ay = _xf(a[0], a[1], se)
+    bx, by = _xf(b[0], b[1], se)
+    ops.append({"op": "seg", "a": [ay / 32, -ax / 32, a[2]], "b": [by / 32, -bx / 32, b[2]], "r": r / 32, "m": m})
+
+
+def _arch_z(y, z0, arch_h):
+    """橫跨全格（y ∈ [0.5, 31.5]）的半橢圓拱高。"""
+    t = max(0.0, min(1.0, (y - 0.5) / 31.0))
+    return z0 + arch_h * math.sin(math.pi * t)
+
+
 def roofs(ops, st, se):
     z = st["roof_z"]
+    kind = st["roof"]
+    if kind == "glass_arch":                                   # 維多利亞／經典拱形玻璃鐵架車站棚（橫跨雙側月台）
+        arch_h = st.get("arch_h", 12.0)
+        segs = 10
+        ys = [0.5 + 31.0 * k / segs for k in range(segs + 1)]
+        # 兩側縱向簷樑＋公司色花飾邊樑
+        for y0, y1 in ((0.2, 1.4), (30.6, 31.8)):
+            box(ops, 0, 32, y0, y1, z - 1.6, z + 0.6, st["trim"], se)
+        # 5 道橫向拱形鐵肋（x = 0, 8, 16, 24, 32）
+        for x in (0.5, 8.0, 16.0, 24.0, 31.5):
+            for k in range(segs):
+                y0, y1 = ys[k], ys[k + 1]
+                z0, z1 = _arch_z(y0, z, arch_h), _arch_z(y1, z, arch_h)
+                seg(ops, (x, y0, z0), (x, y1, z1), 0.55, st["frame"], se)
+            # 拱腳小斜撐
+            seg(ops, (x, 1.2, z - 4.2), (x, 4.2, _arch_z(4.2, z, arch_h) - 0.6), 0.35, st["trim"], se)
+            seg(ops, (x, 30.8, z - 4.2), (x, 27.8, _arch_z(27.8, z, arch_h) - 0.6), 0.35, st["trim"], se)
+        # 縱向桁條與屋脊鋼樑（讓玻璃拱頂有豐富結構感）
+        for k in (2, 4, 5, 6, 8):
+            yk = ys[k]
+            zk = _arch_z(yk, z, arch_h)
+            r = 0.45 if k == 5 else 0.30
+            seg(ops, (0.0, yk, zk), (32.0, yk, zk), r, st["frame"], se)
+        return
     for y0, y1 in ((0.0, st["roof_w"]), (32 - st["roof_w"], 32.0)):
-        kind = st["roof"]
-        if kind == "glass_frame":                              # 鋼架（玻璃另由半透明遮罩處理）
-            box(ops, 0, 32, y0, y0 + 0.8, z, z + 1.6, st["frame"], se)
-            box(ops, 0, 32, y1 - 0.8, y1, z, z + 1.6, st["frame"], se)
-            box(ops, 0, 32, (y0 + y1) / 2 - 0.4, (y0 + y1) / 2 + 0.4, z, z + 1.2, st["frame"], se)
-            for x in range(0, 33, 4):
-                box(ops, max(0, x - 0.35), min(32, x + 0.35), y0, y1, z + 0.4, z + 1.2, st["frame"], se)
-        elif kind == "slab_skylight":                          # 混凝土平頂，中央一道天窗（半透明）
-            mid0, mid1 = y0 + st["roof_w"] * 0.35, y0 + st["roof_w"] * 0.65
-            box(ops, 0, 32, y0, mid0, z, z + 2.0, st["slab"], se)
-            box(ops, 0, 32, mid1, y1, z, z + 2.0, st["slab"], se)
-            box(ops, 0, 32, y0, y0 + 0.6, z + 2.0, z + 2.8, st["trim"], se)     # 簷口
-            box(ops, 0, 32, y1 - 0.6, y1, z + 2.0, z + 2.8, st["trim"], se)
-            for x in range(0, 33, 8):                          # 天窗的橫樑
-                box(ops, max(0, x - 0.4), min(32, x + 0.4), mid0, mid1, z + 1.2, z + 2.0, st["slab"], se)
-        else:                                                  # gable：人字瓦頂＋公司色簷板
+        if kind == "slab_skylight":                            # 現代主義懸挑翼狀雨棚（深色屋頂凹槽＋寬天窗＋公司色簷口）
+            mid0, mid1 = y0 + st["roof_w"] * 0.28, y0 + st["roof_w"] * 0.72
+            # 外緣白色混凝土薄殼結構＋深色防眩頂面（不再整片過曝純白）
+            box(ops, 0, 32, y0, mid0, z, z + 1.8, st["slab"], se)
+            box(ops, 0, 32, mid1, y1, z, z + 1.8, st["slab"], se)
+            box(ops, 0, 32, y0 + 0.5, mid0 - 0.2, z + 1.5, z + 2.0, "darkconcrete", se)
+            box(ops, 0, 32, mid1 + 0.2, y1 - 0.5, z + 1.5, z + 2.0, "darkconcrete", se)
+            box(ops, 0, 32, y0, y0 + 0.7, z + 1.4, z + 2.8, st["trim"], se)
+            box(ops, 0, 32, y1 - 0.7, y1, z + 1.4, z + 2.8, st["trim"], se)
+            for x in range(0, 33, 8):                          # 天窗橫向鋼樑＋柱頭斜撐
+                box(ops, max(0, x - 0.45), min(32, x + 0.45), y0, y1, z + 1.0, z + 2.3, "darksteel", se)
+                cy = 3.5 if y0 < 16 else 28.5
+                seg(ops, (max(1, min(31, x)), cy, z - 3.5), (max(1, min(31, x)), (y0 + y1) / 2, z + 0.5), 0.35, "darksteel", se)
+        else:                                                  # gable：鄉間木造人字瓦頂＋斜撐＋公司色簷板
             gable(ops, 0, 32, y0, y1, z, st["roof_h"], st["roof_m"], se)
-            box(ops, 0, 32, y0, y0 + 0.4, z - 1.6, z, st["trim"], se)
-            box(ops, 0, 32, y1 - 0.4, y1, z - 1.6, z, st["trim"], se)
+            box(ops, 0, 32, y0, y0 + 0.5, z - 1.8, z, st["trim"], se)
+            box(ops, 0, 32, y1 - 0.5, y1, z - 1.8, z, st["trim"], se)
+            cy = st["pillar_y"] if y0 < 16 else 32 - st["pillar_y"]
+            for x in st["pillar_x"]:
+                seg(ops, (x, cy, z - 4.0), (x, (y0 + y1) / 2, z - 0.4), 0.32, st["pillar"], se)
 
 
 def shelter(ops, st, se):
@@ -133,22 +171,32 @@ def shelter(ops, st, se):
     if not st.get("shelter"):
         return
     ph = st["ph"]
-    box(ops, 11, 21, 0.8, 5.0, ph, ph + 9, "lightwood", se)
-    box(ops, 14.5, 17.5, 4.9, 5.1, ph, ph + 6.5, "darkwood", se)        # 門
-    for x in (12.2, 18.3):
-        box(ops, x, x + 1.5, 4.9, 5.1, ph + 3.5, ph + 6, "glass", se)  # 窗
+    box(ops, 10, 22, 0.8, 5.2, ph, ph + 9.5, "wood", se)
+    gable(ops, 9.5, 22.5, 0.4, 5.6, ph + 9.5, 3.2, "slate", se)
+    box(ops, 14.5, 17.5, 5.1, 5.4, ph, ph + 6.8, "darkwood", se)        # 門
+    for x in (11.4, 18.6):
+        box(ops, x, x + 1.8, 5.1, 5.4, ph + 3.4, ph + 6.4, "blueglass", se)
+    box(ops, 19.5, 20.8, 1.4, 2.7, ph + 10.5, ph + 15.0, "brick", se)   # 小煙囪
 
 
 def glass_quads(st, se):
     """半透明玻璃的平面四邊形（Loco 座標，四個角）。"""
     z = st["roof_z"]
     quads = []
+    if st["roof"] == "glass_arch":
+        arch_h = st.get("arch_h", 12.0)
+        segs = 8
+        ys = [0.8 + 30.4 * k / segs for k in range(segs + 1)]
+        for k in range(segs):
+            y0, y1 = ys[k], ys[k + 1]
+            z0, z1 = _arch_z(y0, z, arch_h), _arch_z(y1, z, arch_h)
+            q = [(0.5, y0, z0), (31.5, y0, z0), (31.5, y1, z1), (0.5, y1, z1)]
+            quads.append([(*_xf(x, y, se), zz) for x, y, zz in q])
+        return quads
     for y0, y1 in ((0.0, st["roof_w"]), (32 - st["roof_w"], 32.0)):
-        if st["roof"] == "glass_frame":
-            q = [(0, y0 + 0.8, z + 1.2), (32, y0 + 0.8, z + 1.2), (32, y1 - 0.8, z + 1.2), (0, y1 - 0.8, z + 1.2)]
-        elif st["roof"] == "slab_skylight":
-            m0, m1 = y0 + st["roof_w"] * 0.35, y0 + st["roof_w"] * 0.65
-            q = [(0, m0, z + 1.6), (32, m0, z + 1.6), (32, m1, z + 1.6), (0, m1, z + 1.6)]
+        if st["roof"] == "slab_skylight":
+            m0, m1 = y0 + st["roof_w"] * 0.28, y0 + st["roof_w"] * 0.72
+            q = [(0, m0, z + 1.7), (32, m0, z + 1.7), (32, m1, z + 1.7), (0, m1, z + 1.7)]
         else:
             continue
         quads.append([(*_xf(x, y, se), zz) for x, y, zz in q])
@@ -169,23 +217,23 @@ def glass_mask(st, se):
 
 STATIONS = {
     "TRSTAT1": dict(display="Glass Canopy Station",
-                    concept="1960 年代城市站：淺色混凝土月台與白色月台邊線，公司色方柱撐起鋼架玻璃雨棚（玻璃為半透明，"
-                            "可看到下方的列車）；沒有雨棚的月台段有路燈與長椅。",
-                    style=dict(ph=4, deck="concrete", edge="white", lamp_post="darksteel", bench="darkwood",
-                               pillar="company", pillar_r=0.55, pillar_x=(4, 16, 28), pillar_y=3.0,
-                               roof="glass_frame", roof_z=26, roof_w=12.0, frame="darksteel")),
+                    concept="經典拱形玻璃鐵架車站：磚石基座與風化石月台、白色安全線，深鐵與公司色拱形鋼肋橫跨雙側月台"
+                            "撐起半透明拱形玻璃頂棚（下方列車清晰可見）；無棚段有鑄鐵路燈與長椅。",
+                    style=dict(ph=4, base="darkstone", deck="stone", edge="white", lamp_post="darksteel", bench="darkwood",
+                               pillar="darksteel", pillar_r=0.55, pillar_x=(0.8, 8, 16, 24, 31.2), pillar_y=1.2,
+                               roof="glass_arch", roof_z=20, arch_h=12.5, frame="darksteel", trim="company")),
     "TRSTAT4": dict(display="Concourse Station",
-                    concept="1960 年代中期城市站：深色鋪面月台與黃色警示線，白色混凝土圓柱撐起厚實的平頂混凝土雨棚，"
-                            "屋頂中央一道玻璃天窗（半透明），簷口為公司色。",
-                    style=dict(ph=4, deck="darkconcrete", edge="yellowsteel", lamp_post="steel", bench="steel",
-                               pillar="whiteconcrete", pillar_r=0.8, pillar_x=(8, 24), pillar_y=3.5, square=False,
-                               roof="slab_skylight", roof_z=24, roof_w=12.5, slab="whiteconcrete", trim="company")),
+                    concept="現代主義都會車站：深色鋪面月台與黃色警示線，圓柱與鋼構斜撐撐起雙側現代雨棚（凹入深色屋頂防反光、"
+                            "中央寬幅半透明玻璃天窗與公司色簷口）；無棚段有現代路燈與長椅。",
+                    style=dict(ph=4, base="darkconcrete", deck="stone", edge="yellowsteel", lamp_post="darksteel", bench="steel",
+                               pillar="concrete", pillar_r=0.75, pillar_x=(8, 24), pillar_y=3.2, square=False,
+                               roof="slab_skylight", roof_z=23, roof_w=12.8, slab="concrete", trim="company")),
     "TRSTAT5": dict(display="Country Halt",
-                    concept="鄉間小站：磚砌月台基座上鋪木板，木柱撐起人字瓦頂雨棚、簷口飾板為公司色；"
-                            "後側月台有一間木造候車亭；沒有雨棚的月台段有煤氣路燈與木長椅。",
+                    concept="鄉間小站：紅磚基座木板月台、木柱與斜撐撐起深色石板人字屋頂與公司色簷板，"
+                            "後側月台附帶磚煙囪的木造候車室；無棚段有復古路燈與木長椅。",
                     style=dict(ph=3.5, base="brick", deck="planks", edge="white", lamp_post="darkwood", bench="wood",
-                               pillar="darkwood", pillar_r=0.45, pillar_x=(5, 16, 27), pillar_y=3.0,
-                               roof="gable", roof_z=16, roof_w=10.5, roof_h=4.5, roof_m="shingle", trim="company",
+                               pillar="darkwood", pillar_r=0.48, pillar_x=(5, 16, 27), pillar_y=3.0,
+                               roof="gable", roof_z=16, roof_w=10.8, roof_h=5.2, roof_m="slate", trim="company",
                                shelter=True)),
 }
 

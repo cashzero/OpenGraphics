@@ -14,3 +14,4 @@
 ## 驗證紀錄
 - 2026-11-20 V1：`tools/lint.py` 0 錯誤；contact sheet 已檢視
 - 2026-11-22 V2：`tools/newgame_check.sh`（standalone，`OG_REGUK`／`OG_REGALP`）開新遊戲 → 模擬一年不崩潰、存檔物件全部來自 repo；物件選擇預覽 `build/screenshots/m3/preview/trainStation-OGTRSTA5.png` 已檢視。**未驗證**：尚未看過放在地圖上的樣子（需要含此物件的測試存檔）
+- 2026-11-25 V1：改為深石板斜頂木構雨棚與木造候車室；build/preview/check_trstat5_new.png 檢視通過
