@@ -12,13 +12,25 @@ def _h(kit):
 
 def _transformer(kit, T, seed):
     rng = random.Random(seed)
-    kit.box(T * 0.6, T * 0.42, T * 0.26, (0, 0, 0), kit.material("Company Color 1 Transformer", (0.3, 0.35, 0.3), noise=0.2))
+    dark_st = kit.material("Dark Steel", (0.14, 0.15, 0.16), rough=0.5, metal=0.6)
+    tank_m = kit.material("Transformer Steel", (0.28, 0.30, 0.32), rough=0.5, metal=0.5, noise=0.25)
+    trim = kit.material("Company Color 1 Trim", (0.5, 0.5, 0.5))
+    porc = kit.material("Porcelain", (0.58, 0.54, 0.46), rough=0.4)
+    # 主變壓器鋼體＋散熱片＋公司色標示帶
+    kit.box(T * 0.56, T * 0.38, T * 0.25, (0, 0, 0), tank_m)
+    kit.box(T * 0.58, T * 0.40, T * 0.04, (0, 0, T * 0.18), trim)
+    for k in range(4):
+        x = (k - 1.5) * T * 0.13
+        kit.box(T * 0.04, T * 0.46, T * 0.20, (x, 0, T * 0.02), dark_st)
     for k in range(3):
-        x = (k - 1) * T * 0.18
-        kit.cylinder(0.32, T * 0.2, (x, rng.uniform(-0.3, 0.3), T * 0.26), kit.material("Porcelain", (0.7, 0.65, 0.55)), verts=8)
+        x = (k - 1) * T * 0.16
+        kit.cylinder(0.28, T * 0.22, (x, rng.uniform(-0.2, 0.2), T * 0.25), porc, verts=8)
+        kit.cylinder(0.10, T * 0.08, (x, rng.uniform(-0.2, 0.2), T * 0.47), dark_st, verts=6)
+    # 鋼構匯流排門架
     for dx in (-T * 0.38, T * 0.38):
-        kit.box(0.3, 0.3, T * 0.6, (dx, T * 0.3, 0), kit.steel())
-    kit.box(T * 0.8, 0.25, 0.25, (0, T * 0.3, T * 0.58), kit.steel())
+        kit.box(0.28, 0.28, T * 0.62, (dx, T * 0.30, 0), dark_st)
+    kit.box(T * 0.82, 0.22, 0.22, (0, T * 0.30, T * 0.58), dark_st)
+    kit.box(T * 0.82, 0.14, 0.14, (0, T * 0.30, T * 0.42), kit.steel())
 
 
 def make_part(kit, index):
@@ -32,17 +44,39 @@ def make_part(kit, index):
         kit.lathe(prof, (0, 0, 0), kit.material("Cooling Tower", (0.42, 0.46, 0.46), noise=0.12))
         kit.lathe([(T * 0.69, 0), (T * 0.69, H * 0.04)], (0, 0, 0), kit.material("Company Color 1 Band", (0.5, 0.5, 0.5)))
     elif index == 2:
-        kit.ground_plate(1, 1, kit.material("Pavement", (0.48, 0.47, 0.44), noise=0.3), thickness=0.03)
+        kit.ground_plate(1, 1, kit.gravel(), thickness=0.03)
     elif index in (3, 4):
         _transformer(kit, T, index)
         if index == 4:
-            kit.box(T * 0.3, T * 0.3, T * 0.15, (T * 0.25, -T * 0.25, 0), kit.concrete())
+            kit.box(T * 0.32, T * 0.28, T * 0.18, (T * 0.25, -T * 0.25, 0), kit.material("Control Box", (0.24, 0.24, 0.23), noise=0.35))
     elif index == 5:
         H = _h(kit)
+        dark_roof = kit.material("Dark Roof", (0.14, 0.15, 0.16), rough=0.85, noise=0.45)
+        slate = kit.material("Slate", (0.10, 0.11, 0.12), rough=0.7, noise=0.35)
+        trim = kit.material("Company Color 1 Trim", (0.5, 0.5, 0.5))
         kit.ground_plate(2, 2, kit.gravel(), thickness=0.03)
-        kit.box(T * 1.7, T * 1.25, H * 0.95, (-T * 0.1, -T * 0.2, 0), kit.brick())
-        kit.windows(T * 1.7, T * 1.25, H * 0.15, H * 0.9, 2, 7, loc=(-T * 0.1, -T * 0.2, 0))
-        kit.box(T * 1.75, T * 1.3, H * 0.08, (-T * 0.1, -T * 0.2, H * 0.95), kit.material("Company Color 1 Roof Edge", (0.4, 0.4, 0.4)))
+        # 紅磚鍋爐與汽機廠房：凹入暗屋頂＋磚女兒牆＋採光氣樓＋公司色簷口細條
+        bx, by = -T * 0.10, -T * 0.16
+        bw, bd, bh = T * 1.66, T * 1.22, H * 0.86
+        kit.box(bw, bd, bh, (bx, by, 0), kit.brick())
+        kit.windows(bw, bd, bh * 0.16, bh * 0.86, 2, 7, loc=(bx, by, 0))
+        kit.box(bw * 0.94, bd * 0.92, H * 0.04, (bx, by, bh - H * 0.02), dark_roof)
+        pt = T * 0.06
+        ph = H * 0.09
+        kit.box(bw, pt, ph, (bx, by - bd / 2 + pt / 2, bh), kit.brick())
+        kit.box(bw, pt, ph, (bx, by + bd / 2 - pt / 2, bh), kit.brick())
+        kit.box(pt, bd, ph, (bx - bw / 2 + pt / 2, by, bh), kit.brick())
+        kit.box(pt, bd, ph, (bx + bw / 2 - pt / 2, by, bh), kit.brick())
+        # 公司色細飾帶（不蓋屋頂，避免變成大面積白塊）
+        kit.box(bw + 0.08, 0.08, H * 0.05, (bx, by - bd / 2 - 0.01, bh - H * 0.04), trim)
+        kit.box(bw + 0.08, 0.08, H * 0.05, (bx, by + bd / 2 + 0.01, bh - H * 0.04), trim)
+        kit.box(0.08, bd + 0.08, H * 0.05, (bx - bw / 2 - 0.01, by, bh - H * 0.04), trim)
+        kit.box(0.08, bd + 0.08, H * 0.05, (bx + bw / 2 + 0.01, by, bh - H * 0.04), trim)
+        # 屋頂採光氣樓＋排風管
+        kit.box(bw * 0.72, bd * 0.30, H * 0.08, (bx, by, bh), kit.glass())
+        kit.gable_roof(bw * 0.76, bd * 0.36, H * 0.09, (bx, by, bh + H * 0.08), slate, along_x=True)
+        for k in range(3):
+            kit.cylinder(T * 0.055, H * 0.14, (bx + (k - 1) * T * 0.35, by + bd * 0.30, bh), kit.steel(), verts=10)
     elif index == 6:
         H = _h(kit)
         for k in range(2):
