@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # V2 端到端冒煙測試：在「沒有 vanilla 物件」的環境中，用原版情境載入 OG 物件（+ placeholder）→ 模擬 → 截圖。
 #   tools/v2_smoke.sh ["<情境名稱>.SC5"]      預設 "Boulder Breakers.SC5"
-# 需要 OpenLoco fork 的 og-main（別名層 + screenshot 命令）。
+# 需要 OpenLoco fork 的 master（別名層 + screenshot 命令）。
 # 產出：build/screenshots/v2_smoke/<情境>.png；任何一步失敗就以非 0 結束。
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
@@ -28,7 +28,7 @@ if ! LOCO_DATA_DIR="$NOOBJ" tools/run_openloco.sh simulate "$LOCO_DATA_DIR/Scena
   cat "$LOG"; echo "FAIL：simulate" >&2; exit 1
 fi
 grep -q "scenario ticks: 500" "$LOG" || { cat "$LOG"; echo "FAIL：模擬沒有跑滿 500 ticks" >&2; exit 1; }
-grep -q "object aliases" "$LOG" || { cat "$LOG"; echo "FAIL：沒有載入別名表（OpenLoco 不是 fork 的 og-main？）" >&2; exit 1; }
+grep -q "object aliases" "$LOG" || { cat "$LOG"; echo "FAIL：沒有載入別名表（OpenLoco 不是 fork 的 master？）" >&2; exit 1; }
 grep -E "\[ERR\]" "$LOG" | grep -v "could not be found" || true
 LOCO_DATA_DIR="$NOOBJ" tools/run_openloco.sh screenshot "$LOCO_DATA_DIR/Scenarios/$SCENARIO" 200 -o "$OUT_PNG" --size 1024x640 >"$LOG" 2>&1 \
   || { cat "$LOG"; echo "FAIL：screenshot" >&2; exit 1; }

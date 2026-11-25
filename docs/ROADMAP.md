@@ -70,8 +70,10 @@ M2 之前的分類數字（保留作為紀錄；最新數字以 `python3 tools/i
 
 - g1：M4 已全部換成正式美術或計算產生（見 M4）。選取框、格線、玻璃、陰影、施工預覽幽靈等依賴對照表的效果，目前只在截圖中確認畫面正常，**尚未在互動操作中看過**（headless 無法使用建造／地形工具）；選取框各區的編號依程式碼推得。
 - OpenLoco 在 GUI 開新遊戲時預設選 `OGREGUS`（上游物件），它的 willLoad 清單直接寫 vanilla 名稱，經別名層對應到 OG 物件（M3 之後已全部有 OG 版）。是否把 fork 的預設 region 改成 `OGREGUK` 待決定。
-- 尚未在地圖上看過（新遊戲不會自動蓋鐵路、車站、機場，也沒有車輛運行）：軌道、軌道附加物、電車軌、號誌、平交道、車站、機場、碼頭、車輛、蒸汽／排氣；這些只通過 V1、物件選擇預覽與載入／模擬測試。要看放在地圖上的樣子需要含這些物件的測試存檔（或人工透過 WSLg 建造後截圖）。
-- 音效（M2 的 5 個 + M3 的 34 個）是程序合成，headless 不播放，沒有試聽。
+- M6 的標題場景（`build-scene`）已在地圖上看過：標準軌與窄軌（含齒軌、架空線）、磚造高架橋與吊橋、隧道、火車站 3 種、巴士站與卡車站、機場 2 種、碼頭、渡輪、客機、蒸汽／柴油列車、公車、卡車、產業與城鎮建築。**仍未在地圖上看過**：電車軌與電車、號誌、平交道、其餘大部分車輛；可用 `build-scene` 寫測試場景。
+- 音效（M2 的 5 個 + M3 的 34 個）是程序合成，沒有試聽。M5 起可用 `AUDIO_OUT` 把遊戲的音訊輸出錄成 WAV 檢查（見 `PIPELINE.md`），但仍沒有人耳試聽。
+- 音樂（M5）：只確認合成與播放流程、音量與頻譜正常，沒有人耳試聽；TimGM6mb 是很小的音色庫，音色比較單薄。
+- 音效（M5）：CSS1 只在遊戲中確認新聞的兩個音效；點擊、建造等需要互動操作，headless 沒有觸發。環境音沒有在遊戲中觸發過（測試存檔的視角附近沒有足夠的森林／水／山地），只檢查了檔案格式、響度與循環接縫。
 - ScenarioText 45 個沒有 OG 版本（M6）。
 - OpenLoco fork 的 CMake 仍下載上游 `objects.zip`，還沒有下載本 fork 的 `objects.zip`／`base.zip`（決策 D5）。
 
@@ -97,7 +99,7 @@ M2 之前的分類數字（保留作為紀錄；最新數字以 `python3 tools/i
 
 語言字串由 OpenLoco 的 `data/language/*.yml` 提供，不依賴 vanilla。
 
-上游 OpenLoco 的命令列只有 `simulate <save> <ticks> <out>`（無頭模擬）與 `compare`，沒有無頭截圖；fork 的 `og-main` 已加上 `screenshot`、`new-game` 等指令（見 `PIPELINE.md` V2）。
+上游 OpenLoco 的命令列只有 `simulate <save> <ticks> <out>`（無頭模擬）與 `compare`，沒有無頭截圖；fork 的 `master` 已加上 `screenshot`、`new-game` 等指令（見 `PIPELINE.md` V2）。
 
 ### 開發環境現況
 
@@ -130,7 +132,7 @@ M2 之前的分類數字（保留作為紀錄；最新數字以 `python3 tools/i
 | # | 議題 | 狀態 | 內容 |
 |---|---|---|---|
 | D1 | vanilla 引用怎麼處理 | **已決定 A**（2026-11-19）；已實作於 fork `og/vanilla-alias`，並合併進 `og-main`。實測：OG 物件引用 vanilla 時，拿掉 vanilla 就會 crash；加上別名層後，原版情境在沒有 `ObjData` 的環境下能正常載入 | **A**：在 OpenLoco fork 加入「vanilla → OG 別名層」：找不到 vanilla 物件時，依對照表改載入 OG 物件。對照表由本 repo 自動產生。優點：不需要改上游 DAT（不與 sync 衝突），同時解決情境檔、title.dat、舊存檔引用 vanilla 的問題。**B**：寫工具改寫 DAT 內的引用，每次 sync 後重跑。缺點：修改上游物件、sync 時衝突、情境檔仍然引用 vanilla。 |
-| D2 | OpenLoco 引擎修改 | **已決定**（2026-11-19） | fork：https://github.com/cashzero/OpenLoco 。`../OpenLoco` 的 remote：`origin` = fork、`upstream` = 官方。分支：`master` 追上游，功能開在 `og/*`，整合在 `og-main`（目前含 `og/headless-screenshot`、`og/vanilla-alias`、`og/object-preview`、`og/standalone`、`og/new-game`）。 |
+| D2 | OpenLoco 引擎修改 | **已決定**（2026-11-19） | fork：https://github.com/cashzero/OpenLoco 。`../OpenLoco` 的 remote：`origin` = fork、`upstream` = 官方。分支：2026-11-23 起只用 `master`，直接在上面開發，同步上游時 merge `upstream/master`（原本的 `og-main` 與 `og/*` 功能分支都已併入 `master` 並刪除）。 |
 | D3 | 非物件素材（g1、音訊、標題、情境）放在哪 | **已決定**（2026-11-19，採用建議；已建立 `base/README.md`） | 建議本 repo 新增頂層 `base/`（`base/g1/`、`base/sfx/`、`base/music/`、`base/title/`、`base/scenarios/`），與 `objects/` 一起由 CI 打包。上游沒有這些資料夾，sync 衝突風險低。 |
 | D4 | placeholder 怎麼產生 | **已依建議實作，待確認**（2026-11-19：`tools/make_placeholders.py`） | 建議先以本機 vanilla 資料作為「結構與尺寸模板」產生（不 commit 產物，只 commit 產生工具）；長期改為直接依 OpenLoco 原始碼的結構定義產生，讓 CI 也能產生。 |
 | D5 | 發行方式 | 待決定 | 建議：本 repo 推 tag 發布 `objects.zip`（之後加上 `base.zip`），OpenLoco fork 的 `CMakeLists.txt` 改指向本 fork 的 release URL 與 SHA256。 |
@@ -268,15 +270,25 @@ OpenLoco fork（D2）
 
 ### M5 — 音訊
 
-- [ ] 研究 CSS 格式（`Audio.cpp` 的 `loadSoundsFromCSS`）
-- [ ] 音效 bank（CSS1）、Sound 物件 39 個、環境音（CSS2–4）
-- [ ] 音樂 29 首 + 標題音樂（CSS5）
+- [x] 研究格式（2026-11-23）：`CSS1.DAT` = 32 個介面／事件音效（`SoundId` 0–31）的 bank：`uint32` 數量 + 各音效的 offset，每個音效 = `uint32` PCM 長度 + `WAVEFORMATEX` + PCM（vanilla 為 22050 Hz 16-bit，多數單聲道）。`CSS2–5` 與 29 首音樂都是一般的 WAV（22050 Hz 16-bit 立體聲）：CSS2 = 荒野／山地、CSS3 = 海邊、CSS4 = 森林的環境音循環（約 9 秒，`AmbientAudio.cpp` 依周圍地形選擇），CSS5 = 標題曲。vanilla 音樂共約 84 分鐘，WAV 約 450 MB。
+- [x] Sound 物件 39 個（M2、M3，程序合成）
+- [x] 音樂 29 首 + 標題曲（2026-11-23）：改用 OpenTTD 的 **OpenMSX**（GPL v2）MIDI，依年代分配到各時段（`base/music/`，曲目表與授權見 `base/music/README.md`）。OpenLoco fork 加入 MIDI 支援：找不到 `<slot>.DAT` 時改讀同名 `.mid`，以 TinySoundFont + TimGM6mb（GPL v2，5.7 MB）在背景執行緒合成，並以 `music.yml` 取代點唱機的曲名。全部音樂 6.5 MB（vanilla WAV 約 450 MB）。標題畫面與遊戲中的音訊輸出已錄下確認（`AUDIO_OUT`），點唱機截圖顯示 OpenMSX 曲名。
+- [x] 音效 bank（CSS1，32 個）（2026-11-23）：OpenTTD 的 **OpenSFX**（CC BY-SA 3.0／CC BY 3.0／CC0）21 個素材，依用途對應到 OpenLoco 的 `SoundId`，音量依 vanilla 同一音效的 RMS 調整（`base/sfx/`、`tools/sfx.py`）。遊戲中錄音確認：新車輛新聞的 Oooh、挑戰完成的掌聲都從自製 bank 播出（與素材的相關係數 1.00）。
+- [x] 環境音 CSS2（荒野：風聲）、CSS4（森林：風聲 + 鳥鳴）（2026-11-23）：OpenSFX 素材混成 9 秒無縫循環。
+- [ ] 環境音 CSS3（海邊）：OpenSFX 沒有海浪聲，目前靜音（缺少時 OpenLoco 只警告一次）
+- [ ] CI：把音樂（`tools/music.py install`）與音效（`tools/sfx.py install`）打包進 `base.zip`（修改 CI 需要使用者同意）
 
 ### M6 — 內容
 
-- [ ] 標題畫面存檔（只用 OG 物件）
-- [ ] OG 版情境 + ScenarioText 45 個
-- [ ] 教學：重製或在 fork 中停用
+決策（2026-11-23，使用者確認）：標題畫面是**精心設計的場景**（不是 AI 公司隨意建造），參考 vanilla `title.dat` 的做法（多個小場景、鏡頭依序停留）；OG 範例情境做少量（3–5 個）；ScenarioText 先不做；教學在缺檔時停用。
+
+- [x] 美術調整（2026-11-23）：對照 vanilla 截圖後，樹木改用點雲渲染器 `tools/gen/tree3d.py`（39 個 Tree 物件全部重建）；Blender 物件改用 vanilla 風格的燈光、顆粒與磚紋（`OG_RENDER_STYLE=vanilla`，預設），fork 自製的建築、產業、機場、碼頭 100 個與火車站 3 個全部重新渲染。見 `PIPELINE.md`「美術風格」。
+- [x] OpenLoco fork：場景建造器 `build-scene <scene.yml> -o <存檔>`（`SceneBuilder.cpp`）：依 YAML 腳本生成地形（PNG 高度圖）、放城鎮／產業／建築、鋪軌道與道路（含橋、隧道、車站、號誌、齒軌／架空線）、機場、碼頭、車輛與路線，模擬後存檔。格式見 `base/title/README.md`。
+- [x] 標題畫面存檔（只用 OG 物件）（2026-11-25）：`base/title/`：10 個小場景（河谷高架橋、河港吊橋與渡輪、市中心、機場、礦業線、農村、阿爾卑斯齒軌鐵道、林場、海岸鐵路與燈塔、郊區）＋鏡頭清單（fork 的 `Title.cpp` 讀 `Data/title.yml`，可設旋轉與縮放）。`python3 tools/title.py build` 重建、`install` 安裝；`install_test_env.py --with-base` 會自動安裝。標題畫面實際執行、10 個鏡頭的截圖都已檢視。
+- [ ] CI：把 `base/title/title.dat` 與 `camera.yml`（`tools/title.py install`）打包進 `base.zip`（修改 CI 需要使用者同意）
+- [ ] OG 範例情境 3–5 個（用 `build-scene` 建造；名稱、目標待使用者確認）
+- [ ] ScenarioText 45 個（先不做）
+- [x] 教學（2026-11-23）：fork 在找不到教學檔（`tut1024_1..3`、`boulderBreakers`）時隱藏標題選單的教學按鈕，其餘三個按鈕置中；原本缺檔時會 crash（`throw;`）
 
 ---
 

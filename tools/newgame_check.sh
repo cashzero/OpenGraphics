@@ -9,7 +9,7 @@
 #   SELECT=OGREGUK,OGCOALMI tools/newgame_check.sh
 #   MAX_PLACEHOLDERS=30 tools/newgame_check.sh   placeholder 超過此數量就失敗（預設 30）
 #
-# 需要 OpenLoco fork 的 og-main（new-game、screenshot --centre town:N／industry:NAME、standalone 模式）。
+# 需要 OpenLoco fork 的 master（new-game、screenshot --centre town:N／industry:NAME、standalone 模式）。
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO"

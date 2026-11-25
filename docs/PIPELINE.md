@@ -127,7 +127,49 @@ LOCO_DATA_DIR=$HOME/Locomotion/game .venv/bin/python tools/gen/build_simple_obje
     --open-window objects,options -o "$PWD/build/screenshots/m4/ui.png"
   ```
   可用名稱：options、audio、objects、company、finances、companies、towns、industries、stations、trains、terraform、trees、
-  map、music、messages、about、shortcuts、landscape、construction、roadconstruction（見 OpenLoco.cpp `openWindowsByName`）。
+  map、music（自訂播放清單）、jukebox（點唱機）、messages、about、shortcuts、landscape、construction、roadconstruction（見 OpenLoco.cpp `openWindowsByName`）。
+
+### 音訊（M5，2026-11-23）
+
+```bash
+python3 tools/music.py check                                   # base/music/tracks.json 與檔案一致
+python3 tools/music.py install build/openloco-env/data/base/Data   # install_test_env.py --with-base 會自動執行
+python3 tools/sfx.py check && python3 tools/sfx.py install build/openloco-env/data/base/Data   # 同上（音效 bank + 環境音）
+# 把遊戲的音訊輸出錄成 WAV（OpenAL Soft 的 wave 驅動，即時錄製；headless 時唯一能檢查聲音的方法）
+STANDALONE=1 AUDIO_OUT="$PWD/build/screenshots/m5.wav" tools/run_openloco.sh "$PWD/build/tests/newgame/after.SV5" \
+  --exit-after-frames 500 --open-window jukebox --log_levels "info, warning, error, verbose" -o "$PWD/build/screenshots/m5.png"
+```
+- 音樂是 OpenMSX 的 MIDI（`base/music/`，GPL v2），由 OpenLoco fork 合成：log 會出現 `Rendering MIDI music …` 與 `Rendered MIDI music sample …`。
+- 音效（`base/sfx/`，OpenSFX）：要確認某個音效有播出，把測試環境 `openloco.yml` 的 `playJukeboxMusic` 暫時改成 false 再錄，然後拿素材（依遊戲的音高倍率 22050/22000 重新取樣）和錄音做正規化互相關，相關係數接近 1 就是播出了。
+- 錄下的 WAV 用 RMS（每秒）與頻譜圖檢查：音樂開始後 RMS 約 0.03–0.05（套用遊戲音量後），頻譜要看得到諧波橫線與鼓點直線。
+
+### 美術風格（M6 美術調整，2026-11-23）
+
+對照 vanilla 的遊戲截圖後調整，目標是與 vanilla 並排時質感相近（但造型仍是原創）：
+- **樹木**：`tools/gen/tree3d.py` 是 numpy 點雲渲染器（不用 Blender）：樹幹與枝條 + 一團團葉叢（法線加雜訊），等角投影、
+  光線方向與 vanilla 相同（左上），以 Lab 色彩空間最近色查表量化到 Loco 調色盤；陰影是樹冠垂直投影的形狀。
+  `SPECIES` 列出各樹種（落葉、針葉、松、柱狀、垂柳、棕櫚、仙人掌、蓮座），`--sheet` 產生全部季節／生長階段的預覽。
+  `build_simple_objects.py` 的 39 個 Tree 物件都改用它（`["tree3d.py", "--species", X, "--seed", N]`）。
+- **Blender 物件**：`OG_RENDER_STYLE=vanilla`（預設；`classic` = M3 的舊風格）：Standard view transform、較弱的補光
+  （`static_rig.py`）、材質加顆粒雜訊（兩種尺度）與磚紋（`kit.py`），石板屋頂較深（`models/ops.py`），住宅占地放大 1.2 倍
+  （`building_recipes.py`）。換風格後要整批重算：`build_blender_objects.py`（建築、產業、機場、碼頭；約 2.5 小時）與
+  `build_stations.py`，**一次只跑一個 Blender**。
+
+### 場景建造器與標題畫面（M6，2026-11-25）
+
+OpenLoco fork 的 `build-scene` 依 YAML 腳本建造地圖並存檔（標題畫面、範例情境、地圖上的物件測試都用它）：
+```bash
+python3 tools/install_test_env.py --with-placeholders --with-base           # 建造時用的物件與 base
+.venv/bin/python tools/gen/title_heightmap.py                               # 地形（FLATS／PROFILES = 場景需要的平地與坡道）
+STANDALONE=1 tools/run_openloco.sh build-scene "$PWD/base/title/title.yml" -o "$PWD/build/title/title.SV5"
+python3 tools/title.py build                                                # 上面兩步 + 複製到 base/title/title.dat
+python3 tools/title.py install build/openloco-env/data/base/Data            # title.dat + 鏡頭清單（--with-base 會自動做）
+STANDALONE=1 tools/run_openloco.sh --exit-after-frames 3000 -o "$PWD/build/screenshots/title.png"   # 實際的標題畫面
+```
+- 腳本格式、op 參數與經驗法則見 `base/title/README.md`。失敗時錯誤訊息會列出 op 的內容，並存下 `<輸出>.failed.SV5`；
+  `probe` op 會把區域印成文字地圖，用來找「in the way」的東西。
+- 檢查構圖：對每個鏡頭用 `screenshot <存檔> <tick> --centre x,y --rotation r --zoom 0 --size 1280x720`，tick 取該鏡頭在序列中
+  實際出現的時間（前面鏡頭停留時間的總和 + 一點），才看得到當時車輛的位置。`screenshot` 可以直接讀標題存檔。
 
 ## P2 量化
 
@@ -223,7 +265,7 @@ cmake --build --preset posix-release
 ```
 - 執行檔：`../OpenLoco/build/posix/Release/OpenLoco`
 - CMake 會用 `FetchContent` 下載上游 OpenGraphics `v0.1.12` 的 `objects.zip`，放到 `../OpenLoco/build/posix/Release/data/objects/`（198 個 DAT）。
-- OpenLoco fork（D2）：`../OpenLoco` 切到 `og-main`（`git switch og-main && git pull`）後執行同樣的指令。V2 流程需要 fork 的功能（`screenshot` 命令、別名層）。
+- OpenLoco fork（D2）：`../OpenLoco` 在 fork 的 `master`（`git switch master && git pull`）後執行同樣的指令。V2 流程需要 fork 的功能（`screenshot` 命令、別名層）。
 
 **靜態連結發佈版**（之後要發佈時才用；需要從原始碼編譯所有相依套件，`linux-vcpkg-static` preset）：2026-11-19 嘗試過三次都沒有完成。依序遇到缺 `zip`／`unzip`、缺 autotools（vcpkg 的 `alsa`）、缺 `libxtst-dev`（vcpkg 的 `sdl3`），之後改走上面的 `posix` 路線。若要再試，先補齊下列套件，並在重試前 `rm -rf build/linux-vcpkg-static`：
 ```bash
@@ -280,12 +322,12 @@ python3 tools/s5.py relink "$LOCO_DATA_DIR/Scenarios/Boulder Breakers.SC5" \
 
 ### 端到端冒煙測試（一個指令）
 
-✅ 2026-11-19：`tools/v2_smoke.sh ["<情境>.SC5"]`（約 8 秒；需要 OpenLoco fork 的 `og-main`）
+✅ 2026-11-19：`tools/v2_smoke.sh ["<情境>.SC5"]`（約 8 秒；需要 OpenLoco fork 的 `master`）
 依序：產生 placeholder（若還沒有）→ 組測試環境（含 `aliases.yml`）→ 建立**沒有 `ObjData`** 的 Locomotion 目錄 `build/loco-noobjdata/`（只 symlink `Data`、`Scenarios`）→ 以**原版情境**執行 `simulate` 500 ticks（檢查有跑滿、有載入別名表）→ `screenshot` → `build/screenshots/v2_smoke/<情境>.png`。失敗時以非 0 結束。**PASS 之後仍要親自看截圖。**
 
 這等於在「完全沒有 vanilla 物件」的條件下驗證：所有物件都經由別名層換成 OG 或 placeholder。
 
-### 別名層（fork `og-main`）
+### 別名層（fork `master`）
 
 - OpenLoco 讀取 `<objects 目錄>/aliases.yml`（每列 `[ObjectType 數值, vanilla 名稱, OG 名稱]`）。找不到 vanilla 物件時，改用對應的 OG 物件；物件之間的引用（例如車輛引用軌道）也一樣。
 - 產生：`python3 tools/deps.py --aliases-yml <path>`（只含 repo 已有的 OG 物件）；`tools/make_placeholders.py` 會另外產生含 placeholder 的版本；`install_test_env.py` 會自動放進測試環境。
@@ -294,7 +336,7 @@ python3 tools/s5.py relink "$LOCO_DATA_DIR/Scenarios/Boulder Breakers.SC5" \
 
 ### Standalone（不使用 Locomotion）測試
 
-✅ 2026-11-19（fork `og-main`）：
+✅ 2026-11-19（fork `master`）：
 ```bash
 .venv/bin/python tools/g1.py build -o build/placeholders/base/Data/g1.DAT    # placeholder g1（只需 docs/g1-catalog.json）
 python3 tools/install_test_env.py --with-placeholders --with-base             # 放進 build/openloco-env/data/base
