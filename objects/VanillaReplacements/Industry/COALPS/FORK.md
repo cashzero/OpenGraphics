@@ -15,3 +15,4 @@
 - 2026-11-19 V1：`tools/lint.py` 0 錯誤；contact sheet（含公司色變體與 vanilla 對照）已檢視
 - 2026-11-19 V2：`tools/newgame_check.sh` 通過（standalone 新遊戲物件選擇驗證、模擬一年不崩潰、存檔物件 placeholder 只剩音效等 24 個）；地圖截圖 build/screenshots/newgame/industry_*.png 已檢視：建築、動畫部件、地面圖塊與公司色正常
 - 2026-11-25 V1/V2：鍋爐廠房改為暗色凹入屋頂＋採光氣樓＋公司色細簷口，變電站改為鋼製散熱片變壓器與匯流排門架；build/preview/b2_coalps_fix.p1.png、build/screenshots/polish3/shot5_coalps.png 檢視通過
+- 2026-11-25 V1/V2（建物地表材質升級）：`tools/blender/kit.py` 新增多尺度程序化地表著色器（泥土／碎石／草地／人行道磚縫／混凝土伸縮縫／停機坪／礦土／煤場／雪地＋3D Bump），重算地面部件並同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_01.png`、`cmp_05.png`、`cmp_07.png`）檢視通過。

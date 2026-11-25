@@ -17,3 +17,4 @@
 - 2026-11-25 V1／V2：林場田地人工林改用 `tools/gen/tree3d.py` 點雲冷杉（深針葉綠，與地圖樹木一致），並修正階段 6 樹樁繪製原點；`tools/lint.py` 0 錯誤；V1 已檢視 `build/preview/check_forest_new.png`，V2 已檢視標題場景截圖 `build/screenshots/polish/shot8_forest.png`，人工林色調已與周圍針葉林自然融合、砍伐區可見樹樁
 - 2026-11-25 V1/V2：配合新版 tree3d.py 重建人工林冷杉圖塊；build/screenshots/title_compare/og_own_title_grid.png 檢視通過
 - 2026-11-25 V1/V2（隨樹木暖陽光照重編）：依新版 `tree3d.py` 暖陽色帶重產林場冷杉並驗證 `og_own_title_grid.png`（OG 08）通過。
+- 2026-11-25 V1/V2（建物地表材質升級）：`tools/blender/kit.py` 新增多尺度程序化地表著色器（泥土／碎石／草地／人行道磚縫／混凝土伸縮縫／停機坪／礦土／煤場／雪地＋3D Bump），重算地面部件並同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_01.png`、`cmp_05.png`、`cmp_07.png`）檢視通過。

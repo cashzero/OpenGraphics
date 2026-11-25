@@ -62,9 +62,9 @@ MATS = {  # 名稱: (RGB 線性值, 粗糙度, 金屬度, 雜訊)
 REMAP_NAMES = {"company": "Company Color 1", "company2": "Company Color 2"}
 
 
-def _mat(kit, name):
+def _mat(kit, name, ground=False):
     rgb, rough, metal, noise = MATS[name]
-    return kit.material(f"{REMAP_NAMES.get(name, name.title())} {name}", rgb, rough, metal, noise)
+    return kit.material(f"{REMAP_NAMES.get(name, name.title())} {name}", rgb, rough, metal, noise, ground=ground)
 
 
 def _mesh(name, verts, faces, kit, mat):
@@ -108,7 +108,7 @@ def run_op(kit, op, T=None, Z=None):
     kind = op["op"]
     m = op.get("m", "concrete")
     if kind == "ground":                                  # 覆蓋整個佔地的地面板（含校正用的邊緣）
-        return kit.ground_plate(op.get("tiles", 1), op.get("tiles", 1), _mat(kit, m), thickness=0.03)
+        return kit.ground_plate(op.get("tiles", 1), op.get("tiles", 1), _mat(kit, m, ground=True), thickness=0.03)
     if kind == "box":
         (x, y, z), (sx, sy, h) = op["c"], op["s"]
         o = kit.box(sx * T, sy * T, Z(h), (x * T, y * T, Z(z)), _mat(kit, m), rot=math.radians(op.get("r", 0)))

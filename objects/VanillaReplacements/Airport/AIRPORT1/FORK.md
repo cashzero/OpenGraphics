@@ -15,3 +15,4 @@
 - 2026-11-20 V1：`tools/lint.py` 0 錯誤；contact sheet（含公司色變體與 vanilla 對照）已檢視
 - 2026-11-22 V2：`tools/newgame_check.sh`（standalone，`OG_REGUK`／`OG_REGALP`）開新遊戲 → 模擬一年不崩潰、存檔物件全部來自 repo；物件選擇預覽 `build/screenshots/m3/preview/airport-OGAIRPO1.png` 已檢視。**未驗證**：尚未看過放在地圖上的樣子（需要含此物件的測試存檔）
 - 2026-11-25 V1／V2：重塑航廈（立面結構柱、天窗、拱形玻璃中庭、空橋）、塔台（肋條塔身、外傾窗框、陽台欄杆、球形雷達罩）、機庫（圓筒拱頂、鋼拱肋、四片滑門、背面工作間）與立體停車大樓（露天頂樓車位與車輛、電梯塔、中空公司色飾條）。V1 檢視 `build/preview/check_air1_new.p1..2.png`、`check_air1_p27.png`（發現並修正停車大樓頂樓飾條實心覆蓋柏油面的問題）；V2 檢視標題場景地圖截圖 `build/screenshots/polish/shot4_air1_r0.png`、`shot4_air1_r2.png` 與物件預覽 `obj_OGAIRPO1.png`，多角度堆疊、比例與公司色皆正常
+- 2026-11-25 V1/V2（建物地表材質升級）：`tools/blender/kit.py` 新增多尺度程序化地表著色器（泥土／碎石／草地／人行道磚縫／混凝土伸縮縫／停機坪／礦土／煤場／雪地＋3D Bump），重算地面部件並同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_01.png`、`cmp_05.png`、`cmp_07.png`）檢視通過。
