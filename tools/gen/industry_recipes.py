@@ -376,71 +376,139 @@ def oilrefinery(p, h, info, frame=0):
     g2, g1 = {0, 2, 6, 8, 12}, {4, 10}
     if p in g2:
         ground(o, 2, "gravel")
-    elif p in g1:
+        o.box((0, 0, 0), (1.84, 1.84, 0.35), "darkconcrete")
+        return o
+    if p in g1:
         ground(o, 1, "gravel")
-    elif p == 1:                                              # 製程單元 + 拱形管橋
-        cols = ((-0.50, -0.40, h * 0.92), (-0.08, -0.48, h * 0.78), (0.34, -0.32, h * 0.86))
-        for x, y, hh in cols:
-            column(o, (x, y), 0.10, hh, "silver", platforms=3)
-        for (ax, ay, ah), (bx, by, bh) in ((cols[0], cols[1]), (cols[1], cols[2])):
-            zm = min(ah, bh) * 0.65
-            pipe(o, (ax, ay, zm), (ax, ay, zm + 8), "steel", r=0.022)
-            pipe(o, (ax, ay, zm + 8), (bx, by, zm + 8), "steel", r=0.022)
-            pipe(o, (bx, by, zm + 8), (bx, by, zm - 4), "steel", r=0.022)
-        shed(o, (0.20, 0.50), 0.92, 0.52, 13, wall="stone", roofm="darkconcrete", kind="flat", win=4)
-        for y in (-0.04, 0.12):
-            pipe(o, (-0.88, y, 12), (0.88, y, 12), "steel" if y < 0 else "company", r=0.022)
-        for x in (-0.65, 0.0, 0.65):
-            o.seg((x, -0.04, 0), (x, -0.04, 13), "darksteel", r=0.014)
-            o.seg((x, 0.12, 0), (x, 0.12, 13), "darksteel", r=0.014)
-    elif p == 3:                                              # 大型儲油槽（金屬灰＋浮頂邊環＋圍堰＋樓梯）
-        parapet(o, 0, 0, 1.88, 1.88, 0, 2.2, "stone", t=0.05)
-        for (x, y, r, th) in ((-0.42, -0.40, 0.42, h * 0.56), (0.44, 0.40, 0.38, h * 0.52)):
-            tank(o, (x, y), r, th, "steel", top="flat")
-            o.cyl((x, y, th * 0.72), r * 1.02, 1.6, "company", v=20)
-            o.cyl((x, y, th + 0.8), r * 0.92, 0.8, "darkconcrete", v=20)
-            o.seg((x + r * 1.03, y - 0.08, 0), (x + r * 1.03, y + 0.12, th), "darksteel", r=0.012)
-        pipe(o, (-0.42, -0.40, 3.0), (0.44, 0.40, 3.0), "darksteel", r=0.024)
-    elif p == 5:                                              # 蒸餾塔群（1×1）
-        column(o, (-0.15, -0.1), 0.1, h * 0.92, "silver")
-        column(o, (0.2, 0.15), 0.08, h * 0.7, "silver")
-        pipe(o, (-0.15, -0.1, h * 0.6), (0.2, 0.15, h * 0.5), "company")
-    elif p == 7:                                              # 球形儲槽（金屬銀色＋圍堰）
-        parapet(o, 0, 0, 1.84, 1.84, 0, 2.0, "stone", t=0.05)
-        sphere_tank(o, (-0.40, -0.30), 0.30, 10, "silver")
-        sphere_tank(o, (0.44, 0.34), 0.26, 9, "steel")
-        pipe(o, (-0.40, -0.30, 3.5), (0.44, 0.34, 3.5), "darksteel", r=0.022)
-    elif p == 9:                                              # 裂解單元 + 加熱爐煙囪
-        shed(o, (-0.30, 0.20), 1.04, 0.84, 22, wall="corrugated", roofm="darkconcrete", kind="flat", win=4)
-        band(o, -0.30, 0.20, 1.04, 0.84, 20.6, 1.3, "company", grow=0.04)
+        o.box((0, 0, 0), (0.90, 0.90, 0.35), "darkconcrete")
+        return o
+    if p == 1:                                                # 製程與加氫脫硫單元（密集塔群＋多層拱形管橋＋熱交換器）
+        cols = ((-0.54, -0.42, h * 0.96, 0.13, "steel"),
+                (-0.14, -0.52, h * 0.84, 0.11, "silver"),
+                (0.28, -0.40, h * 0.92, 0.12, "rust"),
+                (-0.48, 0.12, h * 0.72, 0.10, "silver"))
+        for x, y, hh, r, mat in cols:
+            column(o, (x, y), r, hh, mat, platforms=3)
+            o.seg((x + r * 1.1, y, 0), (x + r * 1.1, y, hh), "darksteel", r=0.012)
+        for (ax, ay, ah, *_), (bx, by, bh, *_) in ((cols[0], cols[1]), (cols[1], cols[2]), (cols[0], cols[3])):
+            zm = min(ah, bh) * 0.68
+            pipe(o, (ax, ay, zm), (ax, ay, zm + 7), "rust", r=0.028)
+            pipe(o, (ax, ay, zm + 7), (bx, by, zm + 7), "rust", r=0.028)
+            pipe(o, (bx, by, zm + 7), (bx, by, zm - 3), "rust", r=0.028)
+        # 臥式熱交換器滾筒＋控制泵房＋管架
         for k in range(2):
-            chimney(o, (0.50 + k * 0.26, -0.50), 0.085, h * 0.95, m="stone", top="red", bands="red")
-        column(o, (-0.62, -0.60), 0.11, h * 0.82, "silver", platforms=3)
-        pipe(o, (-0.62, -0.60, 24), (-0.30, 0.20, 24), "steel", r=0.025)
-    elif p == 11:                                             # 高煙囪（1×1）
-        chimney(o, (0, 0), 0.13, h, m="concrete", top="red", bands="red")
-        o.box((0.25, 0.25, 0), (0.3, 0.3, 8), "brick")
-    elif p == 13:                                             # 火炬塔
-        for a in range(3):
-            ang = a * 2 * math.pi / 3
-            o.seg((0.35 * math.cos(ang), 0.35 * math.sin(ang), 0), (0.04 * math.cos(ang), 0.04 * math.sin(ang), h), "company", r=0.012)
-        for k in range(1, 8):
-            z = h * k / 8
-            r = 0.35 - 0.31 * k / 8
-            for a in range(3):
-                a0, a1 = a * 2 * math.pi / 3, (a + 1) * 2 * math.pi / 3
-                o.seg((r * math.cos(a0), r * math.sin(a0), z), (r * math.cos(a1), r * math.sin(a1), z), "white", r=0.007)
-        o.cyl((0, 0, 0), 0.04, h, "darksteel", v=8)
-    else:                                                     # 火焰（64 格，疊在火炬塔頂）
+            o.seg((-0.68, 0.56 - k * 0.22, 8), (0.04, 0.56 - k * 0.22, 8), "steel", r=0.085)
+            for xx in (-0.54, -0.10):
+                o.box((xx, 0.56 - k * 0.22, 0), (0.06, 0.14, 5.5), "darkconcrete")
+        shed(o, (0.44, 0.46), 0.74, 0.62, 16, wall="brick", roofm="darkconcrete", kind="flat", win=4)
+        band(o, 0.44, 0.46, 0.74, 0.62, 14.8, 1.1, "company", grow=0.04)
+        for y in (-0.06, 0.08):
+            pipe(o, (-0.88, y, 13), (0.88, y, 13), "steel" if y < 0 else "company", r=0.024)
+        for x in (-0.70, -0.15, 0.45):
+            o.seg((x, -0.08, 0), (x, -0.08, 14), "darksteel", r=0.016)
+            o.seg((x, 0.10, 0), (x, 0.10, 14), "darksteel", r=0.016)
+            o.seg((x, -0.08, 13), (x, 0.10, 13), "darksteel", r=0.014)
+    elif p == 3:                                              # 巨型風化鋼製原油儲槽（填滿 2×2 圍堰＋補強環＋盤梯＋集油管匯）
+        parapet(o, 0, 0, 1.88, 1.88, 0, 2.8, "stone", t=0.055)
+        for (x, y, r, th, mat) in ((-0.38, -0.36, 0.49, h * 0.74, "steel"),
+                                   (0.42, 0.38, 0.44, h * 0.66, "rust")):
+            tank(o, (x, y), r, th, mat, top="flat")
+            # 水平焊縫加強肋環＋頂部浮頂護欄與暗色浮頂蓋
+            for frac in (0.28, 0.56, 0.82):
+                o.cyl((x, y, th * frac), r * 1.025, 0.9, "darksteel", v=24)
+            o.cyl((x, y, th * 0.66), r * 1.03, 1.6, "company", v=24)
+            o.cyl((x, y, th + 0.4), r * 0.94, 1.0, "darkconcrete", v=24)
+            o.cyl((x, y, th + 1.0), r * 1.01, 1.8, "darksteel", v=24)
+            # 外壁攀登斜梯與頂部集油管
+            o.seg((x + r * 1.03, y - 0.14, 0), (x + r * 1.03, y + 0.18, th + 1.5), "darksteel", r=0.016)
+            o.seg((x + r * 0.95, y - 0.14, 0), (x + r * 0.95, y + 0.18, th + 1.5), "darksteel", r=0.012)
+        pipe(o, (-0.38, -0.36, 4.0), (0.42, 0.38, 4.0), "darksteel", r=0.032)
+        o.box((-0.62, 0.54, 0), (0.36, 0.30, 10.0), "darksteel")              # 泵浦閥組箱
+    elif p == 5:                                              # 雙塔分餾單元（1×1）
+        column(o, (-0.18, -0.14), 0.12, h * 0.94, "steel", platforms=4)
+        column(o, (0.20, 0.16), 0.10, h * 0.78, "rust", platforms=3)
+        pipe(o, (-0.18, -0.14, h * 0.66), (-0.18, -0.14, h * 0.76), "steel", r=0.026)
+        pipe(o, (-0.18, -0.14, h * 0.76), (0.20, 0.16, h * 0.76), "steel", r=0.026)
+        pipe(o, (0.20, 0.16, h * 0.76), (0.20, 0.16, h * 0.60), "steel", r=0.026)
+        o.seg((-0.34, 0.22, 6), (0.24, 0.22, 6), "darksteel", r=0.055)
+    elif p == 7:                                              # 高壓液化氣球形儲槽區（2×2）
+        parapet(o, 0, 0, 1.84, 1.84, 0, 2.4, "stone", t=0.05)
+        sphere_tank(o, (-0.42, -0.32), 0.32, 9, "silver")
+        sphere_tank(o, (0.44, 0.34), 0.29, 8, "steel")
+        pipe(o, (-0.42, -0.32, 4.0), (0.44, 0.34, 4.0), "darksteel", r=0.028)
+        o.box((-0.50, 0.54, 0), (0.42, 0.32, 11.0), "brick")
+        o.box((-0.50, 0.54, 11.0), (0.44, 0.34, 1.2), "darkconcrete")
+    elif p == 9:                                              # 熱裂解爐＋雙煙囪＋塔器（2×2）
+        shed(o, (-0.32, 0.22), 1.08, 0.88, 26, wall="rust", roofm="darkconcrete", kind="flat", win=4)
+        band(o, -0.32, 0.22, 1.08, 0.88, 24.4, 1.4, "company", grow=0.04)
+        for k in range(2):
+            chimney(o, (0.50 + k * 0.26, -0.46), 0.095, h * 0.96, m="steel", top="darksteel", bands="red")
+        column(o, (-0.60, -0.58), 0.13, h * 0.88, "silver", platforms=3)
+        pipe(o, (-0.60, -0.58, 28), (-0.60, -0.58, 36), "rust", r=0.030)
+        pipe(o, (-0.60, -0.58, 36), (-0.32, 0.22, 36), "rust", r=0.030)
+        pipe(o, (-0.32, 0.22, 36), (-0.32, 0.22, 24), "rust", r=0.030)
+    elif p == 11:                                             # 主煙道高煙囪＋鍋爐間（1×1）
+        chimney(o, (-0.06, -0.06), 0.16, h, m="stone", top="darksteel", bands="red")
+        o.box((0.24, 0.24, 0), (0.38, 0.36, 14), "brick")
+        o.gable((0.24, 0.24, 14), (0.42, 0.40, 5), "slate", "x")
+        pipe(o, (0.16, 0.16, 12), (-0.06, -0.06, 18), "darksteel", r=0.05)
+    elif p == 13:                                             # 核心巨型催化裂解塔群＋高聳火炬塔（2×2，h=155，原版 Shot 09 主視覺！）
+        # 重型混凝土與鋼構設備基座
+        o.box((0, 0, 0), (1.74, 1.74, 3.0), "darkconcrete")
+        parapet(o, 0, 0, 1.78, 1.78, 0, 4.2, "stone", t=0.045)
+        # 中央巨型催化裂解主塔（鋼構骨架包覆＋多層圓形走道＋鏽鋼反應器）＋直上 z=155 火炬煙道
+        o.cyl((0, 0, 3), 0.26, 26, "darksteel", v=20)
+        o.cyl((0, 0, 29), 0.22, 64, "steel", v=20, rt=0.18)
+        o.cyl((0, 0, 93), 0.18, 26, "rust", v=20, rt=0.12)
+        o.cyl((0, 0, 119), 0.085, h - 119, "darksteel", v=14, rt=0.065)       # 火炬立管頂到 z=155
+        o.cyl((0, 0, h - 4), 0.11, 4.0, "rust", v=14)                         # 火炬燃燒口
+        # 圍繞主塔的四柱鋼構桁架與 5 層檢修平台
+        for dx in (-0.30, 0.30):
+            for dy in (-0.30, 0.30):
+                o.seg((dx, dy, 3), (dx * 0.72, dy * 0.72, 118), "darksteel", r=0.018)
+        for z_plat, r_plat in ((28, 0.36), (52, 0.34), (76, 0.32), (100, 0.28), (126, 0.20)):
+            o.cyl((0, 0, z_plat), r_plat, 1.2, "darksteel", v=16)
+            o.cyl((0, 0, z_plat + 2.8), r_plat * 0.98, 0.6, "steel", v=16)
+        o.cyl((0, 0, 62), 0.23, 2.4, "company", v=20)
+        # 三座環繞主塔的分餾／再生副塔（不同高度與材質，營造濃密工業剪影）
+        flank = ((-0.52, -0.38, 108, 0.17, "rust"),
+                 (0.54, -0.34, 92, 0.15, "silver"),
+                 (-0.36, 0.50, 80, 0.14, "steel"))
+        for fx, fy, fh, fr, fmat in flank:
+            column(o, (fx, fy), fr, fh, fmat, platforms=4)
+            # 粗大拱形高架鋼管直連中央主塔
+            zm = fh * 0.74
+            pipe(o, (fx, fy, zm), (fx, fy, zm + 11), "rust" if fmat != "rust" else "steel", r=0.036)
+            pipe(o, (fx, fy, zm + 11), (0, 0, zm + 11), "rust" if fmat != "rust" else "steel", r=0.036)
+            pipe(o, (fx, fy, zm * 0.45), (0, 0, zm * 0.45), "darksteel", r=0.030)
+        # 副塔間互連管線＋紅磚壓縮機房＋臥式冷凝器
+        pipe(o, (-0.52, -0.38, 48), (0.54, -0.34, 48), "steel", r=0.028)
+        o.box((0.46, 0.48, 3), (0.62, 0.54, 24), "brick")
+        o.box((0.46, 0.48, 27), (0.64, 0.56, 1.4), "darkconcrete")
+        parapet(o, 0.46, 0.48, 0.64, 0.56, 26.8, 2.2, "stone", t=0.04)
+        for k in range(2):
+            o.seg((-0.36, -0.68 + k * 0.16, 11), (0.34, -0.68 + k * 0.16, 11), "silver", r=0.075)
+    else:                                                     # 劇烈橘紅火炬火焰＋黑煙（64 格，疊在火炬口 z=155 上方）
         k = p - 14
-        rng = random.Random(1000 + k)
-        flick = 0.75 + 0.25 * math.sin(2 * math.pi * k / 64 * 3) + rng.uniform(-0.08, 0.08)
-        lean = 0.06 * math.sin(2 * math.pi * k / 64)
-        fh = h * 0.55 * flick
-        o.cyl((0, 0, 0), 0.03, 3, "darksteel", v=8)
-        o.lathe((lean * 0.3, 0, 3), [(0.0, 0), (0.07, fh * 0.15), (0.09, fh * 0.35), (0.06, fh * 0.65), (0.0, fh)], "flame", seg=10)
-        o.lathe((lean * 0.2, 0, 3), [(0.0, 0), (0.04, fh * 0.15), (0.04, fh * 0.35), (0.0, fh * 0.55)], "glow", seg=8)
-        smoke_puffs(o, (lean, 0), 3 + fh, k, 64, n=2, rise=h - fh - 4, size=0.06, m="smoke")
+        rng = random.Random(2000 + k)
+        ang = 2 * math.pi * k / 64
+        flick = 0.78 + 0.22 * math.sin(ang * 3) + rng.uniform(-0.07, 0.07)
+        lean = 0.11 * math.sin(ang * 2) + 0.05
+        fh = h * 0.62 * flick
+        o.cyl((0, 0, 0), 0.06, 3.5, "darksteel", v=10)
+        # 外層大橘紅火焰＋內層亮黃火芯＋上方躍動火舌
+        o.lathe((lean * 0.35, 0, 3),
+                [(0.0, 0), (0.11, fh * 0.14), (0.14, fh * 0.34), (0.10, fh * 0.66), (0.04, fh * 0.88), (0.0, fh)],
+                "flame", seg=12)
+        o.lathe((lean * 0.25, 0, 3),
+                [(0.0, 0), (0.07, fh * 0.14), (0.075, fh * 0.38), (0.03, fh * 0.62), (0.0, fh * 0.72)],
+                "glow", seg=10)
+        # 躍動分離火舌（增加動態燃燒感）
+        t_tongue = ((k / 64 * 4) % 1.0)
+        o.lathe((lean * (0.6 + t_tongue * 0.5), 0.03 * math.cos(ang * 4), 3 + fh * (0.78 + 0.32 * t_tongue)),
+                [(0.0, 0), (0.07 * (1 - 0.5 * t_tongue), 4), (0.05 * (1 - 0.5 * t_tongue), 10), (0.0, 15)],
+                "flame", seg=8)
+        smoke_puffs(o, (lean * 0.9, 0), 4 + fh * 0.92, k, 64, n=3, rise=max(14, h - fh * 0.92 - 2), size=0.09, m="darksteel")
     return o
 
 
