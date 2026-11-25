@@ -80,7 +80,7 @@ M2 之前的分類數字（保留作為紀錄；最新數字以 `python3 tools/i
 ### 已知的上游問題
 
 - `OGE_LRC1`／`OGE_LRC2`（`EXLRC1`／`EXLRC2`）：bogie sprite 數量不足，OpenLoco 載入時報錯，但仍會繼續載入。依「上游優先」政策不修改。
-- `OG_SNOW`（`OGSNOW`）：在遊戲中雪地呈現大量黑色雜點，vanilla `SNOW` 沒有（2026-11-19，以同一份固定存檔對照截圖發現）。2026-11-25 查明原因：上游 `OG_SNOW.dat` 的部分斜坡雪地 sprite（#96、#98、#100、#103–106、#108、#110、#112）誤用到調色盤 index 253–254（屬於 primary remap 區、不在 OpenLoco `updatePalette` 載入的 10–245 範圍內，未套 remap 時顯示為純黑）。依「上游優先」政策不修改上游物件。
+- `OG_SNOW`（`OGSNOW`）：上游版在遊戲中雪地呈現大量黑色雜點（部分斜坡 sprite #96、#98、#100、#103–106、#108、#110、#112 誤用 index 253–254）且雜訊偏重。2026-11-25 經使用者明確同意，改以本 fork 的 `tools/gen/snow.py` 覆寫 `OG_SNOW`（加上 `FORK.md`），改為全 10..245 柔和冰藍—雪白漸層，已解決黑點問題。
 
 ### 物件以外的 vanilla 依賴（OpenLoco 端）
 
