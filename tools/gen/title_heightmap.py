@@ -54,8 +54,8 @@ FLATS = [
 PROFILES = [
     # 1 秋季河谷：南岸從 183 起是 12 級平地；山脊由場景腳本的 raise 抬高（崖面才能開隧道口）
     {"x": (196, 216), "soft": 3, "y": {y: 12 for y in range(189, 223)}},
-    # 7 齒軌鐵道：從山下車站（17 級，y 112）切穿山脊爬到雪村（26 級，y 84），約每 3 格升 1 級；山谷要夠寬，兩側崖壁才不會擋住列車
-    {"x": (73, 83), "soft": 5, "y": {y: round(26 - (y - 84) * 9 / 28) for y in range(84, 113)}},
+    # 7 齒軌鐵道：從山下車站（17 級，y 112）切穿山脊爬到雪村（26 級，y 84），約每 3 格升 1 級；兩側以起伏緩坡自然接回山脊
+    {"x": (74, 82), "soft": 12, "wave": 3.5, "y": {y: round(26 - (y - 84) * 9 / 28) for y in range(84, 113)}},
 ]
 
 
@@ -124,11 +124,26 @@ def build() -> np.ndarray:
     for prof in PROFILES:
         x0, x1 = prof["x"]
         soft = prof["soft"]
+        wave = prof.get("wave", 0.0)
         for y, lvl in prof["y"].items():
-            for x in range(x0 - soft, x1 + soft + 1):
-                d = max(x0 - x, x - x1, 0)
-                w = 1.0 if d == 0 else 1 - d / (soft + 1)
-                h[x, y] = h[x, y] * (1 - w) + lvl * w
+            # 讓山谷兩側的過渡寬度隨 y 自然起伏，避免等高線呈筆直平行條紋
+            s_lo = max(2.0, soft + wave * (math.sin(y / 4.8) + 0.6 * math.cos(y / 2.7)))
+            s_hi = max(2.0, soft + wave * (math.cos(y / 4.3 + 0.8) + 0.6 * math.sin(y / 2.9)))
+            lo_x = int(math.floor(x0 - s_lo))
+            hi_x = int(math.ceil(x1 + s_hi))
+            for x in range(lo_x, hi_x + 1):
+                if x < x0:
+                    t = (x0 - x) / (s_lo + 1.0)
+                elif x > x1:
+                    t = (x - x1) / (s_hi + 1.0)
+                else:
+                    t = 0.0
+                if t >= 1.0:
+                    continue
+                w = 1.0 if t == 0.0 else (1.0 - t * t * (3.0 - 2.0 * t))
+                # 谷壁外側疊上起伏較緩和的自然山勢，不讓山坡呈筆直階梯帶
+                target = h[x, y] if wave == 0.0 else (h[x, y] * 0.65 + (lvl + 1.5 + 3.5 * n2[x, y] + 1.5 * n3[x, y]) * 0.35)
+                h[x, y] = target * (1.0 - w) + lvl * w
                 if w == 1.0:
                     prof_mask[x, y] = True
     h = relax(h, xs, ys, dr, mountain, sea, prof_mask)
@@ -137,10 +152,10 @@ def build() -> np.ndarray:
 
 
 def relax(h, xs, ys, dr, mountain, sea, extra_fixed=None):
-    """坡度限制：相鄰點的高低差不超過 1 級（山區 2 級）：太高的壓低、太低的墊高。消除生成器會做成岩石崖面的陡坡，
-    讓河岸與丘陵是連續的緩坡。河道中心（水面）與場景平地不動。"""
+    """坡度限制：相鄰點的高低差不超過 1 級（含山區，避免 2 級落差在 Locomotion 中變成階梯狀崖壁）：
+    太高的壓低、太低的墊高，讓河岸、丘陵與雪山都是連續斜坡。河道中心（水面）與場景平地不動。"""
     h = np.round(h)
-    limit = np.where(mountain > 0.5, 2.0, 1.0)
+    limit = 1.0
     fixed = (dr < 3.0) | (sea > 0.5)                # 河道中心與海域不動
     if extra_fixed is not None:
         fixed |= extra_fixed
@@ -155,6 +170,15 @@ def relax(h, xs, ys, dr, mountain, sea, extra_fixed=None):
         # 先壓低太高的點；再把固定高地（場景平地）旁太低的點墊高，讓平地邊緣延伸成緩坡
         new = np.where(fixed, h, np.minimum(h, lowest + limit))
         new = np.where(fixed, new, np.maximum(new, highest - limit))
+        if np.array_equal(new, h):
+            break
+        h = new
+    # 山區與低谷平地交界處可能被雙向夾擠留下陡坎，最後單向壓低山區未固定點，確保雪坡連續無階梯崖壁
+    for _ in range(60):
+        padded = np.pad(h, 1, mode="edge")
+        lowest = np.minimum.reduce([padded[1 + dx:1 + dx + N, 1 + dy:1 + dy + N]
+                                    for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))])
+        new = np.where(fixed | (mountain <= 0.1), h, np.minimum(h, lowest + limit))
         if np.array_equal(new, h):
             break
         h = new

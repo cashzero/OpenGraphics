@@ -215,6 +215,7 @@ ops:
   - train: {vehicles: [OGDEH46, OGPCARSW, OGPCARSW], at: V7V, reverse: true, orders: [V7V, V7T]}
   - trees: {types: [OGRFIR, OGSCPINE], area: [70, 88, 75, 114], count: 70}    # 山谷兩側的針葉林（避開軌道 x 78）
   - trees: {types: [OGRFIR, OGSCPINE], area: [81, 88, 86, 114], count: 70}
+  - trees: {types: [OGRFIR, OGSCPINE], area: [60, 86, 70, 114], count: 75}    # 上坡雪嶺針葉林
   - town: {at: [75, 77], size: 2}     # 7 阿爾卑斯雪村
   # ---- 6 農村：農場 → 食品加工廠，卡車沿鄉間道路運送穀物與牲畜（城鎮之前蓋）
   - industry: {type: OGFARM, at: [170, 318]}

@@ -56,7 +56,7 @@ def main(argv=None) -> int:
     user_dir.mkdir(parents=True, exist_ok=True)
     (user_dir / "plugin.dat").unlink(missing_ok=True)
     lang = data_dir / "language"
-    if not lang.exists():
+    if not lang.exists() and not lang.is_symlink():
         os.symlink(Path(args.openloco_data) / "language", lang)
 
     relink_ctx = None
