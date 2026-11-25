@@ -4,6 +4,7 @@
 #   tools/run_openloco.sh screenshot <存檔絕對路徑> 200 -o <png 絕對路徑> --size 1024x640
 # 環境變數（可覆寫）：LOCO_DATA_DIR、OPENLOCO_BIN、OPENLOCO_ENV、TIMEOUT
 #   STANDALONE=1：不使用 Locomotion（需要 install_test_env.py --with-base），對應 OpenLoco fork 的 OPENLOCO_STANDALONE
+#   AUDIO_OUT=<wav 絕對路徑>：把遊戲的音訊輸出（OpenAL Soft 的 wave 驅動，即時錄製）寫成 WAV，用來檢查音樂與音效
 set -euo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 : "${LOCO_DATA_DIR:=$HOME/Locomotion/game}"
@@ -17,6 +18,11 @@ if [ ! -d "$OPENLOCO_ENV/data/objects" ]; then
 fi
 export XDG_CONFIG_HOME="$OPENLOCO_ENV" OPENLOCO_DATA_DIR="$OPENLOCO_ENV/data"
 export SDL_VIDEO_DRIVER=offscreen SDL_AUDIO_DRIVER=dummy ALSOFT_DRIVERS=null
+if [ -n "${AUDIO_OUT:-}" ]; then
+  ALSOFT_CONF="$OPENLOCO_ENV/alsoft-wave.conf"
+  printf '[wave]\nfile = %s\n' "$AUDIO_OUT" > "$ALSOFT_CONF"
+  export ALSOFT_DRIVERS=wave ALSOFT_CONF
+fi
 # Linux 版會在目前目錄建立 OpenLoco.lock，所以一定要在環境目錄裡執行
 cd "$OPENLOCO_ENV"
 if [ "${STANDALONE:-0}" = "1" ]; then

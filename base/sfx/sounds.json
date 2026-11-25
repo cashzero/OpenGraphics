@@ -1,0 +1,326 @@
+{
+ "source": "OpenSFX 1.0.3（https://github.com/OpenTTD/OpenSFX；取自 Debian 套件 openttd-opensfx 1.0.3-3build1 的 opensfx.cat）",
+ "license": "整體 CC BY-SA 3.0；個別檔案的授權（CC BY 3.0／CC BY-SA 3.0／CC0）見 files.*.credit",
+ "files": {
+  "00_good_year.wav": {
+   "opensfx_index": 0,
+   "credit": "\"Good Year\". By Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "01_bad_year.wav": {
+   "opensfx_index": 1,
+   "credit": "\"Bad Year\". By Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "02_splat_building_docks_canals_.wav": {
+   "opensfx_index": 2,
+   "credit": "\"Splat (building docks/canals/river)\". Original \"splattt.mp3\" by \"SlykMrByches\". Edited by \"Wuzzy\". License: Creative Commons Zero 1.0."
+  },
+  "15_road_vehicle_breakdown.wav": {
+   "opensfx_index": 15,
+   "credit": "\"Road vehicle breakdown\". Original \"Dropping a large gun.wav\" by \"Leady\". Edited by Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "16_train_ship_breakdown.wav": {
+   "opensfx_index": 16,
+   "credit": "\"Train/ship breakdown\". Original \"Dumpster_Diving.wav\" by \"1sticky8\". Edited by \"Wuzzy\". License: Creative Commons Zero 1.0."
+  },
+  "17_crash.wav": {
+   "opensfx_index": 17,
+   "credit": "\"Crash\". Original \"crash.wav\" by \"sagetyrtle\". Edited by Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "19_big_crash.wav": {
+   "opensfx_index": 19,
+   "credit": "\"Big crash\". Original \"crash.wav\" by \"sagetyrtle\". Edited by Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "20_cash_till.wav": {
+   "opensfx_index": 20,
+   "credit": "\"Cash till\". By Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "21_beep.wav": {
+   "opensfx_index": 21,
+   "credit": "\"Beep\". By Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "22_morse.wav": {
+   "opensfx_index": 22,
+   "credit": "\"Morse\". By Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "23_plane_wheels_touching_ground.wav": {
+   "opensfx_index": 23,
+   "credit": "\"Plane wheels touching ground\". Original \"CarStartSkidCrash.wav\" by \"musicmasta1\". Edited by \"Wuzzy\". License: Creative Commons Zero 1.0."
+  },
+  "29_applause.wav": {
+   "opensfx_index": 29,
+   "credit": "\"Applause\". Original \"Approx 850 - Enthusiast Audience.wav\" by \"lonemonk\". Edited by \"Wuzzy\". License: Creative Commons Attribution 3.0 Unported."
+  },
+  "30_oooh_sound.wav": {
+   "opensfx_index": 30,
+   "credit": "\"Oooh sound\". By Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "31_splat_terraform_non_rail_bui.wav": {
+   "opensfx_index": 31,
+   "credit": "\"Splat (terraform/non-rail builds\". By Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "32_splat_rail_builds.wav": {
+   "opensfx_index": 32,
+   "credit": "\"Splat (rail builds)\". Original \"kick_1.wav\" by \"jascha\". Edited by \"Wuzzy\". License: Creative Commons Attribution 3.0 Unported."
+  },
+  "47_bubble_plop.wav": {
+   "opensfx_index": 47,
+   "credit": "\"Toyland: Bubble plop\". By Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "52_wind.wav": {
+   "opensfx_index": 52,
+   "credit": "\"Wind\". Original \"wind1.wav\" by \"Anton\". Edited by Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "54_crashing_tree.wav": {
+   "opensfx_index": 54,
+   "credit": "\"Lumber mill: Crashing tree\". Original \"A Tree Falling Down.wav\" by \"ecfike\". Edited by \"Wuzzy\". License: Creative Commons Zero 1.0."
+  },
+  "57_heavy_wind.wav": {
+   "opensfx_index": 57,
+   "credit": "\"Heavy wind\". Original \"wind1.wav\" by \"Anton\". Edited by Janis Lukss. License: Creative Commons Attribution 3.0 Unported."
+  },
+  "66_bird_1.wav": {
+   "opensfx_index": 66,
+   "credit": "\"Tropical: Bird (1)\". Original \"Bird Noise - 1.wav\" by \"SpaceJoe\". Edited by \"Wuzzy\". License: Creative Commons Zero 1.0."
+  },
+  "72_bird_2.wav": {
+   "opensfx_index": 72,
+   "credit": "\"Tropical: Bird (2)\". Original \"Bird Noise - 12.wav\" by \"SpaceJoe\". Edited by \"Wuzzy\". License: Creative Commons Zero 1.0."
+  }
+ },
+ "css1": [
+  {
+   "id": 0,
+   "name": "clickDown",
+   "file": "21_beep.wav",
+   "gain": 0.12
+  },
+  {
+   "id": 1,
+   "name": "clickUp",
+   "silence": 0.01
+  },
+  {
+   "id": 2,
+   "name": "clickPress",
+   "file": "21_beep.wav",
+   "gain": 0.12
+  },
+  {
+   "id": 3,
+   "name": "construct",
+   "file": "32_splat_rail_builds.wav",
+   "gain": 1.08
+  },
+  {
+   "id": 4,
+   "name": "demolish",
+   "file": "31_splat_terraform_non_rail_bui.wav",
+   "gain": 0.98
+  },
+  {
+   "id": 5,
+   "name": "income",
+   "file": "20_cash_till.wav",
+   "gain": 0.9
+  },
+  {
+   "id": 6,
+   "name": "crash",
+   "file": "19_big_crash.wav",
+   "gain": 0.61
+  },
+  {
+   "id": 7,
+   "name": "water",
+   "file": "02_splat_building_docks_canals_.wav",
+   "gain": 1.26
+  },
+  {
+   "id": 8,
+   "name": "splash1",
+   "file": "02_splat_building_docks_canals_.wav",
+   "gain": 0.91
+  },
+  {
+   "id": 9,
+   "name": "splash2",
+   "file": "02_splat_building_docks_canals_.wav",
+   "gain": 0.6
+  },
+  {
+   "id": 10,
+   "name": "waypoint",
+   "file": "21_beep.wav",
+   "gain": 0.28
+  },
+  {
+   "id": 11,
+   "name": "notification",
+   "file": "22_morse.wav",
+   "gain": 2.0
+  },
+  {
+   "id": 12,
+   "name": "openWindow",
+   "file": "47_bubble_plop.wav",
+   "gain": 0.68
+  },
+  {
+   "id": 13,
+   "name": "applause1",
+   "file": "29_applause.wav",
+   "gain": 0.68
+  },
+  {
+   "id": 14,
+   "name": "error",
+   "file": "01_bad_year.wav",
+   "gain": 1.95
+  },
+  {
+   "id": 15,
+   "name": "multiplayerConnected",
+   "file": "00_good_year.wav",
+   "gain": 2.0
+  },
+  {
+   "id": 16,
+   "name": "multiplayerDisconnected",
+   "file": "01_bad_year.wav",
+   "gain": 1.95
+  },
+  {
+   "id": 17,
+   "name": "demolishTree",
+   "file": "54_crashing_tree.wav",
+   "gain": 0.29
+  },
+  {
+   "id": 18,
+   "name": "demolishBuilding",
+   "file": "17_crash.wav",
+   "gain": 0.69
+  },
+  {
+   "id": 19,
+   "name": "vehiclePlace",
+   "file": "23_plane_wheels_touching_ground.wav",
+   "gain": 1.19
+  },
+  {
+   "id": 20,
+   "name": "vehiclePickup",
+   "file": "32_splat_rail_builds.wav",
+   "gain": 0.85
+  },
+  {
+   "id": 21,
+   "name": "constructShip",
+   "file": "02_splat_building_docks_canals_.wav",
+   "gain": 0.96
+  },
+  {
+   "id": 22,
+   "name": "ticker",
+   "file": "21_beep.wav",
+   "gain": 0.17
+  },
+  {
+   "id": 23,
+   "name": "applause2",
+   "file": "29_applause.wav",
+   "gain": 0.46
+  },
+  {
+   "id": 24,
+   "name": "newsOooh",
+   "file": "30_oooh_sound.wav",
+   "gain": 1.89
+  },
+  {
+   "id": 25,
+   "name": "newsAwww",
+   "file": "01_bad_year.wav",
+   "gain": 1.18
+  },
+  {
+   "id": 26,
+   "name": "breakdown1",
+   "file": "15_road_vehicle_breakdown.wav",
+   "gain": 0.68
+  },
+  {
+   "id": 27,
+   "name": "breakdown2",
+   "file": "16_train_ship_breakdown.wav",
+   "gain": 0.72
+  },
+  {
+   "id": 28,
+   "name": "breakdown3",
+   "file": "15_road_vehicle_breakdown.wav",
+   "gain": 0.97
+  },
+  {
+   "id": 29,
+   "name": "breakdown4",
+   "file": "16_train_ship_breakdown.wav",
+   "gain": 0.86
+  },
+  {
+   "id": 30,
+   "name": "breakdown5",
+   "file": "15_road_vehicle_breakdown.wav",
+   "gain": 0.75
+  },
+  {
+   "id": 31,
+   "name": "breakdown6",
+   "file": "16_train_ship_breakdown.wav",
+   "gain": 0.81
+  }
+ ],
+ "ambient": {
+  "CSS2": {
+   "use": "荒野／山地（AmbientAudio.cpp：附近山地多）",
+   "seconds": 9.0,
+   "layers": [
+    {
+     "gain": 0.9,
+     "repeat": true,
+     "file": "57_heavy_wind.wav"
+    },
+    {
+     "gain": 0.6,
+     "repeat": true,
+     "offset": 1.4,
+     "file": "52_wind.wav"
+    }
+   ]
+  },
+  "CSS4": {
+   "use": "森林（附近樹木多）",
+   "seconds": 9.0,
+   "layers": [
+    {
+     "gain": 0.25,
+     "repeat": true,
+     "file": "52_wind.wav"
+    },
+    {
+     "gain": 0.9,
+     "at": 0.8,
+     "file": "66_bird_1.wav"
+    },
+    {
+     "gain": 0.8,
+     "at": 5.2,
+     "file": "72_bird_2.wav"
+    }
+   ]
+  }
+ },
+ "missing": {
+  "CSS3": "海邊（附近水多）：OpenSFX 沒有海浪聲，暫時靜音"
+ }
+}
