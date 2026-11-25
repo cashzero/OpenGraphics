@@ -22,6 +22,12 @@ def z(px: float) -> float:
 
 _materials = {}
 
+# 原版風格（ROADMAP M6 美術調整）：OG_RENDER_STYLE=vanilla 時，所有非金屬、非玻璃材質疊上細顆粒雜訊（約 1–2 px），
+# 再加一層中等尺度的斑駁，模仿原版算圖的顆粒質感；static_rig.py 同時改用 Standard 色彩轉換與較強的明暗對比。
+import os  # noqa: E402
+VANILLA_STYLE = os.environ.get("OG_RENDER_STYLE", "vanilla") == "vanilla"   # classic = M3 的舊風格
+GRAIN = 0.42
+
 
 def material(name, rgb, rough=0.8, metal=0.0, noise=0.0):
     """建立（或取用）材質。noise > 0 時加上明暗雜訊，讓大面積不會太平板。"""
@@ -48,8 +54,54 @@ def material(name, rgb, rough=0.8, metal=0.0, noise=0.0):
         nt.links.new(tex.outputs["Fac"], ramp.inputs["Fac"])
         nt.links.new(ramp.outputs["Color"], mix.inputs["Color2"])
         nt.links.new(mix.outputs["Color"], bsdf.inputs["Base Color"])
+    if VANILLA_STYLE and "brick" in name.lower():
+        _add_bricks(nt, bsdf, rgb)
+    if VANILLA_STYLE and metal < 0.5 and rough > 0.3:
+        _add_grain(nt, bsdf)
     _materials[key] = m
     return m
+
+
+def _add_bricks(nt, bsdf, rgb):
+    """磚紋（磚縫約每 2 px 一條），取代原本的單色。"""
+    coord = nt.nodes.new("ShaderNodeTexCoord")
+    tex = nt.nodes.new("ShaderNodeTexBrick")
+    tex.inputs["Scale"].default_value = 0.6
+    tex.inputs["Mortar Size"].default_value = 0.035
+    tex.inputs["Color1"].default_value = (*rgb, 1)
+    tex.inputs["Color2"].default_value = (rgb[0] * 0.78, rgb[1] * 0.78, rgb[2] * 0.78, 1)
+    tex.inputs["Mortar"].default_value = (0.30, 0.28, 0.25, 1)
+    nt.links.new(coord.outputs["Object"], tex.inputs["Vector"])
+    nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+
+
+def _add_grain(nt, bsdf):
+    """細顆粒（scale 3.2，約 1–1.5 px）＋斑駁（scale 0.9）兩層雜訊，乘到 Base Color 上。"""
+    src = bsdf.inputs["Base Color"].links[0].from_socket if bsdf.inputs["Base Color"].is_linked else None
+    base_rgb = bsdf.inputs["Base Color"].default_value
+    coord = nt.nodes.new("ShaderNodeTexCoord")
+    out = src
+    for scale, amount in ((3.2, GRAIN), (0.9, GRAIN * 0.45)):
+        tex = nt.nodes.new("ShaderNodeTexNoise")
+        tex.inputs["Scale"].default_value = scale
+        tex.inputs["Detail"].default_value = 1.0
+        nt.links.new(coord.outputs["Object"], tex.inputs["Vector"])
+        ramp = nt.nodes.new("ShaderNodeValToRGB")
+        ramp.color_ramp.elements[0].position = 0.3
+        ramp.color_ramp.elements[1].position = 0.7
+        ramp.color_ramp.elements[0].color = (1 - amount, 1 - amount, 1 - amount, 1)
+        ramp.color_ramp.elements[1].color = (1 + amount * 0.6, 1 + amount * 0.6, 1 + amount * 0.6, 1)
+        nt.links.new(tex.outputs["Fac"], ramp.inputs["Fac"])
+        mix = nt.nodes.new("ShaderNodeMixRGB")
+        mix.blend_type = "MULTIPLY"
+        mix.inputs["Fac"].default_value = 1.0
+        if out is None:
+            mix.inputs["Color1"].default_value = base_rgb
+        else:
+            nt.links.new(out, mix.inputs["Color1"])
+        nt.links.new(ramp.outputs["Color"], mix.inputs["Color2"])
+        out = mix.outputs["Color"]
+    nt.links.new(out, bsdf.inputs["Base Color"])
 
 
 # 常用材質（線性色值；AgX + 上游燈光會讓顏色變亮變淡，所以地面類顏色要給得很深）

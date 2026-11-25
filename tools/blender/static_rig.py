@@ -38,6 +38,13 @@ LIGHTS = [  # (名稱, 強度, 旋轉角度) — 取自上游 OG_4F.blend
     ("Light Back", 2.0, (60.0, 0.0, -90.0)),
     ("Light Upper Highlights", 1.4, (50.0, 0.0, 120.0)),
 ]
+if kit.VANILLA_STYLE:  # 原版風格：補光減弱、主光不變 → 受光面與背光面對比較大
+    LIGHTS = [
+        ("Light Primary", 4.75, (30.0, 0.0, 135.0)),
+        ("Light Left", 1.2, (60.0, 0.0, 35.4)),
+        ("Light Back", 0.7, (60.0, 0.0, -90.0)),
+        ("Light Upper Highlights", 0.8, (50.0, 0.0, 120.0)),
+    ]
 
 
 def setup_scene(size, samples):
@@ -51,7 +58,7 @@ def setup_scene(size, samples):
     scene.render.film_transparent = True
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
-    scene.view_settings.view_transform = "AgX"
+    scene.view_settings.view_transform = "Standard" if kit.VANILLA_STYLE else "AgX"
     world = bpy.data.worlds.new("World")
     world.color = (0.05, 0.05, 0.05)
     scene.world = world

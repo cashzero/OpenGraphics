@@ -15,6 +15,8 @@
 """
 from __future__ import annotations
 
+import os
+
 import math
 
 # ---------------------------------------------------------------- 部件角色
@@ -215,6 +217,8 @@ def roof(o: Ops, kind, cx, cy, sx, sy, h, m, over=0.04, chim=None, dormers=0, al
 def house(part, sub, fam, level, h, P, large):
     o = Ops()
     sx, sy = P.get("fp", (0.6, 0.45))
+    if os.environ.get("OG_RENDER_STYLE", "vanilla") == "vanilla":   # 原版的住宅幾乎填滿地塊
+        sx, sy = min(sx * 1.2, 0.9 if not large else 1.9), min(sy * 1.2, 0.9 if not large else 1.9)
     cx, cy = P.get("off", (0.0, 0.05))
     if sub == "ground":
         tiles = 2 if large else 1
