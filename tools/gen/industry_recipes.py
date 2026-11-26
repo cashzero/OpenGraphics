@@ -190,6 +190,59 @@ def heavy_sphere(o, c, r, z, m="silver"):
     spiral_stair(o, x, y, r * 1.05, 0, zc + r * TZ * 0.55, turns=0.55, steps=12)
 
 
+def distill_column(o, c, r, h, m="silver", frame_m="darksteel", z=0):
+    """寫實化工廠直筒式蒸餾／分餾塔（告別外星錐體造型）：
+    等徑光滑銀灰／鋼製圓筒塔體＋球面頂蓋＋外圍四柱開放式鋼構鷹架、方型檢修走道與側邊回流立管。
+    """
+    x, y = c
+    o.cyl((x, y, z), r * 1.24, 3.5, "stone", v=18)
+    o.cyl((x, y, z + 3.5), r * 1.06, 5.0, frame_m, v=20)
+    body_h = max(14.0, h - 12.0)
+    o.cyl((x, y, z + 8.5), r, body_h, m, v=22)
+    z_cap = z + 8.5 + body_h
+    o.lathe((x, y, z_cap), [(r, 0), (r * 0.92, 2.2), (r * 0.70, 4.2), (r * 0.35, 5.5), (0.0, 6.0)], m, seg=20)
+    o.cyl((x, y, z_cap + 5.5), r * 0.16, 4.0, frame_m, v=10)
+    n_rings = max(2, int(body_h // 16))
+    for k in range(1, n_rings + 1):
+        zr = z + 8.5 + body_h * k / (n_rings + 1)
+        o.cyl((x, y, zr), r * 1.03, 0.9, frame_m, v=20)
+    fw = r * 1.32
+    f_top = z + 8.5 + body_h * 0.92
+    for dx in (-fw, fw):
+        for dy in (-fw, fw):
+            o.seg((x + dx, y + dy, z), (x + dx, y + dy, f_top), frame_m, r=0.015)
+    n_decks = max(2, int(body_h // 22))
+    for k in range(1, n_decks + 1):
+        zd = z + 8.5 + body_h * (k / (n_decks + 0.6))
+        o.box((x, y, zd), (fw * 2.15, fw * 2.15, 1.0), frame_m)
+        for s in (-fw * 1.04, fw * 1.04):
+            o.seg((x - fw * 1.04, y + s, zd + 3.0), (x + fw * 1.04, y + s, zd + 3.0), "steel", r=0.008)
+            o.seg((x + s, y - fw * 1.04, zd + 3.0), (x + s, y + fw * 1.04, zd + 3.0), "steel", r=0.008)
+    o.seg((x + r * 1.12, y, z + 10.0), (x + r * 1.12, y, z_cap + 2.0), "steel", r=0.022)
+    o.seg((x + r * 1.12, y, z_cap + 2.0), (x, y, z_cap + 3.5), "steel", r=0.022)
+
+
+def pipe_rack(o, p1, p2, z_h, mats=("silver", "steel", "rust")):
+    """寫實化工廠高架鋼構管廊（H 型鋼門架＋3 根平行水平製程管線）。"""
+    x1, y1 = p1
+    x2, y2 = p2
+    dx, dy = x2 - x1, y2 - y1
+    L = math.hypot(dx, dy)
+    if L < 1e-4:
+        return
+    nx, ny = -dy / L, dx / L
+    n_bents = 3 if L > 0.7 else 2
+    for i in range(n_bents):
+        t = i / (n_bents - 1)
+        bx, by = x1 + dx * t, y1 + dy * t
+        for side in (-0.09, 0.09):
+            o.seg((bx + nx * side, by + ny * side, 0), (bx + nx * side, by + ny * side, z_h + 1.5), "darksteel", r=0.015)
+        o.seg((bx - nx * 0.11, by - ny * 0.11, z_h), (bx + nx * 0.11, by + ny * 0.11, z_h), "darksteel", r=0.016)
+    for k, pm in enumerate(mats):
+        off = (k - (len(mats) - 1) / 2.0) * 0.055
+        o.seg((x1 + nx * off, y1 + ny * off, z_h + 1.4), (x2 + nx * off, y2 + ny * off, z_h + 1.4), pm, r=0.024)
+
+
 def column(o, c, r, h, m="silver", platforms=3):
     x, y = c
     o.cyl((x, y, 0), r, h, m, v=14)
@@ -294,8 +347,8 @@ def brewery(p, h, info):
 
 
 def chemworks(p, h, info):
-    """重型化工廠（對齊原版 Shot 06 / Shot 10 的厚重工業體量與密度）：
-    混凝土硬化地坪無縫銜接圍籬區，搭配巨型階梯反應塔、粗大拱形鏽鋼管橋、大型球形儲槽與深藍化學儲罐。
+    """寫實現代重型化工廠（銀白保溫鋁板＋風化鋼構鷹架＋高架平行管廊＋紅磚／混凝土廠房，
+    全面捨棄怪異紫色與外星錐體儲槽，呈現真實石化／精細化工廠風貌）。
     """
     o = Ops()
     if p in (0, 2, 4):
@@ -306,56 +359,77 @@ def chemworks(p, h, info):
         ground(o, 1, "concrete")
         o.box((0, 0, 0), (0.92, 0.92, 0.4), "darkconcrete")
         return o
-    if p == 1:                                                # 2×2 重型反應器廠房＋巨型雙反應塔＋深藍化學罐＋粗大管橋
-        # 佔地 85% 飽滿佈局：厚重浪板製程廠房＋高聳階梯鋼製反應塔
-        shed(o, (-0.36, 0.36), 1.12, 0.98, 28, wall="corrugated", roofm="darkconcrete", kind="saw", win=5)
-        band(o, -0.36, 0.36, 1.12, 0.98, 26.5, 1.4, "darksteel", grow=0.04)
-        heavy_vessel(o, (0.48, -0.40), 0.32, h * 0.86, m="steel", cap_m="silver", platforms=3, stair=True)
-        heavy_vessel(o, (-0.42, -0.46), 0.25, h * 0.72, m="rust", cap_m="steel", platforms=2, stair=False)
-        # 粗大拱形鏽鋼製程管橋串聯反應塔與廠房
-        pipe_bridge(o, (0.48, -0.40, h * 0.56), (-0.42, -0.46, h * 0.50), h * 0.68, r=0.056, m="rust")
-        pipe_bridge(o, (0.48, -0.40, 24), (-0.36, 0.36, 24), 34, r=0.052, m="steel")
-        # 兩座鮮明工業深藍化學原料槽
-        riveted_tank(o, (0.58, 0.44), 0.24, 34, m="chemblue", stair=False)
-        riveted_tank(o, (0.14, 0.62), 0.16, 26, m="chemblue", stair=False)
-    elif p == 3:                                              # 2×2 巨型合成蒸餾群＋球形高壓槽＋深藍壓力塔
+    if p == 1:                                                # 2×2 化工製程廠房＋直筒蒸餾塔＋潔白銀灰原料儲槽＋高架管廊
+        parapet(o, 0, 0, 1.88, 1.88, 0, 2.2, "stone", t=0.045)
+        # 左後方：混凝土與深鋼框架化工反應廠房＋屋頂大型冷卻風扇箱
+        o.box((-0.34, 0.36, 0), (1.14, 0.94, 6.0), "stone")
+        o.box((-0.34, 0.36, 6.0), (1.10, 0.90, 23.0), "whiteconcrete")
+        windows(o, -0.34, 0.36, 1.10, 0.90, 9.0, 26.5, 2, 5, m="blueglass", sills="stone")
+        parapet(o, -0.34, 0.36, 1.14, 0.94, 29.0, 2.0, "darksteel", t=0.04)
+        o.box((-0.34, 0.36, 28.8), (1.06, 0.86, 0.8), "darkconcrete")
+        for fx in (-0.64, -0.34, -0.04):
+            o.box((fx, 0.36, 29.6), (0.22, 0.38, 4.5), "steel")
+            o.cyl((fx, 0.36, 34.1), 0.08, 1.8, "darksteel", v=12)
+        # 右前方：直筒不鏽鋼蒸餾塔（附四柱鋼構鷹架與三層方型走道）
+        distill_column(o, (0.50, -0.38), 0.17, h * 0.88, m="silver")
+        # 側邊兩座乾淨平頂銀白／灰鋼化學原料儲槽（零紫色！）＋安全黃閥門管線
+        riveted_tank(o, (0.54, 0.44), 0.25, 32.0, m="white", stair=True)
+        riveted_tank(o, (-0.48, -0.48), 0.24, 26.0, m="silver", stair=False)
+        # 三管平行高架管廊串聯廠房、儲槽與蒸餾塔
+        pipe_rack(o, (-0.34, 0.02), (0.50, -0.38), 18.0, mats=("silver", "steel", "yellowsteel"))
+        pipe_rack(o, (-0.48, -0.48), (0.50, -0.38), 14.0, mats=("silver", "rust", "steel"))
+    elif p == 3:                                              # 2×2 多塔分餾精煉區＋高架管廊＋銀白霍頓球槽＋熱交換器群
         parapet(o, 0, 0, 1.88, 1.88, 0, 2.6, "stone", t=0.05)
-        heavy_vessel(o, (-0.42, -0.36), 0.34, h * 0.92, m="steel", cap_m="silver", platforms=4, stair=True)
-        heavy_vessel(o, (0.42, -0.32), 0.28, h * 0.78, m="steel", cap_m="rust", platforms=3, stair=False)
-        heavy_sphere(o, (-0.36, 0.44), 0.34, 8.0, m="silver")
-        # 高聳深藍化學洗滌塔（立體螺旋鋼框）
-        o.cyl((0.46, 0.44, 0), 0.22, h * 0.82, "chemblue", v=20)
-        o.cyl((0.46, 0.44, h * 0.82), 0.22, 6.0, "darksteel", v=18, rt=0.14)
-        spiral_stair(o, 0.46, 0.44, 0.24, 2.0, h * 0.78, turns=1.6, steps=18)
-        # 粗大拱形管橋連接三座主設備
-        pipe_bridge(o, (-0.42, -0.36, h * 0.62), (0.42, -0.32, h * 0.56), h * 0.74, r=0.062, m="rust")
-        pipe_bridge(o, (0.42, -0.32, h * 0.48), (0.46, 0.44, h * 0.48), h * 0.60, r=0.054, m="rust")
-        pipe_bridge(o, (-0.42, -0.36, 26), (-0.36, 0.44, 26), 34, r=0.048, m="steel")
-    elif p == 5:                                              # 2×2 重型鍋爐與洗滌廠房＋巨型高煙囪＋雙藍儲槽
-        shed(o, (-0.32, 0.32), 1.18, 1.02, 32, wall="brick", roofm="corrugated", kind="gable", win=5, rows=2)
-        band(o, -0.32, 0.32, 1.18, 1.02, 29.5, 1.6, "stone", grow=0.04)
-        # 主重型工業煙囪＋鋼構檢修環台
-        chimney(o, (0.50, -0.46), 0.17, h, m="darkbrick", top="darksteel", bands="steel")
-        for zf in (0.35, 0.65):
-            o.cyl((0.50, -0.46, h * zf), 0.23, 1.2, "darksteel", v=16)
-        # 巨型鋼製洗滌反應罐＋粗大排氣管直通煙囪與鍋爐房
-        heavy_vessel(o, (-0.42, -0.48), 0.30, 68, m="steel", cap_m="silver", platforms=3, stair=True)
-        pipe_bridge(o, (-0.42, -0.48, 42), (0.50, -0.46, 42), 54, r=0.064, m="rust")
-        pipe_bridge(o, (-0.42, -0.48, 22), (-0.32, 0.32, 22), 34, r=0.052, m="steel")
-        riveted_tank(o, (0.54, 0.48), 0.24, 38, m="chemblue", stair=False)
-    elif p == 7:                                              # 1×1 巨型霍頓球形高壓儲槽（填滿 1×1 圍堰）
+        # 三座錯落高度的標準直筒不鏽鋼／工業鋼分餾塔（附開放式結構鋼框與高空聯絡天橋）
+        distill_column(o, (-0.44, -0.34), 0.18, h * 0.92, m="silver")
+        distill_column(o, (0.42, -0.34), 0.16, h * 0.78, m="steel")
+        distill_column(o, (0.44, 0.42), 0.14, h * 0.66, m="white")
+        # 高空鋼構聯絡走道橋＋平行製程管廊
+        pipe_rack(o, (-0.44, -0.34), (0.42, -0.34), 38.0, mats=("silver", "steel", "rust"))
+        pipe_rack(o, (0.42, -0.34), (0.44, 0.42), 26.0, mats=("silver", "yellowsteel", "steel"))
+        # 左後方大型銀白霍頓球形高壓槽
+        heavy_sphere(o, (-0.42, 0.42), 0.34, 8.0, m="white")
+        # 前緣雙排臥式銀灰管殼熱交換器組
+        for k in range(2):
+            o.seg((-0.34, -0.74 + k * 0.16, 7.5), (0.28, -0.74 + k * 0.16, 7.5), "silver", r=0.068)
+            for xx in (-0.22, 0.16):
+                o.box((xx, -0.74 + k * 0.16, 0), (0.06, 0.12, 5.0), "stone")
+    elif p == 5:                                              # 2×2 紅磚化驗控制中心＋高聳混凝土主煙囪＋氣體洗滌塔＋銀白儲罐
+        parapet(o, 0, 0, 1.88, 1.88, 0, 2.2, "stone", t=0.045)
+        # 左後方：兩層紅磚＋切石飾帶化工控制與化驗中心
+        o.box((-0.30, 0.34, 0), (1.22, 0.98, 6.0), "stone")
+        o.box((-0.30, 0.34, 6.0), (1.18, 0.94, 26.0), "brick")
+        windows(o, -0.30, 0.34, 1.18, 0.94, 9.0, 29.5, 2, 6, m="blueglass", sills="stone")
+        band(o, -0.30, 0.34, 1.18, 0.94, 30.2, 1.6, "stone", grow=0.04)
+        parapet(o, -0.30, 0.34, 1.22, 0.98, 32.0, 2.0, "stone", t=0.045)
+        o.box((-0.30, 0.34, 31.6), (1.12, 0.88, 0.8), "darkconcrete")
+        o.box((-0.52, 0.34, 32.4), (0.46, 0.42, 4.5), "silver")
+        # 右前方：高聳淺灰混凝土工業排氣煙囪（附暗鋼檢修環與紅白航空警示環）
+        chimney(o, (0.50, -0.46), 0.16, h, m="whiteconcrete", top="darksteel", bands="rust")
+        for zf in (0.38, 0.68):
+            o.cyl((0.50, -0.46, h * zf), 0.22, 1.3, "darksteel", v=16)
+        # 前左方直筒鋼製氣體洗滌塔＋粗排氣導管通往主煙囪
+        distill_column(o, (-0.44, -0.46), 0.16, 68.0, m="steel")
+        pipe_bridge(o, (-0.44, -0.46, 44.0), (0.50, -0.46, 44.0), 54.0, r=0.058, m="silver")
+        # 右後方銀白平頂化學儲槽＋管廊
+        riveted_tank(o, (0.56, 0.44), 0.24, 34.0, m="white", stair=False)
+        pipe_rack(o, (0.56, 0.44), (0.14, 0.34), 18.0, mats=("silver", "steel", "yellowsteel"))
+    elif p == 7:                                              # 1×1 潔白銀灰霍頓球形高壓儲槽（填滿 1×1 混凝土圍堰）
         parapet(o, 0, 0, 0.92, 0.92, 0, 2.8, "stone", t=0.05)
-        heavy_sphere(o, (0.0, 0.0), 0.36, 9.0, m="silver")
-        pipe(o, (-0.42, -0.34, 4.5), (0.42, -0.34, 4.5), "rust", r=0.032)
-    elif p == 9:                                              # 1×1 重型雙臥式壓力槽＋深藍化學立罐
+        heavy_sphere(o, (0.0, 0.0), 0.36, 9.0, m="white")
+        pipe(o, (-0.42, -0.34, 4.5), (0.42, -0.34, 4.5), "yellowsteel", r=0.028)
+        pipe(o, (-0.42, -0.24, 4.5), (0.42, -0.24, 4.5), "silver", r=0.028)
+    elif p == 9:                                              # 1×1 雙臥式銀白高壓子彈儲槽＋鋼構管匯門架（零紫色！）
         parapet(o, 0, 0, 0.92, 0.92, 0, 2.4, "stone", t=0.045)
-        for y in (-0.22, 0.16):
+        for y in (-0.22, 0.18):
             for x in (-0.26, 0.26):
                 o.box((x, y, 0), (0.08, 0.18, 6.0), "stone")
-            o.seg((-0.40, y, 12.5), (0.40, y, 12.5), "silver", r=0.145)
-            o.cyl((0.0, y, 16.5), 0.08, 2.6, "darksteel", v=12)
-        riveted_tank(o, (0.24, 0.34), 0.16, 26, m="chemblue", stair=False)
-        pipe_bridge(o, (-0.34, -0.22, 12.5), (-0.34, 0.16, 12.5), 22, r=0.036, m="rust")
+            o.seg((-0.38, y, 12.5), (0.38, y, 12.5), "white", r=0.145)
+            o.cyl((-0.14, y, 16.5), 0.055, 3.0, "darksteel", v=10)
+            o.cyl((0.14, y, 16.5), 0.055, 3.0, "yellowsteel", v=10)
+        # 端側小型不鏽鋼計量泵房與高架匯流管架
+        pipe_rack(o, (-0.34, -0.24), (-0.34, 0.20), 22.0, mats=("silver", "yellowsteel", "steel"))
+        o.box((0.26, -0.02, 0), (0.28, 0.24, 8.5), "steel")
     return o
 
 
