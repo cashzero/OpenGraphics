@@ -16,3 +16,4 @@
 - 2026-11-22 V2：`tools/newgame_check.sh`（standalone，`OG_REGUK`／`OG_REGALP`）開新遊戲 → 模擬一年不崩潰、存檔物件全部來自 repo；物件選擇預覽 `build/screenshots/m3/preview/building-OGBLDC27.png` 已檢視。**未驗證**：尚未看過放在地圖上的樣子（需要含此物件的測試存檔）
 - 2026-11-25 V1/V2（建物地表材質升級）：`tools/blender/kit.py` 新增多尺度程序化地表著色器（泥土／碎石／草地／人行道磚縫／混凝土伸縮縫／停機坪／礦土／煤場／雪地＋3D Bump），重算地面部件並同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_01.png`、`cmp_05.png`、`cmp_07.png`）檢視通過。
 - 2026-11-26 V1/V2（建物材質與光照升級）：`tools/blender/kit.py` 與 `static_rig.py` 修復垂直牆面 3D 磚紋映射、新增磚／切石／疊瓦／木板／茅草／灰泥／混凝土接縫＋3D Bump＋`AmbientOcclusion` 屋簷與窗框陰影，並以暖陽主光消除冷灰塑膠感；同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_02.png`、`cmp_04.png`、`cmp_05.png`）檢視通過。
+- 2026-11-26 V1/V2：全 73 棟建築全面翻修為真實建築美學（移除非總部公司色屋頂與雨遮、修正燈塔斷頭與電波塔過細、升級三座教堂／古堡／音樂廳／法院／5 階段總部、住宅立體側翼門廊圍籬與中性砂土美式庭院、城市建築飽滿佔地與圓柱／熨斗／切角／圓頂天際線）；build/screenshots/building_compare_1..6.png 與 build/screenshots/title_compare/cmp_01..10.png 目測通過，lint 0 錯誤，0 切頂。

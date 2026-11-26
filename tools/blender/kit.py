@@ -535,6 +535,8 @@ def _add_arch_shader(nt, bsdf, name: str, rgb, rough: float, metal: float, noise
         ashlar.inputs["Mortar Smooth"].default_value = 0.10
         if "sandstone" in low:
             c1, c2, mort = (0.50, 0.36, 0.19), (0.34, 0.23, 0.11), (0.22, 0.16, 0.09)
+        elif "limestone" in low:
+            c1, c2, mort = (0.68, 0.65, 0.58), (0.55, 0.52, 0.45), (0.35, 0.33, 0.28)
         elif "darkstone" in low:
             c1, c2, mort = (0.17, 0.15, 0.125), (0.10, 0.088, 0.072), (0.06, 0.055, 0.048)
         else:
@@ -548,7 +550,7 @@ def _add_arch_shader(nt, bsdf, name: str, rgb, rough: float, metal: float, noise
         bump_src = ashlar.outputs["Fac"]
         bump_str = 0.55
 
-    # 6. 屋頂瓦片（slate / shingle / terracotta）：清晰橫向疊瓦＋單片色差＋立體凹凸
+    # 6. 屋頂瓦片（slate / shingle / redshingle / terracotta）：清晰橫向疊瓦＋單片色差＋立體凹凸
     elif any(k in low for k in ("slate", "shingle", "terracotta")):
         sh = nt.nodes.new("ShaderNodeTexBrick")
         sh.offset = 0.5
@@ -559,11 +561,13 @@ def _add_arch_shader(nt, bsdf, name: str, rgb, rough: float, metal: float, noise
         sh.inputs["Mortar Smooth"].default_value = 0.08
         if "terracotta" in low:
             c1, c2, mort = (0.48, 0.16, 0.062), (0.31, 0.095, 0.038), (0.16, 0.055, 0.022)
+        elif "redshingle" in low:
+            c1, c2, mort = (0.44, 0.145, 0.090), (0.30, 0.088, 0.052), (0.15, 0.042, 0.025)
         elif "shingle" in low:
-            c1, c2, mort = (0.25, 0.14, 0.072), (0.15, 0.080, 0.040), (0.075, 0.042, 0.020)
+            c1, c2, mort = (0.28, 0.165, 0.085), (0.17, 0.095, 0.048), (0.085, 0.048, 0.024)
         else:
-            # 深沉質感石板瓦（避免原本淺冷灰塑膠三角）
-            c1, c2, mort = (0.095, 0.102, 0.108), (0.055, 0.060, 0.066), (0.020, 0.022, 0.025)
+            # 威爾斯石板藍灰瓦（清晰有層次，不會死黑）
+            c1, c2, mort = (0.145, 0.160, 0.178), (0.088, 0.098, 0.112), (0.034, 0.038, 0.045)
         sh.inputs["Color1"].default_value = (*c1, 1)
         sh.inputs["Color2"].default_value = (*c2, 1)
         sh.inputs["Mortar"].default_value = (*mort, 1)
@@ -572,7 +576,7 @@ def _add_arch_shader(nt, bsdf, name: str, rgb, rough: float, metal: float, noise
         bump_src = sh.outputs["Fac"]
         bump_str = 0.68
 
-    # 7. 茅草屋頂（thatch）：沿坡面縱向纖維＋金褐稻草色帶
+    # 7. 茅草屋頂（thatch）：沿坡面縱向纖維＋陽光金黃稻草色帶
     elif "thatch" in low:
         tmap = nt.nodes.new("ShaderNodeMapping")
         tmap.inputs["Scale"].default_value = (4.0, 4.0, 1.0)
@@ -583,17 +587,17 @@ def _add_arch_shader(nt, bsdf, name: str, rgb, rough: float, metal: float, noise
         tn.inputs["Roughness"].default_value = 0.82
         nt.links.new(tmap.outputs["Vector"], tn.inputs["Vector"])
         tr = _make_ramp(nt, [
-            (0.30, (0.09, 0.055, 0.018)),
-            (0.50, (0.20, 0.135, 0.048)),
-            (0.70, (0.34, 0.245, 0.095)),
+            (0.28, (0.19, 0.135, 0.045)),
+            (0.50, (0.38, 0.280, 0.105)),
+            (0.72, (0.60, 0.470, 0.195)),
         ])
         nt.links.new(tn.outputs["Fac"], tr.inputs["Fac"])
         col_out = tr.outputs["Color"]
         bump_src = tn.outputs["Fac"]
         bump_str = 0.75
 
-    # 8. 木材／魚鱗板／原木（wood / darkwood / lightwood / logs / planks / sage clapboard）
-    elif any(k in low for k in ("darkwood", "lightwood", "wood", "logs", "planks", "sage")):
+    # 8. 木材／魚鱗板／原木（wood / darkwood / lightwood / whitewood / redwood / logs / planks / sage clapboard）
+    elif any(k in low for k in ("darkwood", "lightwood", "whitewood", "redwood", "wood", "logs", "planks", "sage")):
         cl = nt.nodes.new("ShaderNodeTexBrick")
         cl.offset = 0.35
         cl.inputs["Scale"].default_value = 0.95
@@ -603,6 +607,10 @@ def _add_arch_shader(nt, bsdf, name: str, rgb, rough: float, metal: float, noise
         cl.inputs["Mortar Smooth"].default_value = 0.08
         if "darkwood" in low:
             c1, c2, mort = (0.14, 0.075, 0.035), (0.085, 0.045, 0.020), (0.04, 0.02, 0.01)
+        elif "whitewood" in low:
+            c1, c2, mort = (0.76, 0.76, 0.73), (0.65, 0.65, 0.62), (0.38, 0.38, 0.36)
+        elif "redwood" in low:
+            c1, c2, mort = (0.44, 0.135, 0.088), (0.30, 0.088, 0.056), (0.15, 0.045, 0.028)
         elif "lightwood" in low or "planks" in low:
             c1, c2, mort = (0.44, 0.28, 0.13), (0.31, 0.19, 0.085), (0.16, 0.10, 0.045)
         elif "sage" in low:
