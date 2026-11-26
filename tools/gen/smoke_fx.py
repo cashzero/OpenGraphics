@@ -56,45 +56,43 @@ def periodic_noise(x: np.ndarray, y: np.ndarray, t: float, seed: int, fx: float,
 
 
 def render_cooling_steam(frame: int, n_frames: int = 32, base_y_attach: int = 10) -> tuple[int, int, int, int, bytes]:
-    """寬大輕盈的冷卻塔白色蒸氣羽流（仿原版 COALPS 104×126 px 半透明網點霧氣）。"""
-    w, h = 104, 124
+    """寬闊蓬鬆、橫向翻湧飄散的真實冷卻塔白蒸氣雲團（122×118 px，帶多層有機雲隙與明暗立體感）。"""
+    w, h = 122, 118
     t = frame / n_frames
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
-    # 歸一化高度 v=0（塔口底端）→ v=1（頂端消散）
     v = (h - 1 - yy) / (h - 1)
-    # 隨高度微微向右上方順風飄移＋自然搖擺
-    cx = w * 0.44 + 13.0 * (v ** 1.35) + 3.2 * np.sin(v * 5.0 - t * 2 * math.pi)
-    # 塔口處與冷卻塔上緣等寬（半寬 ~22 px），往上蓬鬆擴散到 ~44 px
-    half_w = 21.0 + 24.0 * (v ** 0.72)
+    # 由塔口出發、隨高度自然往右上方橫向大跨度飄散
+    cx = w * 0.42 + 16.0 * (v ** 1.15) + 4.5 * np.sin(v * 4.2 - t * 2 * math.pi)
+    # 寬闊翻湧展開：塔口半寬 25px → 中上段張開至 52px（真實寬雲團而非細直柱！）
+    half_w = 24.0 + 30.0 * (v ** 0.58)
     dx = (xx - cx) / half_w
 
-    # 往上平移的多層週期紊流場（視覺上升流）
-    y_adv = (h - 1 - yy) * 0.11 - t * 6.0
-    x_adv = (xx - cx) * 0.10
-    n1 = periodic_noise(x_adv, y_adv, t, seed=301, fx=0.95, fy=0.85, ft=1)
-    n2 = periodic_noise(x_adv, y_adv, t, seed=307, fx=2.10, fy=1.90, ft=2)
-    n3 = periodic_noise(x_adv * 1.4, y_adv * 1.4, t, seed=313, fx=3.60, fy=3.30, ft=2)
-    turb = 0.48 * n1 + 0.34 * n2 + 0.18 * n3
+    # 多尺度翻騰上升流雜訊（大雲團 + 中雲簇 + 細緻撕裂霧絲）
+    y_adv = (h - 1 - yy) * 0.09 - t * 5.0
+    x_adv = (xx - cx) * 0.08
+    n_big = periodic_noise(x_adv, y_adv, t, seed=301, fx=0.75, fy=0.70, ft=1)
+    n_mid = periodic_noise(x_adv, y_adv, t, seed=307, fx=1.75, fy=1.60, ft=2)
+    n_fin = periodic_noise(x_adv * 1.5, y_adv * 1.5, t, seed=313, fx=3.40, fy=3.10, ft=2)
+    # 讓雲隙更自然（有機破洞與捲曲白絲）
+    puffs = 0.52 * n_big + 0.32 * n_mid + 0.16 * n_fin
 
-    # 橢圓塔口底端包絡＋頂部自然羽化消散
-    radial = np.sqrt(dx * dx + ((v - 0.12) * 0.35) ** 2)
-    env = np.clip(1.0 - radial * 0.92, 0.0, 1.0)
-    # 底端柔順貼合冷卻塔圓弧口
-    bot_cut = np.clip((v + 0.04 * (1.0 - dx * dx)) / 0.12, 0.0, 1.0)
-    top_fade = np.clip((1.0 - v) / 0.42, 0.0, 1.0) ** 0.85
-    density = env * bot_cut * top_fade * (0.42 + 0.98 * turb)
+    # 寬大包絡（不截斷兩側，讓左右兩側翻湧出自然白雲簇）
+    env = np.clip(1.0 - (dx * dx * 0.88), 0.0, 1.0)
+    bot_cut = np.clip((v + 0.06 * (1.0 - dx * dx)) / 0.11, 0.0, 1.0)
+    top_fade = np.clip((1.0 - v) / 0.34, 0.0, 1.0) ** 0.78
+    # 提高雜訊對比，拉出清晰的雲團塊與雲間縫隙（避免均勻點陣網格感！）
+    cloud_shape = np.clip((puffs - 0.24) / 0.54, 0.0, 1.0)
+    density = env * bot_cut * top_fade * (0.28 + 1.08 * cloud_shape)
 
-    # Bayer 4×4 有序網點產生原版般的「半透明輕霧」感（外緣呈現細緻網格孔洞，不再是實心球團！）
     bayer = BAYER4[yy.astype(np.int32) & 3, xx.astype(np.int32) & 3]
-    # 網點可見機率：中核濃密，中層 45-75% 透空，外緣 10-35% 輕煙點
-    alpha_prob = np.clip((density - 0.14) / 0.58, 0.0, 1.0)
-    # 頂端強制輕薄化，永遠不會變成厚重實心圓餅
-    alpha_prob = alpha_prob * (0.94 - 0.48 * (v ** 1.2))
-    visible = alpha_prob > (bayer * 0.86 + 0.08)
+    # 核心與亮雲簇保持實白棉絮感，邊緣與雲隙柔順抖動透空
+    alpha_prob = np.clip((density - 0.16) / 0.44, 0.0, 1.0)
+    alpha_prob = alpha_prob * (0.98 - 0.32 * (v ** 1.35))
+    visible = alpha_prob > (bayer * 0.74 + 0.10)
 
-    # 明暗著色：上方與左上方受暖陽照亮（純白 20–21），底部與右下方帶柔和灰影（15–17）
-    lit = 0.56 + 0.28 * (1.0 - np.clip(dx, -1, 1) * 0.5) + 0.26 * (v ** 0.6) + 0.28 * (n2 - 0.5)
-    lit = np.clip(lit + (bayer - 0.5) * 0.12, 0.0, 1.0)
+    # 豐富立體受光：雲團左上方與頂部純白高光（20–21）、雲腹與底緣帶柔和冷灰陰影（15–18）
+    lit = 0.44 + 0.34 * cloud_shape + 0.22 * (1.0 - np.clip(dx, -1, 1) * 0.5) + 0.18 * (v ** 0.55) + 0.20 * (n_mid - 0.5)
+    lit = np.clip(lit + (bayer - 0.5) * 0.10, 0.0, 1.0)
     idx = np.clip((lit * (len(STEAM_RAMP) - 1) + 0.5).astype(np.int32), 0, len(STEAM_RAMP) - 1)
 
     px = np.zeros((h, w), dtype=np.uint8)
@@ -107,8 +105,7 @@ def render_cooling_steam(frame: int, n_frames: int = 32, base_y_attach: int = 10
     y0, y1 = int(nz_y.min()), int(nz_y.max()) + 1
     cropped = px[y0:y1, x0:x1]
     cw, ch = x1 - x0, y1 - y0
-    # 讓 (w*0.44, h-1) 對齊塔口 (0, base_y_attach)
-    x_off = x0 - int(round(w * 0.44))
+    x_off = x0 - int(round(w * 0.42))
     y_off = y0 - (h - 1) + base_y_attach
     return cw, ch, x_off, y_off, cropped.tobytes()
 

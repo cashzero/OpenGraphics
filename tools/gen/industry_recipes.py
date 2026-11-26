@@ -488,36 +488,53 @@ def farm(p, h, info, us=False):
             fence(o, 0, 0, 1.9, 1.9, h=2.5)
         return o
     if not us:
-        if p == 1:                                            # 農舍＋石砌側屋＋低矮石牆
-            house(o, (-0.30, 0.20), 0.86, 0.58, 15, wall="whitewash", roofm="thatch")
-            o.box((0.55, -0.40, 0), (0.44, 0.34, 9), "stone")
-            o.gable((0.55, -0.40, 9), (0.48, 0.38, 6.5), "slate", "x")
-        elif p == 3:                                          # 木造陶瓦大穀倉（自然紅褐陶瓦，非公司色！）
-            o.box((0, 0, 0), (1.36, 0.84, 13), "wood")
-            o.gable((0, 0, 13), (1.44, 0.92, 12.5), "terracotta", "x")
-            face_box(o, 0, 0, 1.36, 0.84, "-y", 0, 0.35, 0, 11, "darkwood")
-            o.box((-0.62, -0.55, 0), (0.28, 0.22, 4.5), "hay")
-        elif p == 5:                                          # 乾草棚
-            for x in (-0.5, 0.0, 0.5):
-                for y in (-0.35, 0.35):
-                    o.box((x, y, 0), (0.05, 0.05, 18), "wood")
-            o.gable((0, 0, 18), (1.26, 0.88, 10), "corrugated", "x")
+        if p == 1:                                            # 2×2 滿格 L 型石砌白牆農莊主屋＋庭院石矮牆＋副屋（h=32）
+            house(o, (-0.18, 0.34), 1.32, 0.68, 17, wall="whitewash", roofm="slate", along="x", win=5)
+            house(o, (0.48, -0.26), 0.64, 0.88, 15, wall="stone", roofm="thatch", along="y", win=3)
+            # 庭院低矮石牆圍合＋門廊與草堆
+            o.box((-0.44, -0.78, 0), (0.94, 0.08, 4.0), "stone")
+            o.box((-0.86, -0.34, 0), (0.08, 0.94, 4.0), "stone")
+            o.box((-0.56, -0.44, 0), (0.34, 0.24, 5.5), "hay")
+        elif p == 3:                                          # 2×2 滿格寬大木石雙坡大穀倉＋側披屋＋乾草堆（h=24）
+            o.box((0, 0.06, 0), (1.68, 1.14, 5.0), "stone")
+            o.box((0, 0.06, 5.0), (1.64, 1.10, 11.0), "wood")
+            o.gable((0, 0.06, 16.0), (1.74, 1.22, 13.0), "terracotta", "x")
+            face_box(o, 0, 0.06, 1.64, 1.10, "-y", 0, 0.42, 0, 13.0, "darkwood")
+            for dx in (-0.78, -0.39, 0.39, 0.78):
+                o.box((dx, -0.50, 0), (0.06, 0.06, 15.5), "darkwood")
+            o.box((-0.58, -0.72, 0), (0.44, 0.28, 6.0), "hay")
+            o.box((0.56, -0.72, 0), (0.42, 0.26, 8.0), "lightwood")
+        elif p == 5:                                          # 2×2 滿格開放式重木乾草大棚＋滿棚金黃乾草垛（h=33）
+            for x in (-0.76, -0.25, 0.25, 0.76):
+                for y in (-0.52, 0.52):
+                    o.box((x, y, 0), (0.065, 0.065, 20.0), "darkwood")
+                    o.seg((x, y, 13.0), (x, y * 0.62, 20.0), "darkwood", r=0.018)
+            o.gable((0, 0, 20.0), (1.72, 1.26, 12.5), "corrugated", "x")
             for k in range(6):
-                o.box((-0.4 + (k % 3) * 0.4, -0.15 + (k // 3) * 0.3, 0), (0.3, 0.22, 6 + (k % 2) * 4), "hay")
-        elif p == 6:                                          # 機具棚 + 拖拉機
-            shed(o, (0.1, 0.2), 1.15, 0.74, 16, wall="wood", roofm="corrugated", door=False)
-            o.box((-0.4, -0.5, 1.5), (0.18, 0.12, 3), "red")
-            o.box((-0.33, -0.5, 4.5), (0.08, 0.1, 3), "red")
-            for dx in (-0.47, -0.33):
-                o.seg((dx, -0.57, 2), (dx, -0.43, 2), "black", r=0.04)
-        elif p == 8:                                          # 巨型石磚混凝土圓筒穀倉（1×1）＋銀圓頂＋卸料槽
-            o.cyl((0.0, 0.0, 0), 0.28, h * 0.78, "stone", v=20)
-            for zf in (0.22, 0.44, 0.66):
-                o.cyl((0.0, 0.0, h * zf), 0.288, 1.1, "darksteel", v=20)
-            o.lathe((0.0, 0.0, h * 0.78), [(0.29, 0), (0.27, 4), (0.20, 8), (0.08, 11), (0.0, 12)], "silver", seg=20)
-            o.box((0.26, 0.0, 0), (0.12, 0.12, h * 0.76), "wood")
-            o.box((0.22, 0.28, 0), (0.32, 0.24, 11), "wood")
-            o.gable((0.22, 0.28, 11), (0.36, 0.28, 4.5), "slate", "x")
+                hx = -0.50 + (k % 3) * 0.50
+                hy = -0.24 + (k // 3) * 0.48
+                o.box((hx, hy, 0), (0.42, 0.38, 10.0 + (k % 2) * 4.5), "hay")
+        elif p == 6:                                          # 2×2 滿格農機具棚＋拖拉機＋農用拖車（h=33）
+            o.box((0.04, 0.20, 0), (1.62, 1.06, 18.0), "wood")
+            o.gable((0.04, 0.20, 18.0), (1.70, 1.14, 12.0), "corrugated", "x")
+            windows(o, 0.04, 0.20, 1.62, 1.06, 7, 16, 1, 5, sills="darkwood", sides=("+x", "-x", "+y"))
+            for k in range(3):
+                face_box(o, 0.04, 0.20, 1.62, 1.06, "-y", -0.30 + k * 0.30, 0.24, 0, 13.0, "darkwood")
+            # 前方紅色農用拖拉機與木載車
+            o.box((-0.44, -0.62, 2.0), (0.28, 0.16, 4.5), "red")
+            o.box((-0.34, -0.62, 6.5), (0.14, 0.14, 4.5), "red")
+            for dx in (-0.54, -0.34):
+                o.seg((dx, -0.71, 2.5), (dx, -0.53, 2.5), "black", r=0.055)
+            o.box((0.26, -0.62, 2.0), (0.48, 0.26, 4.5), "lightwood")
+            o.box((0.26, -0.62, 6.5), (0.44, 0.22, 3.5), "hay")
+        elif p == 8:                                          # 1×1 粗壯石磚混凝土圓筒大穀倉塔＋銀圓頂＋卸料槽（h=92）
+            o.cyl((-0.04, 0.04, 0), 0.35, h * 0.80, "stone", v=22)
+            for zf in (0.18, 0.36, 0.54, 0.72):
+                o.cyl((-0.04, 0.04, h * zf), 0.362, 1.3, "darksteel", v=22)
+            o.lathe((-0.04, 0.04, h * 0.80), [(0.36, 0), (0.34, 5), (0.25, 10), (0.11, 14), (0.0, 16)], "silver", seg=22)
+            o.box((0.30, 0.04, 0), (0.14, 0.14, h * 0.78), "wood")
+            o.box((0.26, -0.30, 0), (0.36, 0.28, 12.0), "wood")
+            o.gable((0.26, -0.30, 12.0), (0.40, 0.32, 5.0), "slate", "x")
     else:
         if p == 1:                                            # 白色農舍 + 門廊
             house(o, (-0.2, 0.2), 0.9, 0.6, 16, wall="white", roofm="slate", win=4)
@@ -591,26 +608,48 @@ def forest(p, h, info):
     o = Ops()
     if p in (0, 2, 4):
         ground(o, 1, "dirt")
-    elif p == 1:                                              # 林務小屋
-        o.box((0, 0.1, 0), (0.5, 0.36, 10), "logs")
-        o.gable((0, 0.1, 10), (0.56, 0.42, 9), "shingle", "x")
-        face_box(o, 0, 0.1, 0.5, 0.36, "-y", 0, 0.08, 0, 7, "darkwood")
-        chimney(o, (0.15, 0.15), 0.035, 22, m="stone")
-        log_pile(o, (0.0, -0.32), 2, 3, 0.5, 0.025)
-    elif p == 3:                                              # 原木吊架
-        for x in (-0.35, 0.35):
-            o.seg((x, -0.3, 0), (x, 0, h * 0.85), "wood", r=0.02)
-            o.seg((x, 0.3, 0), (x, 0, h * 0.85), "wood", r=0.02)
-        o.seg((-0.4, 0, h * 0.85), (0.4, 0, h * 0.85), "wood", r=0.025)
-        log_pile(o, (0, 0), 3, 4, 0.7, 0.03)
-    elif p == 5:                                              # 原木堆
-        log_pile(o, (-0.15, -0.1), 2, 4, 0.55, 0.035, along="y")
-        log_pile(o, (0.25, 0.2), 2, 3, 0.45, 0.03)
+    elif p == 1:                                              # 1×1 滿格原木林務管理小屋＋前廊＋石煙囪＋木柴堆（h=26）
+        o.box((0.0, 0.08, 0), (0.76, 0.56, 12.5), "logs")
+        o.gable((0.0, 0.08, 12.5), (0.86, 0.68, 10.5), "shingle", "x")
+        windows(o, 0.0, 0.08, 0.76, 0.56, 4.5, 10.5, 1, 3, sills="darkwood")
+        face_box(o, 0.0, 0.08, 0.76, 0.56, "-y", 0, 0.16, 0, 8.5, "darkwood")
+        o.box((0.0, -0.26, 8.0), (0.76, 0.18, 1.0), "darkwood")
+        for dx in (-0.34, 0.0, 0.34):
+            o.box((dx, -0.32, 0), (0.04, 0.04, 8.0), "darkwood")
+        chimney(o, (0.24, 0.20), 0.055, 25.0, m="stone", top="darkstone")
+        log_pile(o, (0.0, -0.40), 2, 4, 0.68, 0.028)
+    elif p == 3:                                              # 1×1 重型原木裝車龍門吊架＋吊掛原木束＋儲木架（h=43）
+        # 四柱斜撐重型木鋼龍門框架
+        for x in (-0.36, 0.36):
+            for y in (-0.28, 0.28):
+                o.seg((x, y, 0), (x * 0.88, y * 0.78, 32.0), "darkwood", r=0.032)
+            o.seg((x, -0.28, 4.0), (x, 0.28, 30.0), "darkwood", r=0.018)
+            o.seg((x, 0.28, 4.0), (x, -0.28, 30.0), "darkwood", r=0.018)
+        o.box((0, 0, 32.0), (0.86, 0.58, 2.2), "darksteel")
+        o.box((0, 0, 34.2), (0.88, 0.24, 3.0), "yellowsteel")  # 頂部電動葫蘆主樑
+        o.box((0.04, 0, 31.0), (0.18, 0.20, 4.5), "darksteel") # 吊車滑車
+        for dx in (-0.12, 0.12):
+            o.seg((dx, 0, 31.0), (dx, 0, 17.0), "black", r=0.008)
+        # 懸吊中的原木束與地面整齊原木垛
+        logs(o, (0, 0), 2, 0.62, 0.038, z=14.0, along="x")
+        log_pile(o, (0, 0.04), 2, 4, 0.72, 0.034)
+    elif p == 5:                                              # 1×1 木圍籬針葉樹苗圃（四排育苗床＋16 株翠綠雲杉幼苗，h=14）
+        fence(o, 0, 0, 0.90, 0.90, h=3.2, m="wood")
+        for iy in range(4):
+            by = -0.30 + iy * 0.20
+            o.box((0, by, 0), (0.76, 0.13, 1.5), "darkwood")
+            for ix in range(4):
+                bx = -0.27 + ix * 0.18
+                sh = 7.5 + ((ix + iy) % 3) * 1.8
+                o.cyl((bx, by, 1.5), 0.018, 2.0, "darkwood", v=6)
+                o.cyl((bx, by, 3.0), 0.068, sh, "hedge", v=8, rt=0.008)
     return o
 
 
 def oilrefinery(p, h, info, frame=0):
-    """重型煉油廠（對齊原版 Shot 09 的巨型鉚接原油儲槽與高密度階梯催化裂解塔群）。"""
+    """寫實現代重型煉油廠（標準等徑直筒分餾塔＋開放鋼構鷹架＋水平高架多管廊＋巨型鉚接原油儲槽，
+    全面淘汰外星堆疊錐體造型，並維持 part 13 火炬噴口精準位於 (0,0,155) 銜接 2D 紊流火焰）。
+    """
     o = Ops()
     g2, g1 = {0, 2, 6, 8, 12}, {4, 10}
     if p in g2:
@@ -621,88 +660,83 @@ def oilrefinery(p, h, info, frame=0):
         ground(o, 1, "concrete")
         o.box((0, 0, 0), (0.92, 0.92, 0.4), "darkconcrete")
         return o
-    if p == 1:                                                # 2×2 加氫脫硫與分餾製程群
+    if p == 1:                                                # 2×2 加氫脫硫與直筒分餾單元＋三管高架管廊＋紅磚泵房
         parapet(o, 0, 0, 1.88, 1.88, 0, 2.6, "stone", t=0.05)
-        heavy_vessel(o, (-0.46, -0.38), 0.28, h * 0.96, m="steel", cap_m="silver", platforms=3, stair=True)
-        heavy_vessel(o, (0.38, -0.42), 0.24, h * 0.84, m="rust", cap_m="steel", platforms=3, stair=False)
-        pipe_bridge(o, (-0.46, -0.38, h * 0.62), (0.38, -0.42, h * 0.58), h * 0.74, r=0.052, m="rust")
-        # 臥式熱交換器滾筒＋紅磚控制泵房
+        distill_column(o, (-0.46, -0.38), 0.17, h * 0.96, m="silver")
+        distill_column(o, (0.36, -0.42), 0.15, h * 0.82, m="steel")
+        pipe_rack(o, (-0.46, -0.38), (0.36, -0.42), 24.0, mats=("silver", "steel", "rust"))
+        # 臥式管殼熱交換器組＋紅磚控制泵房
         for k in range(2):
-            o.seg((-0.70, 0.56 - k * 0.26, 9.5), (0.06, 0.56 - k * 0.26, 9.5), "silver", r=0.115)
+            o.seg((-0.70, 0.56 - k * 0.26, 9.5), (0.04, 0.56 - k * 0.26, 9.5), "silver", r=0.105)
             for xx in (-0.54, -0.08):
                 o.box((xx, 0.56 - k * 0.26, 0), (0.08, 0.18, 6.0), "stone")
         shed(o, (0.48, 0.44), 0.78, 0.66, 20, wall="brick", roofm="darkconcrete", kind="flat", win=4)
         band(o, 0.48, 0.44, 0.78, 0.66, 18.6, 1.2, "stone", grow=0.04)
-        pipe_bridge(o, (-0.46, -0.38, 18), (0.48, 0.44, 18), 28, r=0.046, m="steel")
+        pipe_rack(o, (-0.46, -0.10), (0.48, 0.44), 16.0, mats=("silver", "rust", "steel"))
     elif p == 3:                                              # 2×2 巨型風化鉚接原油儲槽（Shot 09 主體大儲槽！）
         parapet(o, 0, 0, 1.90, 1.90, 0, 3.0, "stone", t=0.055)
-        # 單座超巨型鉚接風化鋼製儲槽（r=0.72 填滿圍堰＋外壁螺旋梯＋頂緣護欄）＋側邊泵閥間與粗集油管
         riveted_tank(o, (-0.06, -0.06), 0.72, h * 0.84, m="steel", stair=True)
         o.box((0.68, 0.66, 0), (0.40, 0.34, 13.0), "brick")
         o.box((0.68, 0.66, 13.0), (0.42, 0.36, 1.2), "darkconcrete")
         pipe_bridge(o, (0.68, 0.66, 10), (0.38, 0.38, 10), 16, r=0.046, m="rust")
         pipe(o, (-0.82, 0.62, 5.0), (0.56, 0.62, 5.0), "darksteel", r=0.038)
-    elif p == 5:                                              # 1×1 重型雙塔分餾單元
+    elif p == 5:                                              # 1×1 直筒真空分餾塔＋開放鋼構鷹架＋側邊再沸器
         parapet(o, 0, 0, 0.92, 0.92, 0, 2.2, "stone", t=0.045)
-        heavy_vessel(o, (-0.16, -0.14), 0.22, h * 0.92, m="steel", cap_m="silver", platforms=3, stair=True)
-        heavy_vessel(o, (0.22, 0.18), 0.17, h * 0.76, m="rust", cap_m="steel", platforms=2, stair=False)
-        pipe_bridge(o, (-0.16, -0.14, h * 0.62), (0.22, 0.18, h * 0.56), h * 0.74, r=0.042, m="rust")
-    elif p == 7:                                              # 2×2 巨型高壓液化氣球形儲槽區
+        distill_column(o, (-0.10, -0.08), 0.17, h * 0.94, m="silver")
+        o.seg((0.18, 0.24, 9.0), (0.38, 0.24, 9.0), "steel", r=0.075)
+        pipe_bridge(o, (-0.10, -0.08, 32), (0.28, 0.24, 14), 38, r=0.036, m="rust")
+    elif p == 7:                                              # 2×2 巨型高壓液化氣霍頓球形儲槽區
         parapet(o, 0, 0, 1.88, 1.88, 0, 2.8, "stone", t=0.055)
-        heavy_sphere(o, (-0.40, -0.34), 0.42, 10.0, m="silver")
-        heavy_sphere(o, (0.44, 0.34), 0.38, 9.0, m="steel")
-        pipe_bridge(o, (-0.40, -0.34, 16), (0.44, 0.34, 16), 24, r=0.046, m="rust")
+        heavy_sphere(o, (-0.40, -0.34), 0.42, 10.0, m="white")
+        heavy_sphere(o, (0.44, 0.34), 0.38, 9.0, m="silver")
+        pipe_rack(o, (-0.40, -0.34), (0.44, 0.34), 16.0, mats=("silver", "yellowsteel", "steel"))
         o.box((-0.56, 0.56, 0), (0.46, 0.38, 14.0), "brick")
         o.box((-0.56, 0.56, 14.0), (0.48, 0.40, 1.4), "darkconcrete")
-    elif p == 9:                                              # 2×2 熱裂解加熱爐＋巨型塔器＋雙煙囪
+    elif p == 9:                                              # 2×2 箱式管狀加熱爐＋雙排氣鋼煙囪＋直筒汽提塔＋高架管廊
         parapet(o, 0, 0, 1.88, 1.88, 0, 2.6, "stone", t=0.05)
-        shed(o, (-0.30, 0.26), 1.12, 0.92, 30, wall="rust", roofm="darkconcrete", kind="flat", win=4)
-        band(o, -0.30, 0.26, 1.12, 0.92, 28.2, 1.5, "darksteel", grow=0.04)
+        # 典型煉油廠箱式管狀加熱爐（耐火磚鋼框爐體＋梯形集煙罩＋雙鋼煙囪）
+        o.box((-0.26, 0.26, 0), (1.16, 0.88, 28.0), "steel")
+        for dx in (-0.82, -0.45, -0.08, 0.28):
+            o.box((dx, -0.19, 0), (0.06, 0.06, 28.0), "darksteel")
+            o.box((dx, 0.71, 0), (0.06, 0.06, 28.0), "darksteel")
+        o.hip((-0.26, 0.26, 28.0), (1.12, 0.84, 8.0), "darksteel", k=0.4)
         for k in range(2):
-            chimney(o, (0.50 + k * 0.28, -0.48), 0.11, h * 0.96, m="steel", top="darksteel", bands="rust")
-        heavy_vessel(o, (-0.54, -0.52), 0.24, h * 0.88, m="steel", cap_m="silver", platforms=3, stair=True)
-        pipe_bridge(o, (-0.54, -0.52, 30), (-0.30, 0.26, 30), 42, r=0.052, m="rust")
+            chimney(o, (-0.54 + k * 0.56, 0.26), 0.11, h * 0.98, m="steel", top="darksteel", bands="rust")
+        distill_column(o, (-0.50, -0.48), 0.16, h * 0.86, m="silver")
+        pipe_rack(o, (-0.50, -0.48), (0.46, -0.44), 22.0, mats=("silver", "rust", "steel"))
+        riveted_tank(o, (0.56, -0.46), 0.22, 28.0, m="steel", stair=False)
     elif p == 11:                                             # 1×1 主重型煙道高煙囪＋紅磚鍋爐間
         chimney(o, (-0.10, -0.10), 0.20, h, m="stone", top="darksteel", bands="darkbrick")
         o.box((0.24, 0.24, 0), (0.42, 0.40, 18), "brick")
         o.gable((0.24, 0.24, 18), (0.46, 0.44, 6), "slate", "x")
         pipe_bridge(o, (0.24, 0.24, 14), (-0.10, -0.10, 18), 24, r=0.056, m="rust")
-    elif p == 13:                                             # 2×2 核心巨型催化裂解塔群＋高聳火炬塔（h=155，頂端接 2D 火焰）
+    elif p == 13:                                             # 2×2 寫實流體催化裂解塔群＋中央鋼桁架火炬塔（頂端 (0,0,155) 接 2D 火焰）
         o.box((0, 0, 0), (1.84, 1.84, 3.2), "darkconcrete")
         parapet(o, 0, 0, 1.88, 1.88, 0, 4.4, "stone", t=0.05)
-        # 中央巨型階梯式催化裂解主塔＋螺旋階梯＋直上 z=155 火炬燃燒口
-        o.cyl((0, 0, 3), 0.34, 34, "steel", v=22)
-        o.cyl((0, 0, 37), 0.34, 6.0, "darksteel", v=22, rt=0.26)
-        o.cyl((0, 0, 43), 0.26, 54, "silver", v=22, rt=0.22)
-        o.cyl((0, 0, 97), 0.22, 24, "rust", v=20, rt=0.13)
-        o.cyl((0, 0, 121), 0.10, h - 121, "darksteel", v=16, rt=0.075)        # 火炬立管頂到 z=155
-        o.cyl((0, 0, h - 4.5), 0.12, 4.5, "rust", v=16)                       # 火炬燃燒口
-        # 重型四柱鋼構桁架＋5 層寬檢修平台＋螺旋階梯
-        for dx in (-0.38, 0.38):
-            for dy in (-0.38, 0.38):
-                o.seg((dx, dy, 3), (dx * 0.72, dy * 0.72, 120), "darksteel", r=0.024)
-        for z_plat, r_plat in ((32, 0.44), (58, 0.40), (84, 0.36), (106, 0.30), (130, 0.20)):
-            o.cyl((0, 0, z_plat), r_plat, 1.4, "darksteel", v=18)
-            o.cyl((0, 0, z_plat + 3.0), r_plat * 0.99, 0.65, "steel", v=18)
-        spiral_stair(o, 0, 0, 0.36, 4.0, 96.0, turns=1.4, steps=22)
-        # 三座厚重環繞副塔（大幅加粗體量）＋粗大拱形高架鋼管
-        flank = ((-0.54, -0.40, 114, 0.25, "steel", "silver"),
-                 (0.54, -0.36, 98, 0.22, "rust", "steel"),
-                 (-0.40, 0.52, 86, 0.21, "steel", "rust"))
-        for fx, fy, fh, fr, fmat, fcap in flank:
-            heavy_vessel(o, (fx, fy), fr, fh, m=fmat, cap_m=fcap, platforms=3, stair=False, z=3)
-            zm = fh * 0.70
-            pipe_bridge(o, (fx, fy, zm), (0, 0, zm), zm + 14, r=0.052, m="rust" if fmat != "rust" else "steel")
-            pipe(o, (fx, fy, zm * 0.44), (0, 0, zm * 0.44), "darksteel", r=0.042)
-        # 紅磚壓縮機房＋粗大臥式冷凝器
-        pipe_bridge(o, (-0.54, -0.40, 52), (0.54, -0.36, 52), 62, r=0.044, m="steel")
+        # 中央標準等徑火炬立管＋四柱鋼桁架火炬塔（直達 z=155 火炬燃燒口，無外星錐體！）
+        o.cyl((0, 0, 3), 0.11, h - 7.5, "darksteel", v=16, rt=0.085)
+        o.cyl((0, 0, h - 4.5), 0.125, 4.5, "rust", v=16)                      # 火炬燃燒口 z=155
+        for dx in (-0.22, 0.22):
+            for dy in (-0.22, 0.22):
+                o.seg((dx, dy, 3), (dx * 0.65, dy * 0.65, h - 12), "darksteel", r=0.020)
+        for z_plat, pw in ((30, 0.48), (62, 0.42), (94, 0.36), (124, 0.30)):
+            o.box((0, 0, z_plat), (pw, pw, 1.4), "darksteel")
+            o.box((0, 0, z_plat + 3.0), (pw, pw, 0.5), "steel")
+        # 三座真實直筒式裂解／再生／分餾主塔（配開放式結構鋼框）＋高空平行管廊
+        distill_column(o, (-0.54, -0.40), 0.19, 114.0, m="silver", z=3)
+        distill_column(o, (0.52, -0.38), 0.17, 98.0, m="steel", z=3)
+        distill_column(o, (-0.42, 0.50), 0.16, 86.0, m="white", z=3)
+        pipe_rack(o, (-0.54, -0.40), (0.52, -0.38), 54.0, mats=("silver", "rust", "steel"))
+        pipe_rack(o, (-0.54, -0.40), (-0.42, 0.50), 40.0, mats=("silver", "steel", "rust"))
+        pipe_bridge(o, (-0.54, -0.40, 78), (0, 0, 78), 88, r=0.048, m="rust")
+        pipe_bridge(o, (0.52, -0.38, 66), (0, 0, 66), 76, r=0.044, m="steel")
+        # 紅磚壓縮機房＋臥式冷凝分離鼓
         o.box((0.48, 0.50, 3), (0.68, 0.58, 26), "brick")
         o.box((0.48, 0.50, 29), (0.70, 0.60, 1.4), "darkconcrete")
         parapet(o, 0.48, 0.50, 0.70, 0.60, 28.8, 2.2, "stone", t=0.045)
         for k in range(2):
-            o.seg((-0.38, -0.70 + k * 0.20, 13), (0.36, -0.70 + k * 0.20, 13), "silver", r=0.095)
+            o.seg((-0.36, -0.72 + k * 0.18, 12.5), (0.36, -0.72 + k * 0.18, 12.5), "silver", r=0.088)
     else:                                                     # 火焰 part 14..77 由 tools/gen/fire_fx.py 2D 流體模擬覆寫
-        k = p - 14
         o.cyl((0, 0, 0), 0.06, 3.0, "darksteel", v=10)
     return o
 
@@ -787,23 +821,29 @@ def oilwell(p, h, info):
     elif p == 17:
         ground(o, 2, "concrete")
         o.box((0, 0, 0), (1.88, 1.88, 0.35), "darkconcrete")
-    elif 1 <= p <= 16:                                        # 抽油機（16 格，工業黃鋼與深鋼，無公司色）
+    elif 1 <= p <= 16:                                        # 1×1 重型清晰磕頭抽油機（16 格，厚實 A 型架＋黃鋼遊梁驢頭＋圍欄基座）
         k = p - 1
-        ang = math.radians(16) * math.sin(2 * math.pi * k / 16)
-        o.box((0, 0, 0), (0.7, 0.25, 1.5), "concrete")
-        for dy in (-0.07, 0.07):
-            o.seg((0.0, dy, 1.5), (0.0, dy * 0.4, 30), "darksteel", r=0.014)
-            o.seg((-0.12, dy, 1.5), (0.0, dy * 0.4, 30), "darksteel", r=0.012)
-        L1, L2 = 0.38, 0.25
-        piv = (0.0, 0.0, 31)
+        ang = math.radians(17) * math.sin(2 * math.pi * k / 16)
+        o.box((0, 0, 0), (0.84, 0.44, 2.2), "concrete")
+        fence(o, 0, 0, 0.90, 0.90, h=2.6, m="darksteel")
+        # 粗壯 A 型支撐三腳鋼架（Samson Post）
+        for dy in (-0.10, 0.10):
+            o.seg((0.02, dy, 2.2), (0.0, dy * 0.35, 34.0), "darksteel", r=0.026)
+            o.seg((-0.18, dy, 2.2), (0.0, dy * 0.35, 34.0), "darksteel", r=0.022)
+        o.box((0.0, 0.0, 32.5), (0.14, 0.14, 3.0), "steel")
+        # 厚重工業黃鋼遊梁（Walking Beam）＋弧形驢頭（Horsehead）
+        L1, L2 = 0.42, 0.30
+        piv = (0.0, 0.0, 35.0)
         head = (piv[0] + L1 * math.cos(ang), 0, piv[2] + L1 * TZ * math.sin(ang))
         tail = (piv[0] - L2 * math.cos(ang), 0, piv[2] - L2 * TZ * math.sin(ang))
-        o.seg(tail, head, "yellowsteel", r=0.03)
-        o.lathe((head[0], 0, head[2] - 6), [(0.0, 0), (0.06, 2), (0.07, 6), (0.06, 10), (0.0, 12)], "yellowsteel", seg=10)  # 驢頭
-        o.seg((head[0] + 0.05, 0, head[2] - 6), (0.43, 0, 2), "black", r=0.004)
-        o.cyl((0.43, 0, 0), 0.04, 4, "darksteel", v=8)
-        o.box((-0.25, 0, 1.5), (0.16, 0.18, 6), "darksteel")                            # 曲柄配重
-        o.seg((tail[0], 0, tail[2]), (-0.25, 0, 7.5 + 3 * math.sin(ang * 3)), "darksteel", r=0.012)
+        o.seg(tail, head, "yellowsteel", r=0.044)
+        o.lathe((head[0], 0, head[2] - 8.5), [(0.0, 0), (0.08, 3), (0.10, 8), (0.08, 13), (0.0, 16)], "yellowsteel", seg=12)
+        o.seg((head[0] + 0.06, 0, head[2] - 7), (0.44, 0, 3), "black", r=0.008)
+        o.cyl((0.44, 0, 2.0), 0.07, 6.0, "darksteel", v=10)   # 井口採油樹
+        # 旋轉大配重曲柄與馬達箱
+        o.box((-0.28, 0, 2.2), (0.24, 0.26, 9.5), "darksteel")
+        o.box((-0.44, 0, 2.2), (0.16, 0.18, 6.0), "steel")
+        o.seg((tail[0], 0, tail[2]), (-0.28, 0, 11.0 + 4.0 * math.sin(ang * 3)), "steel", r=0.020)
     elif p == 18:                                             # 2×2 重型鉚接原油儲槽群＋圍堰＋螺旋梯＋泵房
         parapet(o, 0, 0, 1.88, 1.88, 0, 2.8, "stone", t=0.05)
         riveted_tank(o, (-0.36, -0.34), 0.46, h * 0.72, m="steel", stair=True)
@@ -812,19 +852,29 @@ def oilwell(p, h, info):
         pipe_bridge(o, (-0.36, -0.34, 8), (0.42, 0.36, 8), 14, r=0.042, m="rust")
         o.box((-0.62, 0.56, 0), (0.42, 0.34, 12.0), "corrugated")
         o.gable((-0.62, 0.56, 12.0), (0.46, 0.38, 4.5), "slate", "x")
-    elif p == 20:                                             # 1×1 重型鑽井架＋泥漿泵屋＋鑽桿架
-        for dx in (-1, 1):
-            for dy in (-1, 1):
-                o.seg((dx * 0.27, dy * 0.27, 2), (dx * 0.055, dy * 0.055, h - 2), "darksteel", r=0.018)
-        for k in range(1, 10):
-            z = 2 + (h - 4) * k / 10
-            w = 0.27 - 0.215 * k / 10
+    elif p == 20:                                             # 1×1 重型鋼構石油鑽井架＋高架黃鋼鑽台＋泥漿泵屋（h=133）
+        # 高架鋼構鑽井底座平台
+        o.box((0, 0, 0), (0.82, 0.82, 9.0), "darksteel")
+        o.box((0, 0, 9.0), (0.86, 0.86, 1.8), "wood")
+        # 粗壯四柱交叉桁架鑽塔（清楚可辨，不再細若蛛絲！）
+        n_lvl = 9
+        for k in range(n_lvl):
+            f0, f1 = k / n_lvl, (k + 1) / n_lvl
+            z0 = 10.5 + (h - 16.5) * f0
+            z1 = 10.5 + (h - 16.5) * f1
+            w0 = 0.32 - 0.22 * f0
+            w1 = 0.32 - 0.22 * f1
+            for sx in (-1, 1):
+                for sy in (-1, 1):
+                    o.seg((sx * w0, sy * w0, z0), (sx * w1, sy * w1, z1), "darksteel", r=0.026)
             for (a, b) in (((-1, -1), (1, -1)), ((1, -1), (1, 1)), ((1, 1), (-1, 1)), ((-1, 1), (-1, -1))):
-                o.seg((a[0] * w, a[1] * w, z), (b[0] * w, b[1] * w, z), "steel", r=0.010)
-        o.box((0, 0, h - 4), (0.14, 0.14, 4.0), "yellowsteel")    # 天車頭
-        o.box((0, 0, 0), (0.68, 0.68, 2.5), "wood")
-        o.box((0.32, 0.30, 0), (0.28, 0.24, 9.0), "corrugated")
-        o.gable((0.32, 0.30, 9.0), (0.30, 0.26, 3.0), "slate", "x")
+                o.seg((a[0] * w1, a[1] * w1, z1), (b[0] * w1, b[1] * w1, z1), "steel", r=0.015)
+                o.seg((a[0] * w0, a[1] * w0, z0), (b[0] * w1, b[1] * w1, z1), "steel", r=0.012)
+        # 中段醒目安全黃二層立管作業台（Monkeyboard）＋頂部天車架
+        o.box((0, 0, h * 0.52), (0.44, 0.44, 14.0), "yellowsteel")
+        o.box((0, 0, h - 7.0), (0.24, 0.24, 7.0), "yellowsteel")
+        o.box((0.34, 0.32, 0), (0.30, 0.26, 11.0), "corrugated")
+        o.gable((0.34, 0.32, 11.0), (0.34, 0.30, 4.0), "slate", "x")
     return o
 
 
@@ -1213,57 +1263,85 @@ def steelmill(p, h, info):
     if p in (2, 6, 9):
         ground(o, 1, "ore")
         return o
-    if p == 1 or 10 <= p <= 16:                               # 2×2 重型轉爐煉鋼廠房；10–16 為倒鋼動畫格
+    if p == 1 or 10 <= p <= 16:                               # 2×2 滿格重型雙跨轉爐煉鋼大廠房；10–16 為倒鋼動畫格（h=86）
         k = 0 if p == 1 else p - 9
-        shed(o, (0, 0.12), 1.58, 1.18, 48, wall="rust", roofm="corrugated", win=0)
-        # 外露重型鋼構扶壁柱與深鋼簷口帶
-        for dx in (-0.76, -0.38, 0.0, 0.38, 0.76):
-            o.box((dx, -0.48, 0), (0.06, 0.06, 47), "darksteel")
-            o.box((dx, 0.72, 0), (0.06, 0.06, 47), "darksteel")
-        band(o, 0, 0.12, 1.58, 1.18, 45.8, 1.8, "darksteel", grow=0.04)
-        o.box((0, 0.12, 62), (1.16, 0.34, 7.5), "darksteel")  # 貫穿式屋頂排煙氣樓
-        o.gable((0, 0.12, 69.5), (1.20, 0.38, 4.5), "rust", "x")
-        for x in (-0.48, 0.48):
-            chimney(o, (x, 0.56), 0.095, h * 0.98, m="steel", top="darksteel", bands="rust")
+        # 滿格重鋼主跨（高天車廠房）＋側跨出鋼間
+        o.box((-0.06, 0.16, 0), (1.76, 1.18, 52.0), "rust")
+        o.box((-0.06, -0.58, 0), (1.76, 0.38, 30.0), "darksteel")
+        o.gable((-0.06, 0.16, 52.0), (1.84, 1.26, 14.0), "corrugated", "x")
+        o.box((-0.06, -0.58, 30.0), (1.80, 0.42, 2.0), "corrugated")
+        # 密集外露重型 H 鋼扶壁柱＋貫穿式百葉排煙氣樓
+        for dx in (-0.88, -0.44, 0.0, 0.44, 0.80):
+            o.box((dx, -0.44, 0), (0.07, 0.07, 52.0), "darksteel")
+            o.box((dx, 0.76, 0), (0.07, 0.07, 52.0), "darksteel")
+        band(o, -0.06, 0.16, 1.76, 1.18, 50.0, 2.0, "darksteel", grow=0.04)
+        o.box((-0.06, 0.16, 64.0), (1.44, 0.38, 9.0), "darksteel")
+        o.gable((-0.06, 0.16, 73.0), (1.50, 0.44, 5.5), "rust", "x")
+        for x in (-0.54, 0.42):
+            chimney(o, (x, 0.58), 0.11, h * 0.98, m="steel", top="darksteel", bands="rust")
         door_glow = "glow" if k else "black"
-        face_box(o, 0, 0.12, 1.58, 1.18, "-y", -0.15, 0.44, 0, 32, door_glow)
-        face_box(o, 0, 0.12, 1.58, 1.18, "-x", 0.10, 0.44, 0, 32, door_glow)
+        face_box(o, -0.06, -0.58, 1.76, 0.38, "-y", -0.15, 0.50, 0, 26, door_glow)
+        face_box(o, -0.06, 0.16, 1.76, 1.18, "-x", 0.10, 0.48, 0, 34, door_glow)
         if k:
             tilt = min(k, 6) / 6
-            o.lathe((-0.30, -0.58, 18), [(0.0, 0), (0.14, 1.5), (0.16, 9), (0.14, 14)], "darksteel", seg=14)
-            o.seg((-0.30 + 0.1 * tilt, -0.58, 30), (-0.30 + 0.2 * tilt, -0.64, 4), "flame", r=0.025 + 0.025 * tilt)
-            o.cyl((-0.14, -0.64, 0), 0.10 + 0.06 * tilt, 2.0, "glow", v=14)
-    elif p == 3:                                              # 1×1 重型鋼構礦石倉＋漏斗＋輸送廊道
-        for dx in (-0.30, 0.30):
-            for dy in (-0.30, 0.30):
-                o.box((dx, dy, 0), (0.08, 0.08, 16), "darksteel")
-        o.box((0, 0, 15), (0.84, 0.84, 20), "rust")
-        band(o, 0, 0, 0.84, 0.84, 33.5, 1.6, "darksteel", grow=0.04)
-        o.gable((0, 0, 35), (0.88, 0.88, 6.0), "corrugated", "x")
-        o.cyl((0, 0, 7), 0.18, 8, "darksteel", v=4, rt=0.42)
-    elif p == 5:                                              # 2×2 巨型高爐＋三座鉚接熱風爐＋粗大下降管橋＋螺旋梯＋裝料斜橋
+            o.lathe((-0.34, -0.78, 18), [(0.0, 0), (0.14, 1.5), (0.16, 9), (0.14, 14)], "darksteel", seg=14)
+            o.seg((-0.34 + 0.1 * tilt, -0.78, 30), (-0.34 + 0.2 * tilt, -0.84, 4), "flame", r=0.028 + 0.026 * tilt)
+            o.cyl((-0.18, -0.84, 0), 0.12 + 0.06 * tilt, 2.2, "glow", v=14)
+    elif p == 3:                                              # 1×1 滿格重型鋼構礦石與助熔劑大儲倉（h=33）
+        for dx in (-0.36, 0.36):
+            for dy in (-0.36, 0.36):
+                o.box((dx, dy, 0), (0.09, 0.09, 15.0), "darksteel")
+        o.box((0, 0, 14.0), (0.90, 0.90, 14.0), "rust")
+        band(o, 0, 0, 0.90, 0.90, 26.5, 1.8, "darksteel", grow=0.04)
+        o.gable((0, 0, 28.0), (0.94, 0.94, 5.5), "corrugated", "x")
+        o.cyl((0, 0, 6.0), 0.20, 8.0, "darksteel", v=4, rt=0.45)
+    elif p == 5:                                              # 2×2 寫實直筒煉鐵高爐＋四柱重鋼頂架＋三座熱風爐＋下降管＋裝料斜橋（h=129）
         parapet(o, 0, 0, 1.88, 1.88, 0, 2.8, "stone", t=0.05)
-        heavy_vessel(o, (-0.12, -0.06), 0.40, h * 0.92, m="rust", cap_m="steel", platforms=4, stair=True)
+        # 真實直筒／微收高爐本體（爐缸＋風口帶＋爐身＋四柱鋼構爐頂框架＋雙高爐放散管，告別外星錐體！）
+        bx, by = -0.14, -0.06
+        o.cyl((bx, by, 0), 0.38, 22.0, "darksteel", v=24)
+        o.cyl((bx, by, 22.0), 0.36, 64.0, "rust", v=24, rt=0.28)
+        o.cyl((bx, by, 86.0), 0.24, 18.0, "steel", v=20)
+        # 四柱重型高爐外框鋼結構與 4 層方形檢修平台＋頂部天車架＋放散立管
+        fw = 0.42
+        for dx in (-fw, fw):
+            for dy in (-fw, fw):
+                o.seg((bx + dx, by + dy, 0), (bx + dx * 0.78, by + dy * 0.78, 108.0), "darksteel", r=0.026)
+        for z_pl, pw in ((26, 0.90), (54, 0.84), (82, 0.76), (104, 0.68)):
+            o.box((bx, by, z_pl), (pw, pw, 2.0), "darksteel")
+            o.box((bx, by, z_pl + 3.5), (pw, pw, 0.7), "steel")
+        o.box((bx, by, 106.0), (0.64, 0.64, 4.0), "darksteel")
+        for sx in (-0.12, 0.12):
+            o.cyl((bx + sx, by, 108.0), 0.055, 19.0, "steel", v=12)                   # 雙高爐頂部放散管
         # 三座巨型鉚接熱風爐（Cowper stoves）＋相連粗大熱風導管
         for k in range(3):
             sy = -0.58 + k * 0.38
             riveted_tank(o, (0.64, sy), 0.19, h * 0.56, m="steel", stair=(k == 1))
-            pipe_bridge(o, (-0.12, -0.06, h * 0.62), (0.64, sy, h * 0.50), h * 0.72, r=0.048, m="rust")
-        # 高爐頂部粗大煤氣下降管（downcomer）＋除塵器
+            pipe_bridge(o, (bx, by, h * 0.58), (0.64, sy, h * 0.50), h * 0.68, r=0.048, m="rust")
+        # 粗大煤氣下降管（downcomer）＋旋風除塵器
         riveted_tank(o, (-0.64, 0.58), 0.22, h * 0.48, m="darksteel", stair=False)
-        pipe_bridge(o, (-0.12, -0.06, h * 0.82), (-0.64, 0.58, h * 0.46), h * 0.94, r=0.058, m="rust")
-        # 雙軌桁架裝料斜橋
+        pipe_bridge(o, (bx, by, 98.0), (-0.64, 0.58, h * 0.46), 114.0, r=0.058, m="rust")
+        # 雙軌桁架裝料斜橋（Skip Hoist Bridge）
         for off in (-0.06, 0.06):
-            o.seg((-0.90 + off, -0.90 - off, 2), (-0.14 + off, -0.14 - off, h * 0.82), "darksteel", r=0.032)
-    elif p == 7:                                              # 1×1 重型雙煙囪＋石砌煙道基座
-        o.box((0, 0, 0), (0.76, 0.76, 10.0), "stone")
-        chimney(o, (-0.16, -0.16), 0.13, h, m="darkbrick", top="darkstone", bands="steel")
-        chimney(o, (0.20, 0.20), 0.11, h * 0.88, m="brick", top="darkstone", bands="darkstone")
-    elif p == 8:                                              # 1×1 鋼胚堆＋重型門架吊具
-        for k in range(8):
-            x, y = -0.26 + (k % 4) * 0.17, -0.16 + (k // 4) * 0.32
-            o.box((x, y, (k // 4) * 3.2), (0.13, 0.26, 3.2), "steel")
-        o.hip((0.20, 0.26, 0), (0.42, 0.32, h * 0.58), "darkstone", k=0.3)
+            o.seg((-0.90 + off, -0.90 - off, 2), (bx + off, by - off, 102.0), "darksteel", r=0.032)
+    elif p == 7:                                              # 1×1 重型雙煙囪＋石砌煙道基座（h=150）
+        o.box((0, 0, 0), (0.80, 0.80, 12.0), "stone")
+        chimney(o, (-0.16, -0.16), 0.15, h, m="darkbrick", top="darkstone", bands="steel")
+        chimney(o, (0.20, 0.20), 0.13, h * 0.88, m="brick", top="darkstone", bands="darkstone")
+    elif p == 8:                                              # 1×1 鋼捲與鋼胚料場＋跨軌黃鋼龍門吊車（h=20）
+        # 雙側軌道梁與門型天車架
+        for sy in (-0.38, 0.38):
+            o.box((0, sy, 0), (0.88, 0.06, 1.5), "darksteel")
+        for sx in (-0.34, 0.34):
+            for sy in (-0.36, 0.36):
+                o.box((sx, sy, 1.5), (0.05, 0.05, 16.0), "darksteel")
+            o.box((sx, 0, 16.5), (0.07, 0.78, 2.2), "yellowsteel")
+        o.box((0, 0, 17.5), (0.76, 0.16, 2.2), "yellowsteel")                         # 跨軌橋式主梁
+        # 場內堆滿發亮銀灰鋼捲與厚鋼胚
+        for k in range(3):
+            o.seg((-0.26 + k * 0.24, -0.18, 4.5), (-0.26 + k * 0.24, -0.02, 4.5), "silver", r=0.085)
+        for k in range(4):
+            o.box((-0.24 + k * 0.16, 0.18, 0), (0.13, 0.24, 5.5), "steel")
     return o
 
 
@@ -1271,23 +1349,30 @@ def stockfarm(p, h, info):
     o = Ops()
     if p == 0:
         ground(o, 2, "dirt")
-        fence(o, 0, 0, 1.9, 1.9, h=2.5)
+        fence(o, 0, 0, 1.9, 1.9, h=2.8)
     elif p == 2:
         ground(o, 1, "dirt")
-    elif p == 1:                                              # 牛舍 + 農舍 + 鍍鋅青貯筒倉
-        o.box((0.2, 0.2, 0), (1.2, 0.6, 12), "wood")
-        o.gable((0.2, 0.2, 12), (1.26, 0.66, 10), "corrugated", "x")
-        for k in range(5):
-            face_box(o, 0.2, 0.2, 1.2, 0.6, "-y", -0.4 + k * 0.2, 0.08, 4, 3, "black")
-        house(o, (-0.6, -0.5), 0.5, 0.4, 12, wall="stone", roofm="slate", win=2)
-        riveted_tank(o, (0.75, -0.55), 0.15, 22, m="silver")
-    elif p == 3:                                              # 動物棚（1×1）
-        for x in (-0.3, 0.3):
-            for y in (-0.2, 0.2):
-                o.box((x, y, 0), (0.04, 0.04, 10), "wood")
-        o.gable((0, 0, 10), (0.75, 0.55, 6), "corrugated", "x")
-        o.box((0, 0.22, 0), (0.7, 0.04, 6), "wood")
-        o.box((0, 0, 0), (0.5, 0.3, 2), "hay")
+    elif p == 1:                                              # 2×2 滿格大型牧場牛舍＋石砌牧場農舍＋高聳青貯筒倉＋木圍欄（h=37）
+        # 大型通風木造牛舍（填滿後半格）
+        o.box((0.06, 0.34, 0), (1.66, 0.84, 15.0), "wood")
+        o.gable((0.06, 0.34, 15.0), (1.74, 0.92, 12.0), "corrugated", "x")
+        o.box((0.06, 0.34, 24.5), (1.10, 0.22, 3.5), "darkwood")
+        o.gable((0.06, 0.34, 28.0), (1.14, 0.26, 2.8), "corrugated", "x")
+        for k in range(6):
+            face_box(o, 0.06, 0.34, 1.66, 0.84, "-y", -0.40 + k * 0.16, 0.10, 5.0, 4.0, "black")
+        # 前左方寬大石砌牧場主屋＋前右方鍍鋅鉚接青貯筒倉＋草垛
+        house(o, (-0.42, -0.46), 0.84, 0.58, 15, wall="stone", roofm="slate", win=3)
+        riveted_tank(o, (0.64, -0.46), 0.22, 34.0, m="silver", stair=False)
+        o.box((0.20, -0.58, 0), (0.36, 0.26, 6.0), "hay")
+    elif p == 3:                                              # 1×1 木圍欄畜欄＋遮雨乾草飼料棚＋飲水槽（h=17）
+        fence(o, 0, 0, 0.90, 0.90, h=3.2, m="wood")
+        for x in (-0.34, 0.0, 0.34):
+            for y in (-0.12, 0.32):
+                o.box((x, y, 0), (0.05, 0.05, 11.0), "darkwood")
+        o.gable((0, 0.10, 11.0), (0.82, 0.56, 6.0), "corrugated", "x")
+        o.box((0, 0.34, 0), (0.76, 0.05, 8.0), "wood")
+        o.box((0, 0.10, 0), (0.58, 0.30, 4.5), "hay")
+        o.box((0, -0.28, 0), (0.48, 0.12, 2.8), "stone")                              # 石製飲水槽
     return o
 
 
@@ -1373,25 +1458,30 @@ def winery(p, h, info):
         ground(o, 2, "gravel")
     elif p == 2:
         ground(o, 1, "gravel")
-    elif p == 1:                                              # 石造酒窖＋扶壁＋拱門遮棚＋橡木酒桶堆
-        o.box((0, 0.22, 0), (1.48, 0.86, 20), "stone")
-        windows(o, 0, 0.22, 1.48, 0.86, 5, 18, 1, 6, wf=0.3, sills="darkstone")
-        o.gable((0, 0.22, 20), (1.56, 0.94, 11), "terracotta", "x")
-        face_box(o, 0, 0.22, 1.48, 0.86, "-y", 0, 0.28, 0, 12, "darkwood")
-        o.box((0, -0.30, 11.5), (0.58, 0.24, 1.4), "darkwood")
-        for x in (-0.68, -0.34, 0.34, 0.68):
-            o.box((x, -0.22, 0), (0.09, 0.10, 19), "darkstone")
-        for k in range(6):
-            o.seg((-0.62 + k * 0.15, -0.58, 2.8), (-0.62 + k * 0.15, -0.38, 2.8), "wood", r=0.052)
+    elif p == 1:                                              # 2×2 滿格歐式石砌酒窖＋綠藤葡萄棚架＋雙層橡木酒桶堆（h=32）
+        o.box((0, 0.26, 0), (1.66, 0.96, 20.0), "stone")
+        windows(o, 0, 0.26, 1.66, 0.96, 5, 18, 1, 7, wf=0.32, sills="darkstone")
+        o.gable((0, 0.26, 20.0), (1.76, 1.06, 11.5), "terracotta", "x")
+        face_box(o, 0, 0.26, 1.66, 0.96, "-y", 0, 0.34, 0, 13.0, "darkwood")
+        for x in (-0.78, -0.40, 0.40, 0.78):
+            o.box((x, -0.24, 0), (0.09, 0.10, 19.5), "darkstone")
+        # 前方覆滿翠綠葡萄藤的木造棚架＋雙層橡木桶陳列
+        for x in (-0.70, -0.24, 0.24, 0.70):
+            o.box((x, -0.74, 0), (0.05, 0.05, 12.0), "darkwood")
+        o.box((0, -0.50, 12.0), (1.50, 0.56, 1.0), "darkwood")
+        o.box((0, -0.50, 13.0), (1.54, 0.60, 2.2), "hedge")                           # 綠藤葡萄棚頂
+        for k in range(7):
+            o.seg((-0.66 + k * 0.16, -0.64, 3.0), (-0.66 + k * 0.16, -0.42, 3.0), "wood", r=0.056)
         for k in range(5):
-            o.seg((-0.54 + k * 0.15, -0.58, 6.2), (-0.54 + k * 0.15, -0.38, 6.2), "wood", r=0.050)
-    elif p == 3:                                              # 發酵槽塔（1×1：雙鉚接不鏽鋼發酵桶＋銅管橋＋石砌塔屋）
-        o.box((0, 0.14, 0), (0.64, 0.52, 24), "ochre")
-        o.hip((0, 0.14, 24), (0.70, 0.58, 9), "terracotta", k=0.4)
-        windows(o, 0, 0.14, 0.64, 0.52, 6, 22, 2, 2, wf=0.32, sills="stone")
-        riveted_tank(o, (-0.22, -0.30), 0.15, 18, m="silver")
-        riveted_tank(o, (0.22, -0.30), 0.15, 18, m="silver")
-        pipe_bridge(o, (-0.22, -0.30, 13), (0.22, -0.30, 13), 20, r=0.024, m="copper")
+            o.seg((-0.50 + k * 0.16, -0.64, 6.8), (-0.50 + k * 0.16, -0.42, 6.8), "wood", r=0.054)
+    elif p == 3:                                              # 1×1 赭石釀造發酵室＋三座發亮不鏽鋼釀酒槽＋銅質壓榨管匯（h=40）
+        o.box((0, 0.16, 0), (0.72, 0.54, 26.0), "ochre")
+        o.hip((0, 0.16, 26.0), (0.80, 0.62, 10.0), "terracotta", k=0.45)
+        windows(o, 0, 0.16, 0.72, 0.54, 6, 23, 2, 3, wf=0.34, sills="stone")
+        riveted_tank(o, (-0.26, -0.28), 0.16, 22.0, m="silver")
+        riveted_tank(o, (0.04, -0.32), 0.15, 20.0, m="silver")
+        riveted_tank(o, (0.30, -0.26), 0.14, 18.0, m="copper")
+        pipe_bridge(o, (-0.26, -0.28, 16), (0.30, -0.26, 16), 24, r=0.028, m="copper")
     return o
 
 

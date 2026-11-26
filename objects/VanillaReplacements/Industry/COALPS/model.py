@@ -78,39 +78,38 @@ def make_part(kit, index):
         H = _h(kit)
         dark_roof = kit.material("Dark Roof", (0.14, 0.15, 0.16), rough=0.85, noise=0.45)
         slate = kit.material("Slate", (0.10, 0.11, 0.12), rough=0.7, noise=0.35)
-        cornice = kit.material("Stone Cornice", (0.44, 0.42, 0.37), rough=0.75, noise=0.30)
+        cornice = kit.material("Stone Cornice", (0.46, 0.44, 0.39), rough=0.75, noise=0.30)
         kit.ground_plate(2, 2, kit.material("Concrete Ground", (0.28, 0.30, 0.30), noise=0.35, ground=True), thickness=0.03)
-        # 紅磚鍋爐與汽機廠房：凹入暗屋頂＋磚女兒牆＋採光氣樓＋切石簷口（無公司色）
-        bx, by = -T * 0.10, -T * 0.16
-        bw, bd, bh = T * 1.66, T * 1.22, H * 0.86
+        # 滿格歐式火力電廠渦輪與鍋爐大廳（Battersea 風格：石砌基座＋高聳直條窗＋雙採光氣樓＋磚女兒牆）
+        bx, by = 0.0, -T * 0.06
+        bw, bd, bh = T * 1.82, T * 1.50, H * 0.92
+        kit.box(bw + 0.14, bd + 0.14, H * 0.16, (bx, by, 0), cornice)
         kit.box(bw, bd, bh, (bx, by, 0), kit.brick())
-        kit.windows(bw, bd, bh * 0.16, bh * 0.86, 2, 7, loc=(bx, by, 0))
+        kit.windows(bw, bd, bh * 0.18, bh * 0.86, 2, 8, loc=(bx, by, 0))
         kit.box(bw * 0.94, bd * 0.92, H * 0.04, (bx, by, bh - H * 0.02), dark_roof)
-        pt = T * 0.06
+        pt = T * 0.065
         ph = H * 0.09
         kit.box(bw, pt, ph, (bx, by - bd / 2 + pt / 2, bh), kit.brick())
         kit.box(bw, pt, ph, (bx, by + bd / 2 - pt / 2, bh), kit.brick())
         kit.box(pt, bd, ph, (bx - bw / 2 + pt / 2, by, bh), kit.brick())
         kit.box(pt, bd, ph, (bx + bw / 2 - pt / 2, by, bh), kit.brick())
-        # 切石水平簷口帶
-        kit.box(bw + 0.10, 0.10, H * 0.055, (bx, by - bd / 2 - 0.01, bh - H * 0.04), cornice)
-        kit.box(bw + 0.10, 0.10, H * 0.055, (bx, by + bd / 2 + 0.01, bh - H * 0.04), cornice)
-        kit.box(0.10, bd + 0.10, H * 0.055, (bx - bw / 2 - 0.01, by, bh - H * 0.04), cornice)
-        kit.box(0.10, bd + 0.10, H * 0.055, (bx + bw / 2 + 0.01, by, bh - H * 0.04), cornice)
-        # 屋頂採光氣樓＋排風管
-        kit.box(bw * 0.72, bd * 0.30, H * 0.08, (bx, by, bh), kit.glass())
-        kit.gable_roof(bw * 0.76, bd * 0.36, H * 0.09, (bx, by, bh + H * 0.08), slate, along_x=True)
-        for k in range(3):
-            kit.cylinder(T * 0.055, H * 0.14, (bx + (k - 1) * T * 0.35, by + bd * 0.30, bh), kit.steel(), verts=10)
+        kit.box(bw + 0.14, 0.14, H * 0.06, (bx, by - bd / 2 - 0.02, bh - H * 0.04), cornice)
+        kit.box(bw + 0.14, 0.14, H * 0.06, (bx, by + bd / 2 + 0.02, bh - H * 0.04), cornice)
+        kit.box(0.14, bd + 0.14, H * 0.06, (bx - bw / 2 - 0.02, by, bh - H * 0.04), cornice)
+        kit.box(0.14, bd + 0.14, H * 0.06, (bx + bw / 2 + 0.02, by, bh - H * 0.04), cornice)
+        # 雙排屋頂採光氣樓＋排風管
+        for dy_m in (-bd * 0.22, bd * 0.22):
+            kit.box(bw * 0.74, bd * 0.22, H * 0.08, (bx, by + dy_m, bh), kit.glass())
+            kit.gable_roof(bw * 0.78, bd * 0.26, H * 0.08, (bx, by + dy_m, bh + H * 0.08), slate, along_x=True)
     elif index == 6:
         H = _h(kit)
-        conc = kit.material("Stack Concrete", (0.40, 0.38, 0.34), noise=0.35)
+        conc = kit.material("Stack Concrete", (0.44, 0.42, 0.37), noise=0.35)
         dark = kit.material("Dark Steel", (0.14, 0.14, 0.14), rough=0.5, metal=0.22)
         for k in range(2):
-            sx, sy = T * 0.56, T * (0.04 + 0.34 * k)
-            kit.cylinder(T * 0.14, H, (sx, sy, 0), conc, verts=16, r_top=T * 0.105)
-            kit.cylinder(T * 0.115, H * 0.04, (sx, sy, H * 0.94), dark, verts=16)
-            kit.cylinder(T * 0.125, H * 0.025, (sx, sy, H * 0.72), dark, verts=16)
+            sx, sy = T * 0.48, T * (-0.18 + 0.46 * k)
+            kit.cylinder(T * 0.18, H, (sx, sy, 0), conc, verts=18, r_top=T * 0.13)
+            kit.cylinder(T * 0.142, H * 0.045, (sx, sy, H * 0.94), dark, verts=18)
+            kit.cylinder(T * 0.155, H * 0.028, (sx, sy, H * 0.72), dark, verts=18)
     else:
         # 7–38：冷卻塔頂的蒸汽，32 格循環（球團逐格上升、變大）
         frame = index - 7
