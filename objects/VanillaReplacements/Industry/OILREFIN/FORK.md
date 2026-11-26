@@ -17,3 +17,4 @@
 - 2026-11-25 V1/V2：地坪改為風化碎石、金屬浮頂儲油槽＋圍堰、銀灰球槽與拱形管橋；build/preview/b2_oilrefin.p1.png、build/screenshots/polish3/obj_OGOILREF.png 檢視通過
 - 2026-11-25 V1/V2：核心催化裂解塔群（part 13）重製為四塔高密管橋＋64 格橘紅大火炬，原油儲槽改為風化鋼／鏽鋼加強環與盤梯；build/preview/check_oilrefin_v3.p1.png、build/screenshots/title_compare/cmp_09.png 檢視通過
 - 2026-11-25 V1/V2（建物地表材質升級）：`tools/blender/kit.py` 新增多尺度程序化地表著色器（泥土／碎石／草地／人行道磚縫／混凝土伸縮縫／停機坪／礦土／煤場／雪地＋3D Bump），重算地面部件並同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_01.png`、`cmp_05.png`、`cmp_07.png`）檢視通過。
+- 2026-11-26 V1/V2（建物材質與光照升級）：`tools/blender/kit.py` 與 `static_rig.py` 修復垂直牆面 3D 磚紋映射、新增磚／切石／疊瓦／木板／茅草／灰泥／混凝土接縫＋3D Bump＋`AmbientOcclusion` 屋簷與窗框陰影，並以暖陽主光消除冷灰塑膠感；同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_02.png`、`cmp_04.png`、`cmp_05.png`）檢視通過。

@@ -32,18 +32,18 @@ sys.path.insert(0, os.path.dirname(__file__))
 import kit  # noqa: E402
 import render_sprites as rs  # noqa: E402  共用遮罩材質邏輯
 
-LIGHTS = [  # (名稱, 強度, 旋轉角度) — 取自上游 OG_4F.blend
-    ("Light Primary", 4.75, (30.0, 0.0, 135.0)),
-    ("Light Left", 2.75, (60.0, 0.0, 35.4)),
-    ("Light Back", 2.0, (60.0, 0.0, -90.0)),
-    ("Light Upper Highlights", 1.4, (50.0, 0.0, 120.0)),
+LIGHTS = [  # (名稱, 強度, 旋轉角度, RGB色溫) — 取自上游 OG_4F.blend
+    ("Light Primary", 4.75, (30.0, 0.0, 135.0), (1.0, 1.0, 1.0)),
+    ("Light Left", 2.75, (60.0, 0.0, 35.4), (1.0, 1.0, 1.0)),
+    ("Light Back", 2.0, (60.0, 0.0, -90.0), (1.0, 1.0, 1.0)),
+    ("Light Upper Highlights", 1.4, (50.0, 0.0, 120.0), (1.0, 1.0, 1.0)),
 ]
-if kit.VANILLA_STYLE:  # 原版風格：補光減弱、主光不變 → 受光面與背光面對比較大
+if kit.VANILLA_STYLE:  # 原版風格：暖陽主光（避免白牆過曝）＋微暖中性補光 → 立體感與溫潤色澤對齊原版，暗面不掉進冷青灰
     LIGHTS = [
-        ("Light Primary", 4.75, (30.0, 0.0, 135.0)),
-        ("Light Left", 1.2, (60.0, 0.0, 35.4)),
-        ("Light Back", 0.7, (60.0, 0.0, -90.0)),
-        ("Light Upper Highlights", 0.8, (50.0, 0.0, 120.0)),
+        ("Light Primary", 3.85, (30.0, 0.0, 135.0), (1.0, 0.94, 0.84)),
+        ("Light Left", 1.15, (60.0, 0.0, 35.4), (0.98, 0.96, 0.94)),
+        ("Light Back", 0.65, (60.0, 0.0, -90.0), (0.95, 0.94, 0.92)),
+        ("Light Upper Highlights", 0.65, (50.0, 0.0, 120.0), (1.0, 0.97, 0.90)),
     ]
 
 
@@ -56,6 +56,8 @@ def setup_scene(size, samples):
     scene.render.resolution_x = scene.render.resolution_y = size
     scene.render.resolution_percentage = 100
     scene.render.film_transparent = True
+    if kit.VANILLA_STYLE:
+        scene.render.filter_size = 0.75
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
     scene.view_settings.view_transform = "Standard" if kit.VANILLA_STYLE else "AgX"
@@ -76,9 +78,10 @@ def setup_scene(size, samples):
     cam_data.clip_end = 500
     scene.camera = cam
 
-    for name, energy, (rx, ry, rz) in LIGHTS:
+    for name, energy, (rx, ry, rz), col in LIGHTS:
         ld = bpy.data.lights.new(name, "SUN")
         ld.energy = energy
+        ld.color = col
         lo = bpy.data.objects.new(name, ld)
         lo.rotation_euler = (math.radians(rx), math.radians(ry), math.radians(rz))
         scene.collection.objects.link(lo)

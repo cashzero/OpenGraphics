@@ -47,6 +47,8 @@ def material(name, rgb, rough=0.8, metal=0.0, noise=0.0, ground=False):
     gkind = _detect_ground_kind(name, ground)
     if VANILLA_STYLE and gkind:
         _add_ground_shader(nt, bsdf, gkind, rgb)
+    elif VANILLA_STYLE:
+        _add_arch_shader(nt, bsdf, name, rgb, rough, metal, noise)
     else:
         if noise > 0:
             coord = nt.nodes.new("ShaderNodeTexCoord")
@@ -67,10 +69,6 @@ def material(name, rgb, rough=0.8, metal=0.0, noise=0.0, ground=False):
             nt.links.new(tex.outputs["Fac"], ramp.inputs["Fac"])
             nt.links.new(ramp.outputs["Color"], mix.inputs["Color2"])
             nt.links.new(mix.outputs["Color"], bsdf.inputs["Base Color"])
-        if VANILLA_STYLE and "brick" in name.lower():
-            _add_bricks(nt, bsdf, rgb)
-        if VANILLA_STYLE and metal < 0.5 and rough > 0.3:
-            _add_grain(nt, bsdf)
     _materials[key] = m
     return m
 
@@ -345,46 +343,377 @@ def _add_ground_shader(nt, bsdf, kind: str, rgb):
     nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
 
 
-def _add_bricks(nt, bsdf, rgb):
-    """磚紋（磚縫約每 2 px 一條），取代原本的單色。"""
-    coord = nt.nodes.new("ShaderNodeTexCoord")
-    tex = nt.nodes.new("ShaderNodeTexBrick")
-    tex.inputs["Scale"].default_value = 0.6
-    tex.inputs["Mortar Size"].default_value = 0.035
-    tex.inputs["Color1"].default_value = (*rgb, 1)
-    tex.inputs["Color2"].default_value = (rgb[0] * 0.78, rgb[1] * 0.78, rgb[2] * 0.78, 1)
-    tex.inputs["Mortar"].default_value = (0.30, 0.28, 0.25, 1)
-    nt.links.new(coord.outputs["Object"], tex.inputs["Vector"])
-    nt.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+def _wall_coords(nt, vec_socket):
+    """將 3D Object 座標轉為適用所有立面牆與斜屋頂的 2D 座標：(X+Y, Z, 0)；
+    水平頂面（|Normal.Z| > 0.85）自動切回 (X, Y, 0)，徹底修復 Brick/Wave 在垂直牆面被拉成直條紋的問題。
+    """
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(vec_socket, sep.inputs["Vector"])
+    add_xy = nt.nodes.new("ShaderNodeMath")
+    add_xy.operation = "ADD"
+    nt.links.new(sep.outputs["X"], add_xy.inputs[0])
+    nt.links.new(sep.outputs["Y"], add_xy.inputs[1])
+
+    wall_uv = nt.nodes.new("ShaderNodeCombineXYZ")
+    nt.links.new(add_xy.outputs["Value"], wall_uv.inputs["X"])
+    nt.links.new(sep.outputs["Z"], wall_uv.inputs["Y"])
+
+    top_uv = nt.nodes.new("ShaderNodeCombineXYZ")
+    nt.links.new(sep.outputs["X"], top_uv.inputs["X"])
+    nt.links.new(sep.outputs["Y"], top_uv.inputs["Y"])
+
+    geom = nt.nodes.new("ShaderNodeNewGeometry")
+    nsep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(geom.outputs["Normal"], nsep.inputs["Vector"])
+    nabs = nt.nodes.new("ShaderNodeMath")
+    nabs.operation = "ABSOLUTE"
+    nt.links.new(nsep.outputs["Z"], nabs.inputs[0])
+    is_top = nt.nodes.new("ShaderNodeMath")
+    is_top.operation = "GREATER_THAN"
+    is_top.inputs[1].default_value = 0.85
+    nt.links.new(nabs.outputs["Value"], is_top.inputs[0])
+
+    mix_v = nt.nodes.new("ShaderNodeMix")
+    mix_v.data_type = "VECTOR"
+    in_a = next(i for i in mix_v.inputs if i.name == "A" and i.type == "VECTOR")
+    in_b = next(i for i in mix_v.inputs if i.name == "B" and i.type == "VECTOR")
+    out_r = next(o for o in mix_v.outputs if o.name == "Result" and o.type == "VECTOR")
+    nt.links.new(is_top.outputs["Value"], mix_v.inputs["Factor"])
+    nt.links.new(wall_uv.outputs["Vector"], in_a)
+    nt.links.new(top_uv.outputs["Vector"], in_b)
+    return out_r, wall_uv.outputs["Vector"]
 
 
-def _add_grain(nt, bsdf):
-    """細顆粒（scale 3.2，約 1–1.5 px）＋斑駁（scale 0.9）兩層雜訊，乘到 Base Color 上。"""
-    src = bsdf.inputs["Base Color"].links[0].from_socket if bsdf.inputs["Base Color"].is_linked else None
-    base_rgb = bsdf.inputs["Base Color"].default_value
+def _apply_ao(nt, col_socket, strength=0.48, distance=1.6):
+    """在牆角、屋簷下、窗框凹槽與陽台底部疊加環境光遮蔽（AO），建立原版 3D 算圖的立體接縫陰影。"""
+    ao = nt.nodes.new("ShaderNodeAmbientOcclusion")
+    ao.samples = 8
+    ao.inputs["Distance"].default_value = distance
+    ramp = _make_ramp(nt, [(0.22, (1.0 - strength, 1.0 - strength, 1.0 - strength)), (0.92, (1.0, 1.0, 1.0))])
+    nt.links.new(ao.outputs["AO"], ramp.inputs["Fac"])
+    mix = nt.nodes.new("ShaderNodeMixRGB")
+    mix.blend_type = "MULTIPLY"
+    mix.inputs["Fac"].default_value = 1.0
+    nt.links.new(col_socket, mix.inputs["Color1"])
+    nt.links.new(ramp.outputs["Color"], mix.inputs["Color2"])
+    return mix.outputs["Color"]
+
+
+def _weather_noise(nt, vec_socket, scale_hi=3.2, scale_lo=0.75):
+    """雙尺度風化雜訊（展開至 0..1），避免 Perlin 集中於 0.45..0.55。"""
+    nh = nt.nodes.new("ShaderNodeTexNoise")
+    nh.inputs["Scale"].default_value = scale_hi
+    nh.inputs["Detail"].default_value = 7.0
+    nh.inputs["Roughness"].default_value = 0.78
+    nt.links.new(vec_socket, nh.inputs["Vector"])
+
+    nl = nt.nodes.new("ShaderNodeTexNoise")
+    nl.inputs["Scale"].default_value = scale_lo
+    nl.inputs["Detail"].default_value = 4.0
+    nl.inputs["Roughness"].default_value = 0.65
+    nt.links.new(vec_socket, nl.inputs["Vector"])
+
+    m1 = nt.nodes.new("ShaderNodeMath")
+    m1.operation = "MULTIPLY_ADD"
+    m1.inputs[1].default_value = 0.62
+    nt.links.new(nh.outputs["Fac"], m1.inputs[0])
+    m2 = nt.nodes.new("ShaderNodeMath")
+    m2.operation = "MULTIPLY"
+    m2.inputs[1].default_value = 0.38
+    nt.links.new(nl.outputs["Fac"], m2.inputs[0])
+    nt.links.new(m2.outputs["Value"], m1.inputs[2])
+
+    mr = nt.nodes.new("ShaderNodeMapRange")
+    mr.clamp = True
+    mr.inputs["From Min"].default_value = 0.34
+    mr.inputs["From Max"].default_value = 0.66
+    mr.inputs["To Min"].default_value = 0.0
+    mr.inputs["To Max"].default_value = 1.0
+    nt.links.new(m1.outputs["Value"], mr.inputs["Value"])
+    return mr.outputs["Result"]
+
+
+def _add_arch_shader(nt, bsdf, name: str, rgb, rough: float, metal: float, noise: float):
+    """建築外牆、屋頂、木材、玻璃與公司色專用的程序化建築材質著色器（含 3D 橫向磚／瓦／木板紋、風化、AO 與 Bump）。"""
+    low = name.lower()
     coord = nt.nodes.new("ShaderNodeTexCoord")
-    out = src
-    for scale, amount in ((3.2, GRAIN), (0.9, GRAIN * 0.45)):
-        tex = nt.nodes.new("ShaderNodeTexNoise")
-        tex.inputs["Scale"].default_value = scale
-        tex.inputs["Detail"].default_value = 1.0
-        nt.links.new(coord.outputs["Object"], tex.inputs["Vector"])
-        ramp = nt.nodes.new("ShaderNodeValToRGB")
-        ramp.color_ramp.elements[0].position = 0.3
-        ramp.color_ramp.elements[1].position = 0.7
-        ramp.color_ramp.elements[0].color = (1 - amount, 1 - amount, 1 - amount, 1)
-        ramp.color_ramp.elements[1].color = (1 + amount * 0.6, 1 + amount * 0.6, 1 + amount * 0.6, 1)
-        nt.links.new(tex.outputs["Fac"], ramp.inputs["Fac"])
-        mix = nt.nodes.new("ShaderNodeMixRGB")
-        mix.blend_type = "MULTIPLY"
-        mix.inputs["Fac"].default_value = 1.0
-        if out is None:
-            mix.inputs["Color1"].default_value = base_rgb
+    vec = coord.outputs["Object"]
+
+    # 1. 發光／煙火類不加風化與 AO，保持純淨發光
+    if any(k in low for k in ("flame", "glow", "lit", "smoke", "steam")):
+        bsdf.inputs["Base Color"].default_value = (*rgb, 1)
+        if any(k in low for k in ("flame", "glow", "lit")):
+            bsdf.inputs["Emission Color"].default_value = (*rgb, 1)
+            bsdf.inputs["Emission Strength"].default_value = 0.65 if "lit" in low else 1.2
+        return
+
+    # 2. 玻璃與水面：加入微妙室內深淺與窗簾變化，讓窗戶不再是死黑貼片
+    if any(k in low for k in ("glass", "window", "water")):
+        wn = _weather_noise(nt, vec, scale_hi=1.6, scale_lo=0.45)
+        if "blueglass" in low:
+            stops = [(0.10, (0.035, 0.085, 0.165)), (0.52, (0.095, 0.190, 0.310)), (0.90, (0.200, 0.320, 0.460))]
+        elif "greenglass" in low:
+            stops = [(0.10, (0.030, 0.095, 0.085)), (0.52, (0.085, 0.215, 0.195)), (0.90, (0.185, 0.340, 0.300))]
+        elif "water" in low:
+            stops = [(0.10, (0.020, 0.065, 0.110)), (0.60, (0.055, 0.125, 0.190)), (0.92, (0.110, 0.200, 0.270))]
         else:
-            nt.links.new(out, mix.inputs["Color1"])
-        nt.links.new(ramp.outputs["Color"], mix.inputs["Color2"])
-        out = mix.outputs["Color"]
-    nt.links.new(out, bsdf.inputs["Base Color"])
+            stops = [(0.10, (0.018, 0.032, 0.052)), (0.55, (0.055, 0.088, 0.130)), (0.90, (0.140, 0.175, 0.210))]
+        gr = _make_ramp(nt, stops)
+        nt.links.new(wn, gr.inputs["Fac"])
+        bsdf.inputs["Roughness"].default_value = 0.12
+        nt.links.new(_apply_ao(nt, gr.outputs["Color"], strength=0.30, distance=0.8), bsdf.inputs["Base Color"])
+        return
+
+    tri_uv, wall_uv = _wall_coords(nt, vec)
+    wn = _weather_noise(nt, vec, scale_hi=2.8, scale_lo=0.65)
+    bump_src = wn
+    bump_str = 0.32
+    ao_str = 0.48
+
+    # 3. 公司色材質（屋頂、店面遮陽棚、建築裝飾帶）：在灰階亮度上做瓦片條紋與 AO，quantize 會完整轉進 12 階公司色帶
+    if "company color" in low:
+        tile = nt.nodes.new("ShaderNodeTexBrick")
+        tile.offset = 0.5
+        tile.inputs["Scale"].default_value = 1.05
+        tile.inputs["Brick Width"].default_value = 0.55
+        tile.inputs["Row Height"].default_value = 0.30
+        tile.inputs["Mortar Size"].default_value = 0.032
+        tile.inputs["Mortar Smooth"].default_value = 0.10
+        tile.inputs["Color1"].default_value = (rgb[0] * 1.00, rgb[1] * 1.00, rgb[2] * 1.00, 1)
+        tile.inputs["Color2"].default_value = (rgb[0] * 0.78, rgb[1] * 0.78, rgb[2] * 0.78, 1)
+        tile.inputs["Mortar"].default_value = (rgb[0] * 0.45, rgb[1] * 0.45, rgb[2] * 0.45, 1)
+        nt.links.new(tri_uv, tile.inputs["Vector"])
+
+        # 微幅屋頂風化亮暗變化
+        wr = _make_ramp(nt, [(0.10, (0.76, 0.76, 0.76)), (0.90, (1.0, 1.0, 1.0))])
+        nt.links.new(wn, wr.inputs["Fac"])
+        wmix = nt.nodes.new("ShaderNodeMixRGB")
+        wmix.blend_type = "MULTIPLY"
+        wmix.inputs["Fac"].default_value = 0.65
+        nt.links.new(tile.outputs["Color"], wmix.inputs["Color1"])
+        nt.links.new(wr.outputs["Color"], wmix.inputs["Color2"])
+        col_out = _apply_ao(nt, wmix.outputs["Color"], strength=0.45, distance=1.4)
+        nt.links.new(col_out, bsdf.inputs["Base Color"])
+        bump = nt.nodes.new("ShaderNodeBump")
+        bump.inputs["Strength"].default_value = 0.52
+        bump.inputs["Distance"].default_value = 0.14
+        nt.links.new(tile.outputs["Fac"], bump.inputs["Height"])
+        nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+        return
+
+    # 4. 磚牆（brick / darkbrick / yellowbrick）：真正的 3D 水平磚縫（修復舊版垂直條紋 bug！）
+    if "brick" in low:
+        brick = nt.nodes.new("ShaderNodeTexBrick")
+        brick.offset = 0.5
+        brick.inputs["Scale"].default_value = 0.90
+        brick.inputs["Brick Width"].default_value = 0.68
+        brick.inputs["Row Height"].default_value = 0.28
+        brick.inputs["Mortar Size"].default_value = 0.036
+        brick.inputs["Mortar Smooth"].default_value = 0.08
+        if "darkbrick" in low:
+            c1, c2, mort = (0.24, 0.078, 0.045), (0.14, 0.042, 0.025), (0.18, 0.15, 0.12)
+        elif "yellowbrick" in low:
+            c1, c2, mort = (0.50, 0.35, 0.16), (0.34, 0.22, 0.095), (0.28, 0.24, 0.18)
+        else:
+            c1, c2, mort = (0.38, 0.125, 0.062), (0.23, 0.068, 0.034), (0.26, 0.22, 0.17)
+        brick.inputs["Color1"].default_value = (*c1, 1)
+        brick.inputs["Color2"].default_value = (*c2, 1)
+        brick.inputs["Mortar"].default_value = (*mort, 1)
+        nt.links.new(tri_uv, brick.inputs["Vector"])
+        col_out = brick.outputs["Color"]
+        bump_src = brick.outputs["Fac"]
+        bump_str = 0.58
+
+    # 5. 石造與砂岩（stone / darkstone / sandstone）：暖石灰／花崗岩／砂岩切石塊
+    elif any(k in low for k in ("sandstone", "darkstone", "stone")):
+        ashlar = nt.nodes.new("ShaderNodeTexBrick")
+        ashlar.offset = 0.5
+        ashlar.inputs["Scale"].default_value = 0.55
+        ashlar.inputs["Brick Width"].default_value = 1.0
+        ashlar.inputs["Row Height"].default_value = 0.44
+        ashlar.inputs["Mortar Size"].default_value = 0.032
+        ashlar.inputs["Mortar Smooth"].default_value = 0.10
+        if "sandstone" in low:
+            c1, c2, mort = (0.50, 0.36, 0.19), (0.34, 0.23, 0.11), (0.22, 0.16, 0.09)
+        elif "darkstone" in low:
+            c1, c2, mort = (0.17, 0.15, 0.125), (0.10, 0.088, 0.072), (0.06, 0.055, 0.048)
+        else:
+            # 暖灰切石（命中 pal[216–223]，徹底消除原本偏冷藍灰感）
+            c1, c2, mort = (0.36, 0.31, 0.245), (0.24, 0.205, 0.160), (0.14, 0.12, 0.095)
+        ashlar.inputs["Color1"].default_value = (*c1, 1)
+        ashlar.inputs["Color2"].default_value = (*c2, 1)
+        ashlar.inputs["Mortar"].default_value = (*mort, 1)
+        nt.links.new(tri_uv, ashlar.inputs["Vector"])
+        col_out = ashlar.outputs["Color"]
+        bump_src = ashlar.outputs["Fac"]
+        bump_str = 0.55
+
+    # 6. 屋頂瓦片（slate / shingle / terracotta）：清晰橫向疊瓦＋單片色差＋立體凹凸
+    elif any(k in low for k in ("slate", "shingle", "terracotta")):
+        sh = nt.nodes.new("ShaderNodeTexBrick")
+        sh.offset = 0.5
+        sh.inputs["Scale"].default_value = 1.05
+        sh.inputs["Brick Width"].default_value = 0.55
+        sh.inputs["Row Height"].default_value = 0.30
+        sh.inputs["Mortar Size"].default_value = 0.038
+        sh.inputs["Mortar Smooth"].default_value = 0.08
+        if "terracotta" in low:
+            c1, c2, mort = (0.48, 0.16, 0.062), (0.31, 0.095, 0.038), (0.16, 0.055, 0.022)
+        elif "shingle" in low:
+            c1, c2, mort = (0.25, 0.14, 0.072), (0.15, 0.080, 0.040), (0.075, 0.042, 0.020)
+        else:
+            # 深沉質感石板瓦（避免原本淺冷灰塑膠三角）
+            c1, c2, mort = (0.095, 0.102, 0.108), (0.055, 0.060, 0.066), (0.020, 0.022, 0.025)
+        sh.inputs["Color1"].default_value = (*c1, 1)
+        sh.inputs["Color2"].default_value = (*c2, 1)
+        sh.inputs["Mortar"].default_value = (*mort, 1)
+        nt.links.new(tri_uv, sh.inputs["Vector"])
+        col_out = sh.outputs["Color"]
+        bump_src = sh.outputs["Fac"]
+        bump_str = 0.68
+
+    # 7. 茅草屋頂（thatch）：沿坡面縱向纖維＋金褐稻草色帶
+    elif "thatch" in low:
+        tmap = nt.nodes.new("ShaderNodeMapping")
+        tmap.inputs["Scale"].default_value = (4.0, 4.0, 1.0)
+        nt.links.new(vec, tmap.inputs["Vector"])
+        tn = nt.nodes.new("ShaderNodeTexNoise")
+        tn.inputs["Scale"].default_value = 1.6
+        tn.inputs["Detail"].default_value = 8.0
+        tn.inputs["Roughness"].default_value = 0.82
+        nt.links.new(tmap.outputs["Vector"], tn.inputs["Vector"])
+        tr = _make_ramp(nt, [
+            (0.30, (0.09, 0.055, 0.018)),
+            (0.50, (0.20, 0.135, 0.048)),
+            (0.70, (0.34, 0.245, 0.095)),
+        ])
+        nt.links.new(tn.outputs["Fac"], tr.inputs["Fac"])
+        col_out = tr.outputs["Color"]
+        bump_src = tn.outputs["Fac"]
+        bump_str = 0.75
+
+    # 8. 木材／魚鱗板／原木（wood / darkwood / lightwood / logs / planks / sage clapboard）
+    elif any(k in low for k in ("darkwood", "lightwood", "wood", "logs", "planks", "sage")):
+        cl = nt.nodes.new("ShaderNodeTexBrick")
+        cl.offset = 0.35
+        cl.inputs["Scale"].default_value = 0.95
+        cl.inputs["Brick Width"].default_value = 2.4
+        cl.inputs["Row Height"].default_value = 0.22
+        cl.inputs["Mortar Size"].default_value = 0.036
+        cl.inputs["Mortar Smooth"].default_value = 0.08
+        if "darkwood" in low:
+            c1, c2, mort = (0.14, 0.075, 0.035), (0.085, 0.045, 0.020), (0.04, 0.02, 0.01)
+        elif "lightwood" in low or "planks" in low:
+            c1, c2, mort = (0.44, 0.28, 0.13), (0.31, 0.19, 0.085), (0.16, 0.10, 0.045)
+        elif "sage" in low:
+            c1, c2, mort = (0.28, 0.35, 0.21), (0.20, 0.26, 0.15), (0.10, 0.13, 0.08)
+        else:
+            c1, c2, mort = (0.28, 0.165, 0.075), (0.19, 0.105, 0.045), (0.09, 0.05, 0.02)
+        cl.inputs["Color1"].default_value = (*c1, 1)
+        cl.inputs["Color2"].default_value = (*c2, 1)
+        cl.inputs["Mortar"].default_value = (*mort, 1)
+        nt.links.new(tri_uv, cl.inputs["Vector"])
+        col_out = cl.outputs["Color"]
+        bump_src = cl.outputs["Fac"]
+        bump_str = 0.55
+
+    # 9. 浪板／銅綠屋頂（corrugated / copper）
+    elif any(k in low for k in ("corrugated", "copper")):
+        wave = nt.nodes.new("ShaderNodeTexWave")
+        wave.wave_type = "BANDS"
+        wave.bands_direction = "X"
+        wave.inputs["Scale"].default_value = 2.8 if "corrugated" in low else 1.4
+        wave.inputs["Distortion"].default_value = 0.4
+        nt.links.new(tri_uv, wave.inputs["Vector"])
+        if "copper" in low:
+            stops = [(0.15, (0.08, 0.22, 0.17)), (0.55, (0.17, 0.37, 0.29)), (0.90, (0.26, 0.47, 0.38))]
+        else:
+            stops = [(0.15, (0.11, 0.125, 0.125)), (0.55, (0.22, 0.24, 0.235)), (0.90, (0.33, 0.34, 0.32))]
+        cr = _make_ramp(nt, stops)
+        nt.links.new(wave.outputs["Fac"], cr.inputs["Fac"])
+        col_out = cr.outputs["Color"]
+        bump_src = wave.outputs["Fac"]
+        bump_str = 0.58
+
+    # 10. 粉刷外牆（whitewash / plaster / cream / ochre / pink）：暖調不死白＋細灰泥風化斑駁
+    elif any(k in low for k in ("whitewash", "plaster", "cream", "ochre", "pink")):
+        stucco_pal = {
+            "whitewash": [(0.08, (0.36, 0.310, 0.230)), (0.48, (0.52, 0.465, 0.375)), (0.92, (0.64, 0.595, 0.500))],
+            "plaster":   [(0.08, (0.30, 0.250, 0.180)), (0.48, (0.46, 0.395, 0.295)), (0.92, (0.60, 0.530, 0.410))],
+            "cream":     [(0.08, (0.34, 0.265, 0.155)), (0.48, (0.50, 0.405, 0.250)), (0.92, (0.64, 0.535, 0.355))],
+            "ochre":     [(0.08, (0.28, 0.165, 0.060)), (0.48, (0.45, 0.290, 0.115)), (0.92, (0.60, 0.415, 0.190))],
+            "pink":      [(0.08, (0.30, 0.150, 0.120)), (0.48, (0.48, 0.265, 0.215)), (0.92, (0.62, 0.380, 0.320))],
+        }
+        sk = next(k for k in stucco_pal if k in low)
+        sr = _make_ramp(nt, stucco_pal[sk])
+        nt.links.new(wn, sr.inputs["Fac"])
+        col_out = sr.outputs["Color"]
+        bump_src = wn
+        bump_str = 0.36
+
+    # 11. 建築混凝土牆／屋頂（whiteconcrete / darkconcrete / concrete）：模板接縫＋暖石灰風化
+    elif "concrete" in low:
+        pan = nt.nodes.new("ShaderNodeTexBrick")
+        pan.offset = 0.0
+        pan.inputs["Scale"].default_value = 0.40
+        pan.inputs["Brick Width"].default_value = 1.0
+        pan.inputs["Row Height"].default_value = 0.60
+        pan.inputs["Mortar Size"].default_value = 0.022
+        pan.inputs["Mortar Smooth"].default_value = 0.10
+        if "whiteconcrete" in low:
+            c1, c2, mort = (0.52, 0.495, 0.445), (0.42, 0.400, 0.355), (0.26, 0.245, 0.220)
+        elif "darkconcrete" in low:
+            c1, c2, mort = (0.165, 0.155, 0.138), (0.115, 0.108, 0.095), (0.065, 0.060, 0.052)
+        else:
+            c1, c2, mort = (0.35, 0.325, 0.285), (0.26, 0.242, 0.212), (0.15, 0.140, 0.125)
+        pan.inputs["Color1"].default_value = (*c1, 1)
+        pan.inputs["Color2"].default_value = (*c2, 1)
+        pan.inputs["Mortar"].default_value = (*mort, 1)
+        nt.links.new(tri_uv, pan.inputs["Vector"])
+        col_out = pan.outputs["Color"]
+        bump_src = pan.outputs["Fac"]
+        bump_str = 0.38
+
+    # 12. 鏽鐵／金屬／樹籬／乾草／其餘單色（red, white, steel, rust, hedge, hay...）
+    else:
+        wr = _make_ramp(nt, [
+            (0.10, (rgb[0] * 0.62, rgb[1] * 0.62, rgb[2] * 0.62)),
+            (0.55, (rgb[0] * 0.92, rgb[1] * 0.92, rgb[2] * 0.92)),
+            (0.95, (min(1.0, rgb[0] * 1.12), min(1.0, rgb[1] * 1.12), min(1.0, rgb[2] * 1.12))),
+        ])
+        if "white" in low and "whitewash" not in low:
+            # 窗框／簷口白漆略降反射率，避免過曝死白
+            wr = _make_ramp(nt, [(0.10, (0.48, 0.46, 0.42)), (0.55, (0.64, 0.62, 0.57)), (0.95, (0.76, 0.74, 0.69))])
+        elif "rust" in low:
+            wr = _make_ramp(nt, [(0.10, (0.12, 0.045, 0.020)), (0.55, (0.28, 0.115, 0.048)), (0.92, (0.42, 0.195, 0.085))])
+        elif "hedge" in low:
+            wr = _make_ramp(nt, [(0.10, (0.012, 0.032, 0.006)), (0.55, (0.038, 0.085, 0.016)), (0.92, (0.085, 0.145, 0.032))])
+        nt.links.new(wn, wr.inputs["Fac"])
+        col_out = wr.outputs["Color"]
+        bump_str = 0.55 if ("hedge" in low or "hay" in low or "rust" in low) else (0.18 if metal >= 0.5 else 0.28)
+        ao_str = 0.35 if metal >= 0.5 else 0.45
+
+    # 全部磚／石／木／瓦／混凝土外牆再疊一層自然風化斑駁（破除重複感）
+    if any(k in low for k in ("brick", "stone", "slate", "shingle", "terracotta", "wood", "logs", "planks", "sage", "concrete", "corrugated", "copper")):
+        wmod = _make_ramp(nt, [(0.08, (0.70, 0.68, 0.66)), (0.55, (0.94, 0.94, 0.93)), (0.95, (1.0, 1.0, 1.0))])
+        nt.links.new(wn, wmod.inputs["Fac"])
+        wmix = nt.nodes.new("ShaderNodeMixRGB")
+        wmix.blend_type = "MULTIPLY"
+        wmix.inputs["Fac"].default_value = 0.72
+        nt.links.new(col_out, wmix.inputs["Color1"])
+        nt.links.new(wmod.outputs["Color"], wmix.inputs["Color2"])
+        col_out = wmix.outputs["Color"]
+
+    # 最後套用環境光遮蔽 AO 與 3D Bump
+    col_out = _apply_ao(nt, col_out, strength=ao_str, distance=1.6)
+    nt.links.new(col_out, bsdf.inputs["Base Color"])
+
+    if bump_str > 0:
+        bump = nt.nodes.new("ShaderNodeBump")
+        bump.inputs["Strength"].default_value = bump_str
+        bump.inputs["Distance"].default_value = 0.15
+        nt.links.new(bump_src, bump.inputs["Height"])
+        nt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
 
 
 # 常用材質（線性色值；AgX + 上游燈光會讓顏色變亮變淡，所以地面類顏色要給得很深）
