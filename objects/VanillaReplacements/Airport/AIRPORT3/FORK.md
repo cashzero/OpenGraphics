@@ -16,3 +16,4 @@
 - 2026-11-22 V2：`tools/newgame_check.sh`（standalone，`OG_REGUK`／`OG_REGALP`）開新遊戲 → 模擬一年不崩潰、存檔物件全部來自 repo；物件選擇預覽 `build/screenshots/m3/preview/airport-OGAIRPO3.png` 已檢視。**未驗證**：尚未看過放在地圖上的樣子（需要含此物件的測試存檔）
 - 2026-11-25 V1／V2：重塑航站、拱形大機庫、貨運棚與塔台；`tools/lint.py` 0 錯誤；V1 已檢視 `build/preview/check_air3_new.p1.png`，V2 已檢視標題場景地圖截圖 `build/screenshots/polish/shot4_air3.png` 與物件預覽 `obj_OGAIRPO3.png`，造型、位置與公司色皆正常
 - 2026-11-25 V1/V2（建物地表材質升級）：`tools/blender/kit.py` 新增多尺度程序化地表著色器（泥土／碎石／草地／人行道磚縫／混凝土伸縮縫／停機坪／礦土／煤場／雪地＋3D Bump），重算地面部件並同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_01.png`、`cmp_05.png`、`cmp_07.png`）檢視通過。
+- 2026-11-26 V1/V2（停機坪出口與跑道銜接修正）：`port_recipes.py` 於跑道 `part 1`、`part 2` 補上無縫柏油銜接段與等待線，同步更新 `.blend` 並通過 lint。

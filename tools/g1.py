@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import struct
 import sys
@@ -221,11 +222,45 @@ def corners(slope: int) -> dict:
 
 
 def surface_smooth_mask(edge: int, slope: int, e: dict) -> bytes:
+    """相鄰地塊貼圖過渡遮罩：
+    - 背面退化的水平邊（slope 2/10 的 e0/e1、slope 5/7 的 e2/e3、以及空坡 slope 16）完全留空（0 像素），
+      消除草地與沙地斜坡交界的亮三角 glitch。
+    - 其餘邊使用約 3.4px 寬的有機點描（非機械式 Bayer 棋盤格），常規邊約 36–44 像素、陡邊約 22–26 像素，
+      讓相鄰地形交界柔順自然。
+    """
     w, h = e["w"], e["h"]
-    ax, ay, aw, ah, alpha = slope_alpha()[slope]
-    c = corners(slope)
-    (px, py), (qx, qy) = sorted((c[SMOOTH_EDGES[edge][0]], c[SMOOTH_EDGES[edge][1]]))
     out = bytearray(w * h)
+    if slope == 16:
+        return bytes(out)
+    t_h, r_h, b_h, l_h = SLOPE_CORNERS[slope]
+    # 背面退化的雙水平邊不畫過渡帶（對應原版為 0 像素的 8 個坡面邊）
+    if edge in (0, 1) and b_h > l_h and b_h > r_h:
+        return bytes(out)
+    if edge in (2, 3) and t_h < l_h and t_h < r_h:
+        return bytes(out)
+
+    ax, ay, aw, ah, alpha = slope_alpha()[slope]
+    # 像素中心對齊 64×31 地塊菱形邊界（避免 B=32 偏離實際底邊 1.5px 導致 e0/e1 過窄）
+    c = {
+        "T": (0.0, 0.5 - 16 * t_h),
+        "R": (31.5, 15.5 - 16 * r_h),
+        "B": (0.0, 30.5 - 16 * b_h),
+        "L": (-31.5, 15.5 - 16 * l_h),
+    }
+    (px, py), (qx, qy) = sorted((c[SMOOTH_EDGES[edge][0]], c[SMOOTH_EDGES[edge][1]]))
+    dx, dy = qx - px, qy - py
+    elen = math.hypot(dx, dy)
+    # 沿邊線朝圖塊內部的單位法向量（由圖塊重心決定方向）
+    mid_x = sum(v[0] for v in c.values()) / 4.0
+    mid_y = sum(v[1] for v in c.values()) / 4.0
+    nx, ny = -dy / elen, dx / elen
+    if (mid_x - (px + qx) / 2.0) * nx + (mid_y - (py + qy) / 2.0) * ny < 0:
+        nx, ny = -nx, -ny
+
+    # 單邊水平（如 slope 1 e2）或陡邊略窄（~24px），標準 2:1 斜邊 ~38–42px
+    band_w = 2.6 if (abs(dy) < 1e-6 or abs(dy) > 18.0) else 3.6
+    seed_base = edge * 97 + slope * 13 + 31
+
     for j in range(h):
         for i in range(w):
             sx, sy = e["x"] + i, e["y"] + j
@@ -233,12 +268,20 @@ def surface_smooth_mask(edge: int, slope: int, e: dict) -> bytes:
             if not (0 <= u < aw and 0 <= v < ah and alpha[v * aw + u]):
                 continue
             cx, cy = sx + 0.5, sy + 0.5
-            if not px <= cx <= qx:
+            t = ((cx - px) * dx + (cy - py) * dy) / (elen * elen)
+            if t < -0.02 or t > 1.02:
                 continue
-            line_y = py + (qy - py) * (cx - px) / (qx - px)
-            dist = abs(cy - line_y)
-            density = 1.0 - dist / SMOOTH_WIDTH
-            if density > (BAYER4[(j % 4) * 4 + (i % 4)] + 0.5) / 16:
+            d_in = (cx - px) * nx + (cy - py) * ny
+            if d_in < -0.5 or d_in > band_w + 1.0:
+                continue
+            end_taper = min(1.0, min(t, 1.0 - t) / 0.14) if 0.0 < t < 1.0 else 0.35
+            local_w = band_w * (0.60 + 0.40 * end_taper)
+            # 零均值高頻有機微擾，讓四條邊像素數均勻自然（~36–44 px）
+            wobble = (_hash01(sx // 2, sy // 2, seed_base) - 0.5) * 1.1
+            eff_d = max(0.0, d_in + wobble)
+            prob = max(0.0, 1.0 - eff_d / local_w) ** 1.25 * 0.72
+            jitter = 0.72 * _hash01(sx, sy, seed_base + 7) + 0.28 * (((sx ^ sy) & 1) * 0.5 + 0.25)
+            if prob > jitter:
                 out[j * w + i] = MASK_ON
     return bytes(out)
 

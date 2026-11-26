@@ -18,3 +18,4 @@
 - 2026-11-25 V1/V2：核心催化裂解塔群（part 13）重製為四塔高密管橋＋64 格橘紅大火炬，原油儲槽改為風化鋼／鏽鋼加強環與盤梯；build/preview/check_oilrefin_v3.p1.png、build/screenshots/title_compare/cmp_09.png 檢視通過
 - 2026-11-25 V1/V2（建物地表材質升級）：`tools/blender/kit.py` 新增多尺度程序化地表著色器（泥土／碎石／草地／人行道磚縫／混凝土伸縮縫／停機坪／礦土／煤場／雪地＋3D Bump），重算地面部件並同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_01.png`、`cmp_05.png`、`cmp_07.png`）檢視通過。
 - 2026-11-26 V1/V2（建物材質與光照升級）：`tools/blender/kit.py` 與 `static_rig.py` 修復垂直牆面 3D 磚紋映射、新增磚／切石／疊瓦／木板／茅草／灰泥／混凝土接縫＋3D Bump＋`AmbientOcclusion` 屋簷與窗框陰影，並以暖陽主光消除冷灰塑膠感；同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_02.png`、`cmp_04.png`、`cmp_05.png`）檢視通過。
+- 2026-11-26 V1/V2（2D 流體紊流火炬火焰重製）：以 `tools/gen/fire_fx.py` 取代原本 3D 錐體建模，改產 64 格無縫循環 2D 白熱核心＋橘紅躍動火舌＋上升黑煙精靈（對齊原版 2D billboard 做法）；V1（`check_oilrefin_fire_v2.png`）與 V2 Title 1:1（`cmp_09.png`）檢視通過。

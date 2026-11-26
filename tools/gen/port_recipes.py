@@ -223,6 +223,25 @@ def runway(g, half, width, mat="asphalt", end=None, number=False, touchdown=Fals
         a += 0.36
 
 
+def runway_junction(g, jx, rw_width, side=-1, tw_width=0.42):
+    """跑道與滑行道 T 字銜接段：從圖塊邊界（side*1.0）無縫連到跑道邊緣，附喇叭口倒角、黃色導引線與等待線。"""
+    y_edge = side * 1.03
+    y_rw = side * (rw_width / 2 - 0.04)
+    y0, y1 = min(y_edge, y_rw), max(y_edge, y_rw)
+    # 主銜接柏油段（略高於跑道白邊線 z=1.005 以自然切斷跑道邊線）
+    g.box(jx - tw_width / 2, jx + tw_width / 2, y0, y1, 0, 1.005, "asphalt")
+    # 跑道入口處喇叭口加寬倒角，讓飛機轉彎更自然
+    fy0, fy1 = sorted((side * (rw_width / 2 + 0.18), y_rw))
+    g.box(jx - tw_width / 2 - 0.14, jx + tw_width / 2 + 0.14, fy0, fy1, 0, 1.005, "asphalt")
+    # 黃色滑行中心線延伸進跑道（轉彎導入）
+    cy0, cy1 = sorted((side * 1.02, side * 0.12))
+    g.mark(jx - 0.012, jx + 0.012, cy0, cy1, "yellowsteel", z=1.01)
+    # 雙道黃色跑道等待線（hold-short bar）
+    hy = side * (rw_width / 2 + 0.22)
+    g.mark(jx - tw_width / 2 + 0.03, jx + tw_width / 2 - 0.03, hy - 0.015, hy + 0.015, "yellowsteel", z=1.01)
+    g.mark(jx - tw_width / 2 + 0.03, jx + tw_width / 2 - 0.03, hy + side * 0.045 - 0.012, hy + side * 0.045 + 0.012, "yellowsteel", z=1.01)
+
+
 def taxiway(g, half_len, width=0.42, along="x", ends=(True, True), lights=True):
     h0 = -half_len if ends[0] else -half_len - 0.1
     h1 = half_len if ends[1] else half_len + 0.1
@@ -447,8 +466,12 @@ def airport2(part):
 # ---------------------------------------------------------------- AIRPORT3：1935–1975 中型機場
 def airport3(part):
     g = M()
-    if part in (0, 1, 2, 3):                                  # 跑道：0 西端、3 東端、1/2 中段（1 有跑道編號）
+    if part in (0, 1, 2, 3):                                  # 跑道：0 西端、3 東端、1/2 中段（1 有跑道編號；1/2 接停機坪出口）
         runway(g, 1.0, 0.8, end={0: -1, 3: 1}.get(part), number=(part == 1), touchdown=(part == 2))
+        if part == 1:                                         # x=-1..0, y=2..3：x=0 側（local +0.5）接停機坪 t14 (x=0, y=1)
+            runway_junction(g, 0.5, 0.8, side=-1, tw_width=0.52)
+        elif part == 2:                                       # x=1..2, y=2..3：x=1 側（local -0.5）接停機坪 t16 (x=1, y=1)
+            runway_junction(g, -0.5, 0.8, side=-1, tw_width=0.52)
     elif part == 4:                                           # 現代主義中型航站（旋轉 3 → 正面朝局部 +x）
         g.box(-0.66, 0.56, -0.90, 0.90, 0, 2.0, "darkconcrete")
         g.box(-0.64, 0.54, -0.88, 0.88, 2.0, 26.0, "whiteconcrete")
@@ -510,8 +533,12 @@ def airport3(part):
 # ---------------------------------------------------------------- AIRPORT1：1970 年後的大型國際機場
 def airport1(part):
     g = M()
-    if part in (0, 1, 13, 24):                                # 2×2 跑道：0 跑道頭（局部 +x）、1 中段有編號、13/24 接地區
+    if part in (0, 1, 13, 24):                                # 2×2 跑道：0 跑道頭、1 編號段、13/24 接地區＋滑行道銜接
         runway(g, 1.0, 0.92, end=1 if part == 0 else None, number=(part == 1), touchdown=(part in (13, 24)))
+        if part == 13:                                        # x=-2..-1, y=4..5：x=-2 側（local -0.5）接滑行道 t9r1 (x=-2, y=3)
+            runway_junction(g, -0.5, 0.92, side=-1, tw_width=0.42)
+        elif part == 24:                                      # x=2..3, y=4..5：x=3 側（local +0.5）接滑行道 t9r1 (x=3, y=3)
+            runway_junction(g, 0.5, 0.92, side=-1, tw_width=0.42)
     elif part in (2, 5, 9, 25):                               # 建築底下的混凝土地坪（h0）
         g.slab(1.0, "apron", z1=0.6)
     elif part == 3:                                           # 角落航廈底層（旋轉 1 → 正面朝局部 −x、+y 接主航廈）
@@ -631,15 +658,15 @@ def airport1(part):
         taxiway(g, 0.5, along="x", ends=(False, False))
     elif part == 16:                                          # 滑行道 T 字（往跑道接出）
         taxiway(g, 0.5, along="x", ends=(False, False), lights=False)
-        g.box(-0.21, 0.21, 0.0, 0.5, 0, 1.0, "asphalt")
-        g.mark(-0.012, 0.012, 0.0, 0.5, "yellowsteel")
+        g.box(-0.21, 0.21, 0.0, 0.54, 0, 1.0, "asphalt")
+        g.mark(-0.012, 0.012, 0.0, 0.54, "yellowsteel")
     elif part in (17, 18, 20, 21, 28):                        # 1×1 停機坪
         apron(g, 0.5, stands=[(0, 0)] if part in (17, 21) else [],
               lines=[(-0.5, 0.5, -0.01, 0.01)] if part in (18, 20) else [(-0.01, 0.01, -0.5, 0.5)] if part == 28 else [])
     elif part in (19, 22):                                    # 滑行道接停機坪（往 −y 接出）
         taxiway(g, 0.5, along="x", ends=(False, False), lights=False)
-        g.box(-0.21, 0.21, -0.5, 0.0, 0, 1.0, "apron")
-        g.mark(-0.012, 0.012, -0.5, 0.0, "yellowsteel")
+        g.box(-0.21, 0.21, -0.54, 0.0, 0, 1.0, "apron")
+        g.mark(-0.012, 0.012, -0.54, 0.0, "yellowsteel")
     elif part == 26:                                          # 立體停車大樓底層（旋轉 0，正面朝 +y、左面朝城鎮）
         g.box(-0.82, 0.82, -0.82, 0.82, 0, 8.0, "darkconcrete")
         for z in (0.0, 3.6, 7.0):
