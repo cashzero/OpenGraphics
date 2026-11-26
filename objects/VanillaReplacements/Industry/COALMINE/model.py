@@ -24,7 +24,7 @@ def _rust_steel(kit):
 
 
 def _company_trim(kit):
-    return kit.material("Company Color 1 Trim", (0.55, 0.18, 0.15), rough=0.65, noise=0.25)
+    return kit.material("Iron Trim", (0.24, 0.16, 0.12), rough=0.62, metal=0.20, noise=0.35)
 
 
 def _seg(kit, a, b, r, mat):
