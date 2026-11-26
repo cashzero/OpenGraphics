@@ -328,19 +328,64 @@ def _value_noise(x: float, y: float, cell: float, seed: int) -> float:
 
 
 def snow_mask(coverage: int, slope: int, e: dict) -> bytes:
-    """部分積雪（coverage 1–4）：地塊形狀內，以值雜訊門檻選出 coverage/5 比例的像素，成片的雪隨等級長大。"""
+    """部分積雪遮罩（coverage 1–4）：依坡面四角實際高度線性插值局部高程 z_local ∈ [0, 2]，
+    計算相對於雪線的有效積雪高度 eff_h = (coverage - 2.0) + z_local：
+    - coverage 1（低於雪線 2 階）：平地與一般單階斜坡完全無雪（0 像素，徹底消除農田上的異常白點），
+      只有雙階陡角（slope 15/17/18）最高尖角微微覆雪。
+    - coverage 2（低於雪線 1 階）：平地 0 像素，斜坡較高側自然積雪。
+    - coverage 3（雪線平地）：平地約 32% 細緻薄雪，斜坡隨高度漸濃。
+    - coverage 4（雪線以上 1 階）：平地約 68% 積雪，高坡接近全覆蓋。
+    """
     w, h = e["w"], e["h"]
-    ax, ay, aw, ah, alpha = slope_alpha()[slope]
-    level = coverage / 5
     out = bytearray(w * h)
+    if slope == 16:
+        return bytes(out)
+    t_h, r_h, b_h, l_h = SLOPE_CORNERS[slope]
+    # 若整個坡面最高角仍低於雪線（eff_h <= 0），直接回傳全透明 0 像素
+    if (coverage - 2) + max(t_h, r_h, b_h, l_h) <= 0:
+        return bytes(out)
+
+    ax, ay, aw, ah, alpha = slope_alpha()[slope]
+    yT = 0.5 - 16.0 * t_h
+    yR = 15.5 - 16.0 * r_h
+    yB = 30.5 - 16.0 * b_h
+    yL = 15.5 - 16.0 * l_h
+
     for j in range(h):
         for i in range(w):
             sx, sy = e["x"] + i, e["y"] + j
             u, v = sx - ax, sy - ay
             if not (0 <= u < aw and 0 <= v < ah and alpha[v * aw + u]):
                 continue
-            n = 0.7 * _value_noise(sx, sy * 2, 9.0, 7) + 0.3 * _hash01(sx, sy, 11)
-            if n < level:
+            cx, cy = sx + 0.5, sy + 0.5
+            if cx <= 0.0:
+                f = max(0.0, min(1.0, (cx + 31.5) / 31.5))
+                y_top = (1.0 - f) * yL + f * yT
+                y_bot = (1.0 - f) * yL + f * yB
+                h_top = (1.0 - f) * l_h + f * t_h
+                h_bot = (1.0 - f) * l_h + f * b_h
+            else:
+                f = max(0.0, min(1.0, cx / 31.5))
+                y_top = (1.0 - f) * yT + f * yR
+                y_bot = (1.0 - f) * yB + f * yR
+                h_top = (1.0 - f) * t_h + f * r_h
+                h_bot = (1.0 - f) * b_h + f * r_h
+            gv = max(0.0, min(1.0, (cy - y_top) / max(y_bot - y_top, 1e-4)))
+            z_local = (1.0 - gv) * h_top + gv * h_bot
+
+            eff_h = (coverage - 2.0) + z_local
+            if eff_h <= 0.04:
+                continue
+            if eff_h <= 1.0:
+                prob = 0.32 * (eff_h ** 1.35)
+            elif eff_h <= 2.0:
+                prob = 0.32 + 0.36 * (eff_h - 1.0)
+            else:
+                prob = min(0.97, 0.68 + 0.29 * (eff_h - 2.0))
+
+            # 細緻有機雪粉＋小尺度雪堆雜訊，避免重複大塊白斑
+            n = 0.44 * _value_noise(sx, sy * 2.0, 5.5, 7 + slope * 17) + 0.56 * _hash01(sx, sy, 11 + coverage * 31)
+            if n < prob:
                 out[j * w + i] = MASK_ON
     return bytes(out)
 

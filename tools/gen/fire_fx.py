@@ -58,7 +58,7 @@ def _periodic_noise(x: np.ndarray, y: np.ndarray, phase: float, freq_x: float, f
     return acc / max(wsum, 1e-6)
 
 
-def render_flare_frame(k: int, n_frames: int = 64, w: int = 24, h: int = 84) -> tuple[int, int, int, int, bytes]:
+def render_flare_frame(k: int, n_frames: int = 64, w: int = 24, h: int = 84, attach_y: int = -1) -> tuple[int, int, int, int, bytes]:
     """產生第 k 格火炬火焰＋黑煙 sprite，回傳 (cw, ch, x_off, y_off, px_bytes)。
     原點 (0, 0) 對齊火炬燃燒口中心（畫布底端 y = h - 2、水平中心 x = w / 2）。
     """
@@ -162,20 +162,26 @@ def render_flare_frame(k: int, n_frames: int = 64, w: int = 24, h: int = 84) -> 
     y0, y1 = int(nz_y.min()), int(nz_y.max()) + 1
     cropped = px[y0:y1, x0:x1]
     cw, ch = x1 - x0, y1 - y0
-    # 讓 (cx, h - 1) 對齊 part 13 火炬噴口（part 13 height=155，其頂端實測落在 y=-129，故向下位移 +27px 緊貼噴口）
+    # 讓 (cx, h - 1) 精準貼合 part 13 火炬噴口（由 patch_oilrefin 實測 part 13 頂端座標傳入 attach_y）
     x_off = x0 - cx
-    y_off = y0 - (h - 1) + 27
+    y_off = y0 - (h - 1) + attach_y
     return cw, ch, x_off, y_off, cropped.tobytes()
 
 
 def patch_oilrefin(dat_path: Path) -> None:
+    import objinfo
     obj = dat.read_dat(dat_path)
+    info = objinfo.industry(obj)
     tbl = obj.image_table()
     n_total = len(tbl.entries)
+    # 動態量測 part 13 火炬噴口實際螢幕 Y（遊戲繪製 part 14 時原點在 y = -heights[13]）
+    z_tower = info["heights"][13]
+    e13 = tbl.entries[13 * 4 + 0]
+    attach_y = (e13.y_offset + z_tower) + 1
     # part 14..77 = 64 格 × 4 旋轉 = sprites #56..#311
     repl = {}
     for k in range(64):
-        cw, ch, xo, yo, px_bytes = render_flare_frame(k, 64)
+        cw, ch, xo, yo, px_bytes = render_flare_frame(k, 64, attach_y=attach_y)
         enc = pack.encode_rle(cw, ch, px_bytes)
         for r in range(4):
             repl[56 + k * 4 + r] = (cw, ch, xo, yo, enc)
