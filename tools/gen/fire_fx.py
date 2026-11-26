@@ -162,9 +162,9 @@ def render_flare_frame(k: int, n_frames: int = 64, w: int = 24, h: int = 84) -> 
     y0, y1 = int(nz_y.min()), int(nz_y.max()) + 1
     cropped = px[y0:y1, x0:x1]
     cw, ch = x1 - x0, y1 - y0
-    # 讓 (cx, h - 1) 落在螢幕 (0, -1)（與 part 13 火炬噴口對齊）
+    # 讓 (cx, h - 1) 對齊 part 13 火炬噴口（part 13 height=155，其頂端實測落在 y=-129，故向下位移 +27px 緊貼噴口）
     x_off = x0 - cx
-    y_off = y0 - (h - 1) - 1
+    y_off = y0 - (h - 1) + 27
     return cw, ch, x_off, y_off, cropped.tobytes()
 
 

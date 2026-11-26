@@ -663,7 +663,7 @@ def _add_arch_shader(nt, bsdf, name: str, rgb, rough: float, metal: float, noise
         if "whiteconcrete" in low:
             c1, c2, mort = (0.52, 0.495, 0.445), (0.42, 0.400, 0.355), (0.26, 0.245, 0.220)
         elif "darkconcrete" in low:
-            c1, c2, mort = (0.165, 0.155, 0.138), (0.115, 0.108, 0.095), (0.065, 0.060, 0.052)
+            c1, c2, mort = (0.145, 0.158, 0.168), (0.105, 0.115, 0.124), (0.058, 0.064, 0.070)
         else:
             c1, c2, mort = (0.35, 0.325, 0.285), (0.26, 0.242, 0.212), (0.15, 0.140, 0.125)
         pan.inputs["Color1"].default_value = (*c1, 1)
@@ -674,7 +674,71 @@ def _add_arch_shader(nt, bsdf, name: str, rgb, rough: float, metal: float, noise
         bump_src = pan.outputs["Fac"]
         bump_str = 0.38
 
-    # 12. 鏽鐵／金屬／樹籬／乾草／其餘單色（red, white, steel, rust, hedge, hay...）
+    # 12. 重工業風化金屬板材（steel / silver / darksteel / dark metal / lead / rust / chemblue）：
+    # 降低 Metallic 避免在黑背景 EEVEE 裡反射成死黑，加上鉚接鋼板水平／垂直焊縫＋縱向鐵鏽雨水流痕＋立體高光
+    elif any(k in low for k in ("darksteel", "dark metal", "steel", "silver", "lead", "rust", "chemblue")):
+        # 壓低高金屬度，讓 4 盞太陽燈在圓柱儲槽與球槽上拉出明亮立體高光帶
+        bsdf.inputs["Metallic"].default_value = 0.22 if "rust" not in low else 0.12
+        bsdf.inputs["Roughness"].default_value = 0.34 if "silver" in low else (0.68 if "rust" in low else 0.42)
+        if "Specular IOR Level" in bsdf.inputs:
+            bsdf.inputs["Specular IOR Level"].default_value = 0.85
+
+        # 鉚接鋼板分格（水平焊環＋垂直板縫）
+        plate = nt.nodes.new("ShaderNodeTexBrick")
+        plate.offset = 0.5
+        plate.inputs["Scale"].default_value = 0.58
+        plate.inputs["Brick Width"].default_value = 1.15
+        plate.inputs["Row Height"].default_value = 0.48
+        plate.inputs["Mortar Size"].default_value = 0.024
+        plate.inputs["Mortar Smooth"].default_value = 0.08
+        if "silver" in low:
+            c1, c2, mort = (0.58, 0.565, 0.530), (0.42, 0.405, 0.380), (0.18, 0.175, 0.165)
+            streak_col, streak_fac = (0.28, 0.20, 0.12), 0.36
+        elif "darksteel" in low or "dark metal" in low:
+            c1, c2, mort = (0.20, 0.195, 0.188), (0.12, 0.118, 0.114), (0.055, 0.052, 0.050)
+            streak_col, streak_fac = (0.24, 0.11, 0.045), 0.35
+        elif "rust" in low:
+            c1, c2, mort = (0.36, 0.165, 0.068), (0.22, 0.095, 0.038), (0.10, 0.045, 0.018)
+            streak_col, streak_fac = (0.15, 0.06, 0.022), 0.45
+        elif "chemblue" in low:
+            c1, c2, mort = (0.11, 0.24, 0.58), (0.065, 0.15, 0.40), (0.035, 0.075, 0.22)
+            streak_col, streak_fac = (0.16, 0.14, 0.12), 0.25
+        elif "lead" in low:
+            c1, c2, mort = (0.26, 0.275, 0.285), (0.18, 0.195, 0.205), (0.09, 0.10, 0.105)
+            streak_col, streak_fac = (0.14, 0.13, 0.11), 0.30
+        elif "yellowsteel" in low:
+            c1, c2, mort = (0.68, 0.48, 0.06), (0.50, 0.34, 0.04), (0.22, 0.14, 0.02)
+            streak_col, streak_fac = (0.26, 0.14, 0.04), 0.28
+        else:  # steel：暖灰風化工業鋼板（對齊原版儲槽／反應塔的溫潤舊鐵質感）
+            c1, c2, mort = (0.40, 0.380, 0.345), (0.27, 0.255, 0.230), (0.12, 0.112, 0.100)
+            streak_col, streak_fac = (0.30, 0.155, 0.068), 0.45
+        plate.inputs["Color1"].default_value = (*c1, 1)
+        plate.inputs["Color2"].default_value = (*c2, 1)
+        plate.inputs["Mortar"].default_value = (*mort, 1)
+        nt.links.new(tri_uv, plate.inputs["Vector"])
+
+        # 縱向鐵鏽／雨水流痕（沿 Z 軸拉長雜訊，重現原版儲槽與塔體上的垂直舊化條紋）
+        smap = nt.nodes.new("ShaderNodeMapping")
+        smap.inputs["Scale"].default_value = (2.6, 2.6, 0.38)
+        nt.links.new(vec, smap.inputs["Vector"])
+        sn = nt.nodes.new("ShaderNodeTexNoise")
+        sn.inputs["Scale"].default_value = 1.4
+        sn.inputs["Detail"].default_value = 7.0
+        sn.inputs["Roughness"].default_value = 0.78
+        nt.links.new(smap.outputs["Vector"], sn.inputs["Vector"])
+        sr = _make_ramp(nt, [(0.44, (0, 0, 0)), (0.72, (streak_fac, streak_fac, streak_fac))])
+        nt.links.new(sn.outputs["Fac"], sr.inputs["Fac"])
+        smix = nt.nodes.new("ShaderNodeMixRGB")
+        smix.inputs["Color2"].default_value = (*streak_col, 1.0)
+        nt.links.new(sr.outputs["Color"], smix.inputs["Fac"])
+        nt.links.new(plate.outputs["Color"], smix.inputs["Color1"])
+
+        col_out = smix.outputs["Color"]
+        bump_src = plate.outputs["Fac"]
+        bump_str = 0.48
+        ao_str = 0.48
+
+    # 13. 樹籬／乾草／其餘單色（red, white, black, gold, hedge, hay...）
     else:
         wr = _make_ramp(nt, [
             (0.10, (rgb[0] * 0.62, rgb[1] * 0.62, rgb[2] * 0.62)),
@@ -682,15 +746,12 @@ def _add_arch_shader(nt, bsdf, name: str, rgb, rough: float, metal: float, noise
             (0.95, (min(1.0, rgb[0] * 1.12), min(1.0, rgb[1] * 1.12), min(1.0, rgb[2] * 1.12))),
         ])
         if "white" in low and "whitewash" not in low:
-            # 窗框／簷口白漆略降反射率，避免過曝死白
             wr = _make_ramp(nt, [(0.10, (0.48, 0.46, 0.42)), (0.55, (0.64, 0.62, 0.57)), (0.95, (0.76, 0.74, 0.69))])
-        elif "rust" in low:
-            wr = _make_ramp(nt, [(0.10, (0.12, 0.045, 0.020)), (0.55, (0.28, 0.115, 0.048)), (0.92, (0.42, 0.195, 0.085))])
         elif "hedge" in low:
             wr = _make_ramp(nt, [(0.10, (0.012, 0.032, 0.006)), (0.55, (0.038, 0.085, 0.016)), (0.92, (0.085, 0.145, 0.032))])
         nt.links.new(wn, wr.inputs["Fac"])
         col_out = wr.outputs["Color"]
-        bump_str = 0.55 if ("hedge" in low or "hay" in low or "rust" in low) else (0.18 if metal >= 0.5 else 0.28)
+        bump_str = 0.55 if ("hedge" in low or "hay" in low) else (0.18 if metal >= 0.5 else 0.28)
         ao_str = 0.35 if metal >= 0.5 else 0.45
 
     # 全部磚／石／木／瓦／混凝土外牆再疊一層自然風化斑駁（破除重複感）
@@ -730,11 +791,11 @@ def concrete():
 
 
 def dark_metal():
-    return material("Dark Metal", (0.12, 0.13, 0.14), rough=0.5, metal=0.6)
+    return material("Dark Metal", (0.16, 0.16, 0.155), rough=0.45, metal=0.22)
 
 
 def steel():
-    return material("Steel", (0.35, 0.37, 0.40), rough=0.45, metal=0.7)
+    return material("Steel", (0.36, 0.35, 0.33), rough=0.40, metal=0.22)
 
 
 def glass():

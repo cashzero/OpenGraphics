@@ -17,3 +17,4 @@
 - 2026-11-25 V1/V2：移除過量公司色，改為深鋼豎井井架、暗石板階梯碎礦廠與鏽鋼礦倉；build/preview/b2_oremine.p1.png、build/screenshots/polish3/obj_OGOREMIN.png 檢視通過
 - 2026-11-25 V1/V2（建物地表材質升級）：`tools/blender/kit.py` 新增多尺度程序化地表著色器（泥土／碎石／草地／人行道磚縫／混凝土伸縮縫／停機坪／礦土／煤場／雪地＋3D Bump），重算地面部件並同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_01.png`、`cmp_05.png`、`cmp_07.png`）檢視通過。
 - 2026-11-26 V1/V2（建物材質與光照升級）：`tools/blender/kit.py` 與 `static_rig.py` 修復垂直牆面 3D 磚紋映射、新增磚／切石／疊瓦／木板／茅草／灰泥／混凝土接縫＋3D Bump＋`AmbientOcclusion` 屋簷與窗框陰影，並以暖陽主光消除冷灰塑膠感；同步更新 `.blend`，V1 與 V2 Title 1:1（`cmp_02.png`、`cmp_04.png`、`cmp_05.png`）檢視通過。
+- 2026-11-26 V1/V2（重工業金屬材質與建築幾何全面升級）：`tools/blender/kit.py` 與 `ops.py` 修正高金屬度在黑背景 EEVEE 反射死黑問題並新增鉚接鋼板焊縫＋縱向鐵鏽流痕＋冷中性工業混凝土地坪；`industry_recipes.py` / `COALPS/model.py` 升級重型儲槽、螺旋階梯、管橋、反應塔與球槽細節；同步更新 `.blend` 與全部 22 座工業建物原版 vs OG 對照圖（`build/screenshots/industry_compare_1..4.png`）與 Title 1:1 截圖（`cmp_01/06/09/10.png`）檢視通過。

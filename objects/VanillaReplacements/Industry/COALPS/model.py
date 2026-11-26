@@ -36,15 +36,27 @@ def _transformer(kit, T, seed):
 def make_part(kit, index):
     T = kit.TILE
     if index == 0:
-        kit.ground_plate(2, 2, kit.gravel(), thickness=0.03)
-        kit.cylinder(T * 0.55, 1.2, (-T * 0.2, T * 0.2, 0), kit.coal(), verts=24, r_top=T * 0.35)
+        kit.ground_plate(2, 2, kit.material("Concrete Ground", (0.28, 0.30, 0.30), noise=0.35, ground=True), thickness=0.03)
+        kit.cylinder(T * 0.62, 1.8, (-T * 0.18, T * 0.18, 0), kit.coal(), verts=24, r_top=T * 0.32)
+        kit.cylinder(T * 0.42, 1.3, (T * 0.42, -T * 0.32, 0), kit.coal(), verts=18, r_top=T * 0.18)
     elif index == 1:
         H = _h(kit)
-        prof = [(T * 0.68, 0), (T * 0.58, H * 0.3), (T * 0.47, H * 0.65), (T * 0.45, H * 0.8), (T * 0.48, H)]
-        kit.lathe(prof, (0, 0, 0), kit.material("Cooling Tower", (0.42, 0.46, 0.46), noise=0.12))
-        kit.lathe([(T * 0.69, 0), (T * 0.69, H * 0.04)], (0, 0, 0), kit.material("Company Color 1 Band", (0.5, 0.5, 0.5)))
+        # 雙曲線冷卻塔：底部斜 V 型進氣柱環＋風化混凝土雙曲殼＋頂部深色內環
+        conc = kit.material("Cooling Concrete", (0.38, 0.36, 0.32), noise=0.35)
+        dark = kit.material("Dark Concrete", (0.12, 0.12, 0.12), noise=0.35)
+        for k in range(16):
+            a0 = k * 2.0 * math.pi / 16
+            a1 = (k + 0.5) * 2.0 * math.pi / 16
+            r0 = T * 0.68
+            r1 = T * 0.64
+            kit.box(0.28, 0.28, H * 0.10, (r0 * math.cos(a0), r0 * math.sin(a0), 0), conc)
+            kit.box(0.24, 0.24, H * 0.10, (r1 * math.cos(a1), r1 * math.sin(a1), 0), dark)
+        prof = [(T * 0.68, H * 0.08), (T * 0.58, H * 0.32), (T * 0.47, H * 0.66), (T * 0.45, H * 0.82), (T * 0.49, H)]
+        kit.lathe(prof, (0, 0, 0), conc, segments=28)
+        kit.lathe([(T * 0.46, H * 0.96), (T * 0.46, H)], (0, 0, 0), dark, segments=24)
+        kit.lathe([(T * 0.69, H * 0.08), (T * 0.69, H * 0.12)], (0, 0, 0), kit.material("Company Color 1 Band", (0.5, 0.5, 0.5)))
     elif index == 2:
-        kit.ground_plate(1, 1, kit.gravel(), thickness=0.03)
+        kit.ground_plate(1, 1, kit.material("Concrete Ground", (0.28, 0.30, 0.30), noise=0.35, ground=True), thickness=0.03)
     elif index in (3, 4):
         _transformer(kit, T, index)
         if index == 4:
@@ -54,7 +66,7 @@ def make_part(kit, index):
         dark_roof = kit.material("Dark Roof", (0.14, 0.15, 0.16), rough=0.85, noise=0.45)
         slate = kit.material("Slate", (0.10, 0.11, 0.12), rough=0.7, noise=0.35)
         trim = kit.material("Company Color 1 Trim", (0.5, 0.5, 0.5))
-        kit.ground_plate(2, 2, kit.gravel(), thickness=0.03)
+        kit.ground_plate(2, 2, kit.material("Concrete Ground", (0.28, 0.30, 0.30), noise=0.35, ground=True), thickness=0.03)
         # 紅磚鍋爐與汽機廠房：凹入暗屋頂＋磚女兒牆＋採光氣樓＋公司色簷口細條
         bx, by = -T * 0.10, -T * 0.16
         bw, bd, bh = T * 1.66, T * 1.22, H * 0.86
