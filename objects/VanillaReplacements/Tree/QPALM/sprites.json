@@ -1,102 +1,86 @@
 [
   {
     "path": "0.png",
-    "x": -8,
-    "y": -33,
+    "x": -4,
+    "y": -15,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "1.png",
-    "x": -13,
-    "y": -46,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "2.png",
-    "x": -20,
-    "y": -71,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "3.png",
-    "x": -23,
-    "y": -82,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "4.png",
-    "x": -5,
+    "x": -6,
     "y": -21,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
-    "path": "5.png",
+    "path": "2.png",
     "x": -9,
-    "y": -42,
+    "y": -32,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "3.png",
+    "x": -10,
+    "y": -37,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "4.png",
+    "x": -2,
+    "y": -9,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "5.png",
+    "x": -4,
+    "y": -19,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "6.png",
-    "x": -13,
-    "y": -64,
+    "x": -6,
+    "y": -29,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "7.png",
-    "x": -15,
-    "y": -73,
+    "x": -7,
+    "y": -33,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "8.png",
-    "x": -9,
-    "y": -4,
+    "x": -4,
+    "y": -2,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "9.png",
-    "x": -12,
-    "y": -6,
+    "x": -5,
+    "y": -3,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "10.png",
-    "x": -20,
-    "y": -10,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "11.png",
-    "x": -23,
-    "y": -11,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "12.png",
     "x": -9,
     "y": -4,
     "zoomOffset": 0,
@@ -104,25 +88,41 @@
     "name": null
   },
   {
+    "path": "11.png",
+    "x": -10,
+    "y": -5,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "12.png",
+    "x": -4,
+    "y": -2,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
     "path": "13.png",
-    "x": -12,
-    "y": -6,
+    "x": -5,
+    "y": -3,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "14.png",
-    "x": -20,
-    "y": -10,
+    "x": -9,
+    "y": -4,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "15.png",
-    "x": -23,
-    "y": -11,
+    "x": -10,
+    "y": -5,
     "zoomOffset": 0,
     "flags": 0,
     "name": null

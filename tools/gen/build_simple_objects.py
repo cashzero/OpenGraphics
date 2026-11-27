@@ -598,6 +598,18 @@ def build(vanilla: str, cfg: dict) -> None:
     if "gen" in cfg:
         run([PY, f"tools/gen/{cfg['gen'][0]}", "--template", str(template), *cfg["gen"][1:], "-o", str(folder)])
         pack += ["--sprites", str(folder)]
+        if cfg["gen"][0] == "tree3d.py":
+            # 同步縮放 TreeObject 的 initialHeight (0x02) 與 height (0x03)，讓淨空高度與 Z-sorting 對齊縮放後樹高
+            sys.path.insert(0, str(REPO / "tools"))
+            sys.path.insert(0, str(REPO / "tools" / "gen"))
+            import dat as _dat
+            import tree3d as _tree3d
+            sp = cfg["gen"][cfg["gen"].index("--species") + 1]
+            sc = _tree3d.effective_scale(_tree3d.SPECIES[sp])
+            td = _dat.read_dat(template).data
+            init_h = max(12, int(round(td[2] * sc)))
+            full_h = max(init_h, int(round(td[3] * sc)))
+            pack += ["--set", f"u8@2={init_h}", "--set", f"u8@3={full_h}"]
     if "wav" in cfg:
         wav = folder / f"OG_{vanilla}.wav"
         run([PY, "tools/gen/sound.py", *cfg["wav"], "-o", str(wav)])

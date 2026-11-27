@@ -1,38 +1,30 @@
 [
   {
     "path": "0.png",
-    "x": -20,
-    "y": -39,
+    "x": -9,
+    "y": -18,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "1.png",
-    "x": -28,
-    "y": -56,
+    "x": -13,
+    "y": -25,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "2.png",
-    "x": -36,
-    "y": -71,
+    "x": -16,
+    "y": -32,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "3.png",
-    "x": -41,
-    "y": -81,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "4.png",
     "x": -18,
     "y": -36,
     "zoomOffset": 0,
@@ -40,217 +32,225 @@
     "name": null
   },
   {
-    "path": "5.png",
-    "x": -25,
-    "y": -53,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "6.png",
-    "x": -32,
-    "y": -67,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "7.png",
-    "x": -37,
-    "y": -77,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "8.png",
-    "x": -19,
-    "y": -37,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "9.png",
-    "x": -27,
-    "y": -55,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "10.png",
-    "x": -35,
-    "y": -69,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "11.png",
-    "x": -40,
-    "y": -80,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "12.png",
-    "x": -20,
-    "y": -39,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "13.png",
-    "x": -28,
-    "y": -56,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "14.png",
-    "x": -36,
-    "y": -71,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "15.png",
-    "x": -41,
-    "y": -81,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "16.png",
-    "x": -20,
-    "y": -9,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "17.png",
-    "x": -30,
-    "y": -13,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "18.png",
-    "x": -36,
-    "y": -17,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "19.png",
-    "x": -39,
-    "y": -18,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "20.png",
-    "x": -19,
-    "y": -8,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "21.png",
-    "x": -30,
-    "y": -13,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "22.png",
-    "x": -36,
+    "path": "4.png",
+    "x": -8,
     "y": -16,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
-    "path": "23.png",
-    "x": -38,
+    "path": "5.png",
+    "x": -11,
+    "y": -24,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "6.png",
+    "x": -14,
+    "y": -30,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "7.png",
+    "x": -17,
+    "y": -35,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "8.png",
+    "x": -9,
+    "y": -17,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "9.png",
+    "x": -12,
+    "y": -25,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "10.png",
+    "x": -16,
+    "y": -31,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "11.png",
+    "x": -18,
+    "y": -36,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "12.png",
+    "x": -9,
     "y": -18,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "13.png",
+    "x": -13,
+    "y": -25,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "14.png",
+    "x": -16,
+    "y": -32,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "15.png",
+    "x": -18,
+    "y": -36,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "16.png",
+    "x": -9,
+    "y": -4,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "17.png",
+    "x": -14,
+    "y": -6,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "18.png",
+    "x": -16,
+    "y": -8,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "19.png",
+    "x": -18,
+    "y": -8,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "20.png",
+    "x": -9,
+    "y": -4,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "21.png",
+    "x": -14,
+    "y": -6,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "22.png",
+    "x": -16,
+    "y": -7,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "23.png",
+    "x": -17,
+    "y": -8,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "24.png",
-    "x": -20,
-    "y": -9,
+    "x": -9,
+    "y": -4,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "25.png",
-    "x": -30,
-    "y": -13,
+    "x": -14,
+    "y": -6,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "26.png",
-    "x": -36,
-    "y": -17,
+    "x": -16,
+    "y": -8,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "27.png",
-    "x": -39,
-    "y": -18,
+    "x": -18,
+    "y": -8,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "28.png",
-    "x": -20,
-    "y": -9,
+    "x": -9,
+    "y": -4,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "29.png",
-    "x": -30,
-    "y": -13,
+    "x": -14,
+    "y": -6,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "30.png",
-    "x": -36,
-    "y": -17,
+    "x": -16,
+    "y": -8,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "31.png",
-    "x": -39,
-    "y": -18,
+    "x": -18,
+    "y": -8,
     "zoomOffset": 0,
     "flags": 0,
     "name": null

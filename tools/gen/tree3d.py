@@ -279,7 +279,9 @@ def build_deciduous(cfg, season, rng, H, snow):
     bare = (leafcol is None or amount == 0)
 
     n_limbs = int(cfg.get("limbs", 8)) + 3
-    dens = cfg.get("density", 1.0) * amount * cfg.get("airy", 1.0)
+    small_boost = 1.0 + max(0.0, (60.0 - H) / 45.0) * 0.48
+    hole_scale = min(1.0, max(0.35, H / 65.0))
+    dens = cfg.get("density", 1.0) * amount * cfg.get("airy", 1.0) * small_boost
     lobe_scale = cfg.get("lobe_r", 0.36)
     base_ang = rng.random() * 2 * math.pi
 
@@ -329,17 +331,17 @@ def build_deciduous(cfg, season, rng, H, snow):
                         branch_to(cloud, sub_c, tip, 0.32, 0.20, twig_col, rng, twig_density=1.1, ao=0.76, snow_w=0.7 if bare else 0.0)
             if bare:
                 continue
-            # 細碎通透葉簇（留出微光孔隙，像原版一樣輕盈透出內枝，不糊成巨大實心麵團）
+            # 細碎通透葉簇（留出微光孔隙，並依尺寸收斂孔洞避免縮小時變得稀疏）
             sr = r_lobe * (0.32 + 0.14 * rng.random()) * (0.76 + 0.24 * amount)
             leaf_tuft(cloud, sub_c, sr * 1.08, sr * 1.08, sr * 0.84,
                       lambda kk: leafcol(rng, kk), rng, dens * 1.12, crown_c, max(rx, rz) * 1.05,
-                      holes=0.30 if amount > 0.7 else 0.42, jitter=0.50)
+                      holes=(0.30 if amount > 0.7 else 0.42) * hole_scale, jitter=0.46)
             for _ in range(3):
                 off = unit(rng.normal(size=3) + np.array([0, 0, 0.15])) * sr * (0.55 + 0.45 * rng.random())
                 mr = sr * (0.38 + 0.18 * rng.random())
                 leaf_tuft(cloud, sub_c + off, mr * 1.08, mr * 1.08, mr * 0.82,
                           lambda kk: leafcol(rng, kk), rng, dens * 1.05, crown_c, max(rx, rz) * 1.05,
-                          holes=0.26, jitter=0.52)
+                          holes=0.26 * hole_scale, jitter=0.48)
                 if flowers is not None and rng.random() < 0.65:
                     leaf_tuft(cloud, sub_c + off + np.array([0, 0, mr * 0.2]), mr * 0.68, mr * 0.68, mr * 0.48,
                               lambda kk: np.tile(flowers, (kk, 1)), rng, dens * 0.55, crown_c, max(rx, rz),
@@ -371,7 +373,7 @@ def build_conifer(cfg, season, rng, H, snow):
     bare = (leafcol is None or amount == 0)
     z0 = H * cfg.get("z0", 0.10)
     R = H * 0.255 * cfg.get("width", 1.0)
-    whorls = int(cfg.get("whorls", 15))
+    whorls = max(8, int(round(int(cfg.get("whorls", 15)) * min(1.0, 0.58 + H / 130.0))))
     crown_c = np.array([0, 0, H * 0.44])
     az0 = rng.random() * 2 * math.pi
 
@@ -406,8 +408,8 @@ def build_conifer(cfg, season, rng, H, snow):
                 pr = max(pr, 1.2)
                 # 羽片上層壓扁成自然針葉棚，並略微向上傾斜受光
                 leaf_tuft(cloud, c, pr * 1.25, pr * 1.25, pr * 0.62,
-                          lambda kk: leafcol(rng, kk), rng, 1.85 * amount, crown_c, H * 0.48,
-                          holes=0.06, jitter=0.30, snow_bias=0.14 * (0.3 + 0.7 * f))
+                          lambda kk: leafcol(rng, kk), rng, 2.05 * amount, crown_c, H * 0.48,
+                          holes=0.05, jitter=0.28, snow_bias=0.14 * (0.3 + 0.7 * f))
 
     # 頂梢尖芽
     if not bare:
@@ -462,8 +464,8 @@ def build_pine(cfg, season, rng, H, snow):
             c = end + off
             r = H * (0.036 + 0.016 * rng.random()) * (1.06 - 0.16 * t)
             leaf_tuft(cloud, c, r * 1.32, r * 1.32, r * 0.56,
-                      lambda kk: colfn(rng, kk), rng, 1.48, crown_c, H * 0.42,
-                      holes=0.28, jitter=0.52, snow_bias=0.18)
+                      lambda kk: colfn(rng, kk), rng, 1.75 if H < 70 else 1.48, crown_c, H * 0.42,
+                      holes=0.16 if H < 70 else 0.28, jitter=0.48, snow_bias=0.18)
 
     if snow:
         _snow(cloud, 0.48)
@@ -516,7 +518,7 @@ def build_weeping(cfg, season, rng, H, snow):
             for q0, q1 in zip(curve[::2][:-1], curve[::2][1:]):
                 branch_to(cloud, q0, q1, 0.28, 0.22, TWIG_DARK, rng, twig_density=0.75, ao=0.75)
             continue
-        m = int(length * 3.2 * amount)
+        m = max(10, int(length * 4.0 * amount))
         idx = rng.integers(0, len(curve), m)
         pts = curve[idx] + rng.normal(size=(m, 3)) * np.array([0.85, 0.85, 0.35])
         nrm = unit(np.tile([math.cos(a), math.sin(a), 0.25], (m, 1)) + rng.normal(size=(m, 3)) * 0.35)
@@ -923,7 +925,43 @@ def scale_cloud(cloud, fx, fz):
 # ---------------------------------------------------------------- 主程式
 
 
-def build_frames(template: Path, cfg, seed: int):
+DEFAULT_SCALE = 0.45
+
+
+def effective_scale(cfg: dict, scale: float = DEFAULT_SCALE) -> float:
+    """回傳實際縮放比：一般喬木使用 scale（預設 0.45，對齊真實建築比例），
+    低矮沙漠仙人掌／絲蘭維持最低 0.62、約書亞樹 0.50，避免小圖過度縮小成難以辨識的像素點。"""
+    if cfg.get("no_stretch"):
+        return max(scale, 0.62)
+    if cfg.get("shape") == "joshua":
+        return max(scale, 0.50)
+    return scale
+
+
+class _Box:
+    __slots__ = ("width", "height", "x_offset", "y_offset")
+
+    def __init__(self, width: int, height: int, x_offset: int, y_offset: int):
+        self.width = width
+        self.height = height
+        self.x_offset = x_offset
+        self.y_offset = y_offset
+
+
+def _scaled_entry(e, sc: float, is_shadow: bool = False) -> _Box:
+    nw = max(6, int(round(e.width * sc)))
+    nh = max(6, int(round(e.height * sc)))
+    nxo = int(round(e.x_offset * sc))
+    nyo = int(round(e.y_offset * sc))
+    if not is_shadow:
+        if -nxo >= nw - 1:
+            nw = -nxo + 3
+        if -nyo >= nh:
+            nh = -nyo + 2
+    return _Box(nw, nh, nxo, nyo)
+
+
+def build_frames(template: Path, cfg, seed: int, scale: float = DEFAULT_SCALE):
     obj = dat.read_dat(template)
     d = obj.data
     rot, growth = d[6], d[7]
@@ -937,9 +975,11 @@ def build_frames(template: Path, cfg, seed: int):
     n_main = len(plan)
     if n_main * (2 if has_shadow else 1) != len(entries):
         raise SystemExit(f"影像數不符：依結構計算 {n_main * (2 if has_shadow else 1)}，模板有 {len(entries)}")
+    sc = effective_scale(cfg, scale)
+    scaled = [_scaled_entry(e, sc, is_shadow=(i >= n_main)) for i, e in enumerate(entries)]
     clouds = {}
     frames = []
-    for i, e in enumerate(entries):
+    for i, e in enumerate(scaled):
         k = i if i < n_main else i - n_main
         s, g, r, snow = plan[k]
         key = (s, g, r, snow)
@@ -947,8 +987,8 @@ def build_frames(template: Path, cfg, seed: int):
             # 同一成長階段共用種子，旋轉由 rotate_cloud 實際轉動角度
             sd = seed * 1000 + g
             ref_season = 3 if 3 in seasons else seasons[0]
-            ref = make_cloud(cfg, ref_season, tree_height(entries[k]), sd, False, rot=r)
-            clouds[key] = fit_cloud(cfg, s, entries[k], sd, snow, ref, rot=r)[0]
+            ref = make_cloud(cfg, ref_season, tree_height(scaled[k]), sd, False, rot=r)
+            clouds[key] = fit_cloud(cfg, s, scaled[k], sd, snow, ref, rot=r)[0]
         ox, oy = -e.x_offset, -e.y_offset
         if i < n_main:
             px = render(clouds[key], e.width, e.height, ox, oy, desert=bool(cfg.get("desert")))
@@ -963,6 +1003,7 @@ def main() -> int:
     ap.add_argument("--template", help="結構模板 DAT（vanilla 或現有 OG 樹）")
     ap.add_argument("--species", required=True, help="樹種（SPECIES 的鍵；--sheet 時可用逗號列多個）")
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--scale", type=float, default=DEFAULT_SCALE, help=f"相對模板的高度與尺寸比例（預設 {DEFAULT_SCALE}）")
     ap.add_argument("-o", "--output")
     ap.add_argument("--sheet", help="輸出預覽圖（各樹種 夏／秋／春／冬／積雪，最大成長階段）")
     args = ap.parse_args()
@@ -973,7 +1014,8 @@ def main() -> int:
         im = Image.new("RGB", (cell_w * 5, cell_h * len(names)), (108, 120, 82))
         for row, name in enumerate(names):
             cfg = SPECIES[name]
-            H = 22 if cfg.get("no_stretch") else 120
+            sc = effective_scale(cfg, args.scale)
+            H = (22 if cfg.get("no_stretch") else 120) * sc
             for col, (season, snow) in enumerate(((3, False), (0, False), (2, False), (1, False), (3, True))):
                 cloud = make_cloud(cfg, season, H, args.seed, snow)
                 px = render(cloud, cell_w, cell_h, cell_w // 2, cell_h - 12)
@@ -986,7 +1028,7 @@ def main() -> int:
         im.resize((im.width * 2, im.height * 2), Image.NEAREST).save(args.sheet)
         print(f"預覽 → {args.sheet}")
         return 0
-    frames = build_frames(Path(args.template), SPECIES[args.species], args.seed)
+    frames = build_frames(Path(args.template), SPECIES[args.species], args.seed, scale=args.scale)
     common.write_sprites(args.output, frames)
     return 0
 

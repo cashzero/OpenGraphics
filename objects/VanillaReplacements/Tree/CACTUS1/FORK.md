@@ -14,3 +14,4 @@
 - 2026-11-19 V2：`tools/newgame_check.sh` 通過（standalone 新遊戲物件選擇驗證、模擬一年不崩潰、存檔物件 placeholder 只剩音效等 24 個）；地圖截圖與物件預覽 build/screenshots/m2/preview/ 已檢視（季節、積雪版、陰影）
 - 2026-11-25 V1/V2：全面升級 tree3d.py（對齊原版纖細樹幹、低分叉、通透羽狀葉冠、高對比暖陽光影、落葉針葉樹秋紅與冬枯、連續幾何雪帽、沙漠植物特化）；build/screenshots/title_compare/compare_sheet_1.png 與 compare_sheet_2.png 1:1 檢視通過
 - 2026-11-25 V1/V2（沙漠植物重製）：`tools/gen/tree3d.py` 新增沙漠沙地反射光、日曬鼠尾草綠／灰褐樹皮，重製纖細四向巨柱仙人掌（±X/±Y 臂角修正）、扭曲約書亞樹、樹狀絲蘭與沙漠銀棕；V1 預覽與 V2 Title 1:1（`cmp_03.png`）檢視通過。
+- 2026-11-27 V1/V2：依建築比例將樹木高度、樹冠、陰影與淨空高度同步縮減至 0.45×（沙漠低矮仙人掌／絲蘭 0.62×、約書亞樹 0.50×）；39 個樹木 DAT 通過 tools/lint.py（0 錯誤）與 tools/v2_smoke.sh 及 title_compare 實機截圖檢視。

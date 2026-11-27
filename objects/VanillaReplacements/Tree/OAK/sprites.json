@@ -1,256 +1,256 @@
 [
   {
     "path": "0.png",
-    "x": -18,
-    "y": -48,
+    "x": -8,
+    "y": -22,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "1.png",
-    "x": -29,
-    "y": -79,
+    "x": -13,
+    "y": -36,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "2.png",
-    "x": -39,
-    "y": -108,
+    "x": -18,
+    "y": -49,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "3.png",
-    "x": -47,
-    "y": -130,
+    "x": -21,
+    "y": -58,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "4.png",
-    "x": -16,
-    "y": -44,
+    "x": -7,
+    "y": -20,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "5.png",
-    "x": -27,
-    "y": -73,
+    "x": -12,
+    "y": -33,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "6.png",
-    "x": -37,
-    "y": -101,
+    "x": -17,
+    "y": -45,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "7.png",
-    "x": -44,
-    "y": -122,
+    "x": -20,
+    "y": -55,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "8.png",
-    "x": -16,
-    "y": -47,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "9.png",
-    "x": -28,
-    "y": -78,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "10.png",
-    "x": -38,
-    "y": -107,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "11.png",
-    "x": -46,
-    "y": -129,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "12.png",
-    "x": -18,
-    "y": -48,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "13.png",
-    "x": -29,
-    "y": -79,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "14.png",
-    "x": -39,
-    "y": -108,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "15.png",
-    "x": -47,
-    "y": -130,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "16.png",
-    "x": -18,
-    "y": -11,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "17.png",
-    "x": -25,
-    "y": -14,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "18.png",
-    "x": -35,
-    "y": -22,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "19.png",
-    "x": -41,
-    "y": -26,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "20.png",
-    "x": -18,
-    "y": -11,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "21.png",
-    "x": -25,
-    "y": -14,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "22.png",
-    "x": -34,
+    "x": -7,
     "y": -21,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
+    "path": "9.png",
+    "x": -13,
+    "y": -35,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "10.png",
+    "x": -17,
+    "y": -48,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "11.png",
+    "x": -21,
+    "y": -58,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "12.png",
+    "x": -8,
+    "y": -22,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "13.png",
+    "x": -13,
+    "y": -36,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "14.png",
+    "x": -18,
+    "y": -49,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "15.png",
+    "x": -21,
+    "y": -58,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "16.png",
+    "x": -8,
+    "y": -5,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "17.png",
+    "x": -11,
+    "y": -6,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "18.png",
+    "x": -16,
+    "y": -10,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "19.png",
+    "x": -18,
+    "y": -12,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "20.png",
+    "x": -8,
+    "y": -5,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "21.png",
+    "x": -11,
+    "y": -6,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "22.png",
+    "x": -15,
+    "y": -9,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
     "path": "23.png",
-    "x": -40,
-    "y": -26,
+    "x": -18,
+    "y": -12,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "24.png",
-    "x": -18,
-    "y": -11,
+    "x": -8,
+    "y": -5,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "25.png",
-    "x": -25,
-    "y": -14,
+    "x": -11,
+    "y": -6,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "26.png",
-    "x": -35,
-    "y": -22,
+    "x": -16,
+    "y": -10,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "27.png",
-    "x": -41,
-    "y": -26,
+    "x": -18,
+    "y": -12,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "28.png",
-    "x": -18,
-    "y": -11,
+    "x": -8,
+    "y": -5,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "29.png",
-    "x": -25,
-    "y": -14,
+    "x": -11,
+    "y": -6,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "30.png",
-    "x": -35,
-    "y": -22,
+    "x": -16,
+    "y": -10,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "31.png",
-    "x": -41,
-    "y": -26,
+    "x": -18,
+    "y": -12,
     "zoomOffset": 0,
     "flags": 0,
     "name": null

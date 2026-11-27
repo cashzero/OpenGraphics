@@ -1,22 +1,38 @@
 [
   {
     "path": "0.png",
-    "x": -4,
-    "y": -11,
+    "x": -2,
+    "y": -7,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "1.png",
-    "x": -4,
-    "y": -12,
+    "x": -2,
+    "y": -7,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "2.png",
+    "x": -2,
+    "y": -6,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "3.png",
+    "x": -1,
+    "y": -7,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "4.png",
     "x": -4,
     "y": -10,
     "zoomOffset": 0,
@@ -24,63 +40,143 @@
     "name": null
   },
   {
-    "path": "3.png",
-    "x": -2,
-    "y": -11,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "4.png",
-    "x": -6,
-    "y": -16,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
     "path": "5.png",
-    "x": -6,
-    "y": -16,
+    "x": -4,
+    "y": -10,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "6.png",
-    "x": -6,
-    "y": -15,
+    "x": -4,
+    "y": -9,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "7.png",
-    "x": -4,
-    "y": -15,
+    "x": -2,
+    "y": -9,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "8.png",
-    "x": -7,
-    "y": -20,
+    "x": -4,
+    "y": -12,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "9.png",
-    "x": -8,
-    "y": -20,
+    "x": -5,
+    "y": -12,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "10.png",
+    "x": -5,
+    "y": -11,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "11.png",
+    "x": -4,
+    "y": -11,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "12.png",
+    "x": -6,
+    "y": -15,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "13.png",
+    "x": -7,
+    "y": -16,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "14.png",
+    "x": -6,
+    "y": -14,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "15.png",
+    "x": -4,
+    "y": -13,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "16.png",
+    "x": -7,
+    "y": -17,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "17.png",
+    "x": -7,
+    "y": -18,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "18.png",
+    "x": -7,
+    "y": -17,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "19.png",
+    "x": -5,
+    "y": -16,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "20.png",
+    "x": -9,
+    "y": -20,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "21.png",
+    "x": -9,
+    "y": -20,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "22.png",
     "x": -8,
     "y": -18,
     "zoomOffset": 0,
@@ -88,7 +184,7 @@
     "name": null
   },
   {
-    "path": "11.png",
+    "path": "23.png",
     "x": -6,
     "y": -18,
     "zoomOffset": 0,
@@ -96,119 +192,55 @@
     "name": null
   },
   {
-    "path": "12.png",
-    "x": -10,
-    "y": -24,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "13.png",
-    "x": -11,
-    "y": -25,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "14.png",
-    "x": -9,
-    "y": -22,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "15.png",
-    "x": -7,
-    "y": -21,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "16.png",
-    "x": -12,
-    "y": -28,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "17.png",
-    "x": -12,
-    "y": -29,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "18.png",
-    "x": -11,
-    "y": -28,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "19.png",
-    "x": -8,
-    "y": -26,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "20.png",
-    "x": -14,
-    "y": -32,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "21.png",
-    "x": -14,
-    "y": -32,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "22.png",
-    "x": -13,
-    "y": -29,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "23.png",
-    "x": -10,
-    "y": -29,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
     "path": "24.png",
-    "x": -4,
-    "y": -4,
+    "x": -2,
+    "y": -2,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "25.png",
-    "x": -4,
-    "y": -5,
+    "x": -2,
+    "y": -3,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "26.png",
+    "x": -2,
+    "y": -1,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "27.png",
+    "x": -1,
+    "y": -2,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "28.png",
+    "x": -4,
+    "y": -3,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "29.png",
+    "x": -4,
+    "y": -3,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "30.png",
     "x": -4,
     "y": -2,
     "zoomOffset": 0,
@@ -216,31 +248,55 @@
     "name": null
   },
   {
-    "path": "27.png",
+    "path": "31.png",
     "x": -2,
+    "y": -2,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "32.png",
+    "x": -5,
+    "y": -3,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "33.png",
+    "x": -5,
+    "y": -3,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "34.png",
+    "x": -5,
+    "y": -2,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "35.png",
+    "x": -3,
+    "y": -3,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "36.png",
+    "x": -6,
     "y": -4,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
-    "path": "28.png",
-    "x": -6,
-    "y": -5,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "29.png",
-    "x": -6,
-    "y": -5,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "30.png",
+    "path": "37.png",
     "x": -6,
     "y": -3,
     "zoomOffset": 0,
@@ -248,7 +304,47 @@
     "name": null
   },
   {
-    "path": "31.png",
+    "path": "38.png",
+    "x": -6,
+    "y": -2,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "39.png",
+    "x": -3,
+    "y": -3,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "40.png",
+    "x": -7,
+    "y": -4,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "41.png",
+    "x": -6,
+    "y": -4,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "42.png",
+    "x": -6,
+    "y": -2,
+    "zoomOffset": 0,
+    "flags": 0,
+    "name": null
+  },
+  {
+    "path": "43.png",
     "x": -4,
     "y": -4,
     "zoomOffset": 0,
@@ -256,129 +352,33 @@
     "name": null
   },
   {
-    "path": "32.png",
-    "x": -8,
-    "y": -5,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "33.png",
-    "x": -8,
-    "y": -5,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "34.png",
-    "x": -8,
-    "y": -4,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "35.png",
-    "x": -5,
-    "y": -5,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "36.png",
-    "x": -9,
-    "y": -6,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "37.png",
-    "x": -9,
-    "y": -5,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "38.png",
-    "x": -9,
-    "y": -4,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "39.png",
-    "x": -5,
-    "y": -5,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "40.png",
-    "x": -11,
-    "y": -6,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "41.png",
-    "x": -10,
-    "y": -6,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "42.png",
-    "x": -10,
-    "y": -4,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
-    "path": "43.png",
-    "x": -6,
-    "y": -7,
-    "zoomOffset": 0,
-    "flags": 0,
-    "name": null
-  },
-  {
     "path": "44.png",
-    "x": -12,
-    "y": -7,
+    "x": -7,
+    "y": -4,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "45.png",
-    "x": -13,
-    "y": -7,
+    "x": -8,
+    "y": -4,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "46.png",
-    "x": -11,
-    "y": -5,
+    "x": -7,
+    "y": -3,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
   },
   {
     "path": "47.png",
-    "x": -8,
-    "y": -7,
+    "x": -5,
+    "y": -4,
     "zoomOffset": 0,
     "flags": 0,
     "name": null
