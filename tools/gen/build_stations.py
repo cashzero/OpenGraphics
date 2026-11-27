@@ -216,26 +216,26 @@ def roofs(ops, st, se):
         return
 
     if kind == "modern_arch":
-        # TRSTAT4：現代都會銀鋼圓拱玻璃車站大棚（配下方公司色 V 型鋼骨支撐）
+        # TRSTAT4：現代都會深鋼圓拱玻璃車站大棚（配下方公司色 V 型鋼骨支撐，改用深鋼／舊鋼取代過曝亮銀）
         arch_h = st["arch_h"]
         segs = 12
         ys = [0.8 + 30.4 * k / segs for k in range(segs + 1)]
-        # 5 道亮銀鋼管圓拱肋（現代空間桁架感）
+        # 5 道深鐵鋼管圓拱肋（穩重工業鋼構感，配半透明玻璃不再發白刺眼）
         for x in (0.8, 8.0, 16.0, 24.0, 31.2):
             for k in range(segs):
                 y0, y1 = ys[k], ys[k + 1]
                 z0, z1 = _arch_z(y0, z, arch_h, 0.8, 31.2), _arch_z(y1, z, arch_h, 0.8, 31.2)
-                seg(ops, (x, y0, z0), (x, y1, z1), 0.56, "silver", se)
-                seg(ops, (x, y0, z0 - 1.3), (x, y1, z1 - 1.3), 0.32, "darksteel", se)
-        # 7 道細緻縱向玻璃窗欞鋼樑＋銀色屋脊主樑
+                seg(ops, (x, y0, z0), (x, y1, z1), 0.56, "steel", se)
+                seg(ops, (x, y0, z0 - 1.3), (x, y1, z1 - 1.3), 0.34, "darksteel", se)
+        # 7 道細緻縱向玻璃窗欞鋼樑＋深鋼屋脊主樑
         for k in (1, 3, 5, 6, 7, 9, 11):
             yk = ys[k]
             zk = _arch_z(yk, z, arch_h, 0.8, 31.2)
             r = 0.48 if k == 6 else 0.28
-            seg(ops, (0.0, yk, zk), (32.0, yk, zk), r, "silver" if k % 2 == 0 else "steel", se)
-        # 兩側簷口細銀樑＋微幅公司色細飾線
+            seg(ops, (0.0, yk, zk), (32.0, yk, zk), r, "darksteel" if k % 2 == 0 else "steel", se)
+        # 兩側簷口深鋼主樑
         for y0, y1 in ((0.4, 1.5), (30.5, 31.6)):
-            box(ops, 0, 32, y0, y1, z - 0.8, z + 0.8, "silver", se)
+            box(ops, 0, 32, y0, y1, z - 0.8, z + 0.8, "darksteel", se)
         return
 
     # TRSTAT5：雙側歐式弧形銅綠／鋅鐵拱頂月台雨棚（中央留空給鐵軌天空，氣質優雅！）

@@ -212,14 +212,61 @@ def run_op(kit, op, T=None, Z=None):
 _CFG = None
 
 
+def _deconflict_boxes(ops, T, Z, eps=0.004):
+    """消除同部件內方塊的完全共面重疊（避免 Cycles 光追產生黑色 Z-fighting 斑塊）。
+    保持作者指令順序：後畫的方塊（例如檐口、標線、支道）在共面處微幅往外推 eps（~0.015 px，肉眼不可見），
+    確保 Cycles 精準取用表層材質而不自陰影成黑塊。"""
+    placed = []
+    out = []
+    tol = 1e-3
+
+    def ov(a0, a1, b0, b1):
+        return min(a1, b1) - max(a0, b0) > 1e-4
+
+    for op in ops:
+        if op.get("op") != "box" or op.get("r", 0):
+            out.append(op)
+            continue
+        (cx, cy, z0), (sx, sy, h) = op["c"], op["s"]
+        x0, x1 = (cx - sx / 2) * T, (cx + sx / 2) * T
+        y0, y1 = (cy - sy / 2) * T, (cy + sy / 2) * T
+        za, zb = Z(z0), Z(z0 + h)
+        changed = False
+        while any(abs(zb - b[5]) < tol and ov(x0, x1, b[0], b[1]) and ov(y0, y1, b[2], b[3]) for b in placed):
+            zb += eps
+            changed = True
+        while any(abs(x0 - b[0]) < tol and ov(y0, y1, b[2], b[3]) and ov(za, zb, b[4], b[5]) for b in placed):
+            x0 -= eps
+            changed = True
+        while any(abs(x1 - b[1]) < tol and ov(y0, y1, b[2], b[3]) and ov(za, zb, b[4], b[5]) for b in placed):
+            x1 += eps
+            changed = True
+        while any(abs(y0 - b[2]) < tol and ov(x0, x1, b[0], b[1]) and ov(za, zb, b[4], b[5]) for b in placed):
+            y0 -= eps
+            changed = True
+        while any(abs(y1 - b[3]) < tol and ov(x0, x1, b[0], b[1]) and ov(za, zb, b[4], b[5]) for b in placed):
+            y1 += eps
+            changed = True
+        placed.append((x0, x1, y0, y1, za, zb))
+        if changed:
+            nop = dict(op)
+            inv_z = 1.0 / Z(1.0) if Z(1.0) else 1.0
+            nop["c"] = [((x0 + x1) / 2) / T, ((y0 + y1) / 2) / T, za * inv_z]
+            nop["s"] = [(x1 - x0) / T, (y1 - y0) / T, (zb - za) * inv_z]
+            out.append(nop)
+        else:
+            out.append(op)
+    return out
+
+
 def make_part(kit, index):
     global _CFG
     if _CFG is None:
         with open(os.environ["MODEL_CONFIG"], encoding="utf-8") as fp:
             _CFG = json.load(fp)
     if _CFG.get("unit") == "m":
-        for op in _CFG["parts"][index]["ops"]:
+        for op in _deconflict_boxes(_CFG["parts"][index]["ops"], 1.0, lambda v: v):
             run_op(kit, op, T=1.0, Z=lambda v: v)
     else:
-        for op in _CFG["parts"][index]["ops"]:
+        for op in _deconflict_boxes(_CFG["parts"][index]["ops"], kit.TILE, kit.z):
             run_op(kit, op)

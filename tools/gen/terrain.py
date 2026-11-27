@@ -211,11 +211,11 @@ def make_land_pbr(kind: str, stage: int = 0, n: int = 256) -> tuple[np.ndarray, 
         blade2 = periodic_fbm(n, 204, 52, 127, 0.25)
         f1, _, cid = periodic_worley(n, 40, 205)
 
-        c_deep = np.array([56.0, 68.0, 28.0])
-        c_mid = np.array([80.0, 92.0, 44.0])
-        c_sun = np.array([112.0, 120.0, 56.0])
-        c_straw = np.array([118.0, 98.0, 56.0])    # 鮮明自然草根暖土與細乾草絲（高頻有機草地質感關鍵）
-        c_soil = np.array([96.0, 74.0, 42.0])
+        c_deep = np.array([62.0, 74.0, 32.0])
+        c_mid = np.array([86.0, 96.0, 48.0])
+        c_sun = np.array([118.0, 124.0, 62.0])
+        c_straw = np.array([124.0, 108.0, 62.0])   # 與 GRASSBR 共享暖橄欖／乾草色域，讓草地↔乾草過渡柔順無斷層
+        c_soil = np.array([102.0, 82.0, 48.0])
 
         t = np.clip(0.5 + 0.08 * m_sub + 0.26 * tuft + 0.36 * blade, 0.0, 1.0)[:, :, None]
         grass_rgb = np.where(
@@ -223,11 +223,11 @@ def make_land_pbr(kind: str, stage: int = 0, n: int = 256) -> tuple[np.ndarray, 
             c_deep * (1 - 2 * t) + c_mid * (2 * t),
             c_mid * (2 - 2 * t) + c_sun * (2 * t - 1),
         )
-        # 鮮明細密的高頻暖土與乾草微粒（銳利而非糊成一團，約 28% 分布於草叢間隙）
-        is_straw = (blade2 > 0.36) & (tuft > -0.25)
-        is_soil = (blade2 < -0.44) & (blade < 0.15)
-        grass_rgb = np.where(is_straw[:, :, None], 0.28 * grass_rgb + 0.72 * c_straw, grass_rgb)
-        grass_rgb = np.where(is_soil[:, :, None], 0.32 * grass_rgb + 0.68 * c_soil, grass_rgb)
+        # 鮮明細密的高頻暖土與乾草微粒（銳利而非糊成一團，約 30% 分布於草叢間隙）
+        is_straw = (blade2 > 0.32) & (tuft > -0.28)
+        is_soil = (blade2 < -0.42) & (blade < 0.18)
+        grass_rgb = np.where(is_straw[:, :, None], 0.25 * grass_rgb + 0.75 * c_straw, grass_rgb)
+        grass_rgb = np.where(is_soil[:, :, None], 0.30 * grass_rgb + 0.70 * c_soil, grass_rgb)
         # 細緻陽光嫩葉亮點
         tip = (f1 < 0.18) & (cid > 0.72)
         grass_rgb = np.where(tip[:, :, None], grass_rgb * 1.18 + np.array([8, 10, 4]), grass_rgb)
@@ -256,16 +256,17 @@ def make_land_pbr(kind: str, stage: int = 0, n: int = 256) -> tuple[np.ndarray, 
         fine2 = periodic_fbm(n, 304, 48, 127, 0.35)
         f1, _, cid = periodic_worley(n, 32, 305)
 
-        c_soil = np.array([92.0, 74.0, 44.0])
-        c_olive = np.array([88.0, 96.0, 50.0])
-        c_straw = np.array([144.0, 126.0, 76.0])
-        c_dry = np.array([182.0, 162.0, 108.0])
+        c_soil = np.array([86.0, 72.0, 44.0])
+        c_olive = np.array([84.0, 94.0, 48.0])
+        c_straw = np.array([128.0, 114.0, 68.0])
+        c_dry = np.array([162.0, 146.0, 94.0])
 
         t = np.clip(0.5 + 0.14 * m_sub + 0.28 * straw + 0.32 * fine, 0.0, 1.0)[:, :, None]
         rgb = c_soil * (1.0 - t) + c_straw * t
-        olive_m = np.clip((0.18 - straw * 0.5 + fine2 * 0.65) * 1.15, 0.0, 0.62)[:, :, None]
+        # 較豐富的橄欖綠草叢點綴（與 GRASS1 形成平滑的色相與明度銜接，消除菱形色塊邊界）
+        olive_m = np.clip((0.26 - straw * 0.45 + fine2 * 0.65) * 1.25, 0.0, 0.68)[:, :, None]
         rgb = rgb * (1.0 - olive_m) + c_olive * olive_m
-        dry_m = np.clip((fine * 0.65 + fine2 * 0.65 - 0.14) * 1.35, 0.0, 0.65)[:, :, None]
+        dry_m = np.clip((fine * 0.65 + fine2 * 0.65 - 0.18) * 1.30, 0.0, 0.58)[:, :, None]
         rgb = rgb * (1.0 - dry_m) + c_dry * dry_m
         peb = (f1 < 0.18) & (cid > 0.72)
         rgb = np.where(peb[:, :, None], np.array([164.0, 148.0, 118.0]), rgb)
@@ -304,20 +305,56 @@ def make_land_pbr(kind: str, stage: int = 0, n: int = 256) -> tuple[np.ndarray, 
         return np.clip(rgb, 0, 255), du, dv
 
     if kind == "ROCK1":
-        # 阿爾卑斯崎嶇花崗岩與板岩：自然沉穩石色（不發白刺眼）、多尺度裂隙與高山苔蘚
-        _, edge_a, cid_a = periodic_worley(n, 9, 501, jitter=0.92)
-        _, edge_b, cid_b = periodic_worley(n, 24, 502, jitter=0.88)
-        m1 = periodic_fbm(n, 503, 4, 16, 1.50)
-        fine = periodic_fbm(n, 504, 24, 114, 0.75)
-        crack = np.clip(edge_a * 6.5, 0.0, 1.0) * (0.45 + 0.55 * np.clip(edge_b * 5.5, 0.0, 1.0))
-        h = 0.40 * crack + 0.24 * (cid_a - 0.5) + 0.18 * m1 + 0.18 * fine
-        base = np.array([86.0, 92.0, 88.0])
-        rgb = base[None, None, :] * (0.76 + 0.34 * cid_a[:, :, None] + 0.16 * m1[:, :, None] + 0.16 * fine[:, :, None])
-        rgb *= (0.50 + 0.50 * crack[:, :, None])
-        moss_m = np.clip((0.36 - crack) * 2.2 + 0.32 * m1 - 0.16, 0.0, 0.55)[:, :, None]
-        rgb = rgb * (1.0 - moss_m) + np.array([64.0, 82.0, 44.0]) * moss_m
-        du, dv = height_to_normals(h, strength=2.4)
-        return np.clip(rgb, 0, 165), du, dv
+        # 實拍 CC0 高山花崗岩塊與碎石岩地（textures/pbr/ground_rock：Poly Haven rocks_ground_05）
+        # 嚴格中性高山花崗岩灰（不發藍泥、不發白沙），3×3 細緻碎岩尺度＋實拍法線高對比立體浮雕！
+        p_alb = REPO / "textures" / "pbr" / "ground_rock" / "albedo.jpg"
+        p_nrm = REPO / "textures" / "pbr" / "ground_rock" / "normal.jpg"
+        if p_alb.exists() and p_nrm.exists():
+            from PIL import Image
+            # 128×128 裁切重組＋旋轉錯位平鋪至 256×256（單顆碎岩 2–6px 銳利有層次、無大塊蒼白平板）
+            tile_sz = n // 2
+            im_a = np.asarray(Image.open(p_alb).convert("RGB").resize((tile_sz, tile_sz), Image.LANCZOS), dtype=np.float64)
+            im_n = np.asarray(Image.open(p_nrm).convert("RGB").resize((tile_sz, tile_sz), Image.LANCZOS), dtype=np.float64)
+            rgb = np.tile(im_a, (2, 2, 1))
+            nrm = np.tile(im_n, (2, 2, 1)) / 255.0 * 2.0 - 1.0
+            # 疊加一層高頻碎裂花崗岩角礫，讓平坦岩面也佈滿真實稜角與亮暗微面
+            _, edge_s, cid_s = periodic_worley(n, 26, 511, jitter=0.92)
+            micro = periodic_fbm(n, 509, 24, 118, 0.60)
+            crack_s = np.clip(edge_s * 5.2, 0.0, 1.0)
+
+            # 轉為沉穩寫實的高山花崗岩中性灰（均值 ~104，陽光岩稜 180..205、岩縫深影 36..56）
+            lum = 0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2]
+            mean_l = float(lum.mean())
+            rgb = (rgb - mean_l) * 1.48 + 106.0
+            # 高比例中性花崗岩灰（保留 25% 原石微暖土色，絕不偏白沙也不偏藍泥）
+            lum2 = (0.299 * rgb[:, :, 0] + 0.587 * rgb[:, :, 1] + 0.114 * rgb[:, :, 2])[:, :, None]
+            rgb = lum2 * 0.72 + rgb * 0.28
+            rgb *= np.array([0.97, 0.98, 0.99])[None, None, :]
+            # 用高頻碎石裂縫刻畫出 crisp 2–5px 岩粒與縫隙陰影
+            rgb *= (0.72 + 0.28 * crack_s[:, :, None]) * (0.90 + 0.22 * cid_s[:, :, None])
+            rgb += micro[:, :, None] * 18.0
+            # 岩縫最深處點綴極微量高山暗苔／暖土粉，自然銜接周圍草地
+            grit = np.clip((0.28 - crack_s) * 2.4, 0.0, 0.42)[:, :, None]
+            rgb = rgb * (1.0 - grit) + np.array([76.0, 78.0, 56.0]) * grit
+
+            nz = np.maximum(nrm[:, :, 2], 0.25)
+            du_s, dv_s = height_to_normals(0.55 * crack_s + 0.45 * micro, strength=1.8)
+            du = (-nrm[:, :, 0] / nz) * 1.25 + du_s * 0.65
+            dv = (nrm[:, :, 1] / nz) * 1.25 + dv_s * 0.65
+            return np.clip(rgb, 0, 225), du, dv
+
+        # 備援程序化花崗岩
+        _, edge_a, cid_a = periodic_worley(n, 11, 501, jitter=0.92)
+        _, edge_b, cid_b = periodic_worley(n, 28, 502, jitter=0.88)
+        m1 = periodic_fbm(n, 503, 6, 20, 1.40)
+        fine = periodic_fbm(n, 504, 24, 118, 0.70)
+        crack = np.clip(edge_a * 6.5, 0.0, 1.0) * (0.42 + 0.58 * np.clip(edge_b * 5.5, 0.0, 1.0))
+        h = 0.42 * crack + 0.24 * (cid_a - 0.5) + 0.16 * m1 + 0.18 * fine
+        base = np.array([138.0, 136.0, 128.0])
+        rgb = base[None, None, :] * (0.68 + 0.52 * cid_a[:, :, None] + 0.20 * m1[:, :, None] + 0.22 * fine[:, :, None])
+        rgb *= (0.38 + 0.62 * crack[:, :, None])
+        du, dv = height_to_normals(h, strength=2.8)
+        return np.clip(rgb, 0, 235), du, dv
 
     # ROCK2：自然乾燥峽谷碎裂砂岩與風化岩原（徹底移除規律燈芯絨條紋！改以不規則岩塊、碎石與暖砂岩色帶）
     f1a, edge_a, cid_a = periodic_worley(n, 9, 601, jitter=0.94)
@@ -352,37 +389,44 @@ def make_land_pbr(kind: str, stage: int = 0, n: int = 256) -> tuple[np.ndarray, 
 # ---------------------------------------------------------------- 精準等角坡度 3D 投影與算光
 
 def solve_slope_uv_normal(slope_idx: int, w: int, h: int, x_off: int, y_off: int, scale: float = 1.0):
+    """精準反解全部 19 種 OpenLoco 等角斜坡的 (u, v) 與表面斜率 (dh/du, dh/dv)。
+    令 d = u - v = sx / 32、s = u + v ∈ [|d|, 2 - |d|]，因投影函數 f(s) = s - h((s+d)/2, (s-d)/2)
+    對全部 18 種可見坡度皆嚴格單調遞增，以 16 次向量化二分法即可求得 10^-5 精度唯一解，
+    徹底消除舊版不動點迭代在 slope 2/3/6/7/15（∂h/∂s ≈ ±1）收斂失敗造成的垂直拉條 glitch！
+    """
     hT, hR, hB, hL = SLOPE_CORNERS[slope_idx]
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float64)
     sx = (xx + x_off + 0.5) / scale
     sy = (yy + y_off + 0.5) / scale
 
-    diff = sx / 32.0
-    s_sum = sy / 16.0 + 0.25 * (hT + hR + hB + hL)
-    u = 0.5 * (s_sum + diff)
-    v = 0.5 * (s_sum - diff)
-    for _ in range(6):
-        uc = np.clip(u, -0.05, 1.05)
-        vc = np.clip(v, -0.05, 1.05)
-        hv = hT * (1 - uc) * (1 - vc) + hR * uc * (1 - vc) + hL * (1 - uc) * vc + hB * uc * vc
-        s_sum = sy / 16.0 + hv
-        u = 0.5 * (s_sum + diff)
-        v = 0.5 * (s_sum - diff)
+    d = np.clip(sx / 32.0, -1.0, 1.0)
+    target = sy / 16.0
+    lo = np.abs(d)
+    hi = 2.0 - lo
+    for _ in range(16):
+        mid = 0.5 * (lo + hi)
+        uc = 0.5 * (mid + d)
+        vc = 0.5 * (mid - d)
+        hv = hT * (1.0 - uc) * (1.0 - vc) + hR * uc * (1.0 - vc) + hL * (1.0 - uc) * vc + hB * uc * vc
+        f_mid = mid - hv
+        lo = np.where(f_mid < target, mid, lo)
+        hi = np.where(f_mid < target, hi, mid)
 
-    uc = np.clip(u, 0.0, 1.0)
-    vc = np.clip(v, 0.0, 1.0)
-    dh_du = ((hR - hT) * (1 - vc) + (hB - hL) * vc) * 0.50
-    dh_dv = ((hL - hT) * (1 - uc) + (hB - hR) * uc) * 0.50
-    return u, v, dh_du, dh_dv
+    s = 0.5 * (lo + hi)
+    uc = np.clip(0.5 * (s + d), 0.0, 1.0)
+    vc = np.clip(0.5 * (s - d), 0.0, 1.0)
+    dh_du = ((hR - hT) * (1.0 - vc) + (hB - hL) * vc) * 0.50
+    dh_dv = ((hL - hT) * (1.0 - uc) + (hB - hR) * uc) * 0.50
+    return uc, vc, dh_du, dh_dv
 
 
-# 柔和自然日光環境光底限（陰影柔和、無低多邊形硬三角折面感，與 6 階 blend_lits 100% 精準對齊）
+# 柔和自然日光環境光底限（陰影柔和、無低多邊形硬三角折面感，與 6 階 blend_lits 100% 精準對齊實測坡度亮度）
 BIOME_LIGHT_CFG = {
-    "GRASS1":  (0.52, 0.48, [0.72, 0.85, 1.00, 1.15, 1.28, 1.44]),
-    "GRASSBR": (0.52, 0.48, [0.72, 0.85, 1.00, 1.15, 1.28, 1.42]),
+    "GRASS1":  (0.52, 0.48, [0.74, 0.86, 1.00, 1.10, 1.18, 1.26]),
+    "GRASSBR": (0.52, 0.48, [0.74, 0.86, 1.00, 1.10, 1.18, 1.26]),
     "SAND1":   (0.58, 0.42, [0.76, 0.88, 1.00, 1.10, 1.18, 1.26]),
-    "ROCK1":   (0.50, 0.50, [0.70, 0.84, 1.00, 1.15, 1.28, 1.42]),
-    "ROCK2":   (0.52, 0.48, [0.74, 0.86, 1.00, 1.12, 1.22, 1.32]),
+    "ROCK1":   (0.50, 0.50, [0.72, 0.85, 1.00, 1.11, 1.20, 1.28]),
+    "ROCK2":   (0.52, 0.48, [0.74, 0.86, 1.00, 1.10, 1.18, 1.26]),
 }
 
 

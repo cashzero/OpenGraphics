@@ -242,5 +242,6 @@ done < build/superseded.txt
 ## 7. 路線圖與文件
 
 - 路線圖、里程碑、待決策事項：[`docs/ROADMAP.md`](docs/ROADMAP.md)。完成路線圖上的項目時，在同一個 commit 裡勾選並更新該檔。
+- 美術與渲染世代升級方向（M7：Cycles 光追＋AO 髒污＋PBR 紋理＋感知抖動量化＋統一寫實色卡）：[`docs/ART_DIRECTION.md`](docs/ART_DIRECTION.md)。後續進行任何美術重製或渲染管線調整前先閱讀本檔。
 - 非物件素材（`g1`、音訊、標題、情境）放在 `base/`（ROADMAP 決策 D3），規則見 `base/README.md`。不要在 repo 根目錄另開其他素材資料夾。
 - 新的研究結果（檔案格式、OpenLoco 行為）寫在 `docs/` 底下，並從 ROADMAP 連結過去。

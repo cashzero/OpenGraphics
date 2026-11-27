@@ -257,8 +257,8 @@ def surface_smooth_mask(edge: int, slope: int, e: dict) -> bytes:
     if (mid_x - (px + qx) / 2.0) * nx + (mid_y - (py + qy) / 2.0) * ny < 0:
         nx, ny = -nx, -ny
 
-    # 單邊水平（如 slope 1 e2）或陡邊略窄（~24px），標準 2:1 斜邊 ~38–42px
-    band_w = 2.6 if (abs(dy) < 1e-6 or abs(dy) > 18.0) else 3.6
+    # 寬廣柔和的有機羽化過渡帶（常規 2:1 斜邊約 5.8px 寬、~68–80 px 自然碎簇與點描，比原版更柔順且不在斜坡脊線外溢）
+    band_w = 3.4 if (abs(dy) < 1e-6 or abs(dy) > 18.0) else 5.8
     seed_base = edge * 97 + slope * 13 + 31
 
     for j in range(h):
@@ -269,18 +269,18 @@ def surface_smooth_mask(edge: int, slope: int, e: dict) -> bytes:
                 continue
             cx, cy = sx + 0.5, sy + 0.5
             t = ((cx - px) * dx + (cy - py) * dy) / (elen * elen)
-            if t < -0.02 or t > 1.02:
+            if t < 0.0 or t > 1.0:
                 continue
             d_in = (cx - px) * nx + (cy - py) * ny
-            if d_in < -0.5 or d_in > band_w + 1.0:
+            if d_in < 0.0 or d_in > band_w + 1.8:
                 continue
-            end_taper = min(1.0, min(t, 1.0 - t) / 0.14) if 0.0 < t < 1.0 else 0.35
-            local_w = band_w * (0.60 + 0.40 * end_taper)
-            # 零均值高頻有機微擾，讓四條邊像素數均勻自然（~36–44 px）
-            wobble = (_hash01(sx // 2, sy // 2, seed_base) - 0.5) * 1.1
-            eff_d = max(0.0, d_in + wobble)
-            prob = max(0.0, 1.0 - eff_d / local_w) ** 1.25 * 0.72
-            jitter = 0.72 * _hash01(sx, sy, seed_base + 7) + 0.28 * (((sx ^ sy) & 1) * 0.5 + 0.25)
+            end_taper = min(1.0, min(t, 1.0 - t) / 0.16) if 0.0 < t < 1.0 else 0.25
+            local_w = band_w * (0.55 + 0.45 * end_taper)
+            clump = (_hash01(sx // 3, sy // 3, seed_base + 19) - 0.5) * 2.2
+            wobble = (_hash01(sx // 2, sy // 2, seed_base) - 0.5) * 1.2
+            eff_d = max(0.0, d_in + clump + wobble)
+            prob = (max(0.0, 1.0 - eff_d / local_w) ** 1.45) * 0.82
+            jitter = 0.78 * _hash01(sx, sy, seed_base + 7) + 0.22 * (((sx ^ sy) & 1) * 0.5 + 0.25)
             if prob > jitter:
                 out[j * w + i] = MASK_ON
     return bytes(out)

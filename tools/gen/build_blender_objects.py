@@ -51,10 +51,10 @@ def industry_ground(style):
 
 
 OBJECTS.update({
-    "COALMINE": dict(folder="Industry/COALMINE", name="OGCOALMI", display="Colliery", size=256, samples=24,
+    "COALMINE": dict(folder="Industry/COALMINE", name="OGCOALMI", display="Colliery", size=400, samples=24,
                      extra=industry_ground("coal"),
                      concept="煤礦：紅磚絞車房配公司色鋼構井架（天輪轉動 4 格動畫）、架高煤倉、選煤廠與煙囪；地面為煤場、碎石與泥土。"),
-    "COALPS": dict(folder="Industry/COALPS", name="OGCOALPS", display="Coal Power Plant", size=256, samples=24,
+    "COALPS": dict(folder="Industry/COALPS", name="OGCOALPS", display="Coal Power Plant", size=400, samples=24,
                    extra=industry_ground("gravel"),
                    concept="燃煤電廠：雙曲線冷卻塔（頂端 32 格循環蒸汽）、紅磚鍋爐廠房與雙煙囪、兩種變電設備；地面為碎石與煤堆。"),
 })
@@ -269,7 +269,11 @@ def build(vanilla: str, cfg: dict) -> None:
         model_desc = "`tools/gen/industry_recipes.py` 產生 `model.json`（幾何指令）→ `tools/blender/models/ops.py`；田地圖塊 `tools/gen/industry_fields.py`"
         if "size" not in cfg:
             tall = max(info["heights"]) + 16
-            cfg["size"] = max(256, -(-2 * max(tall, 80) // 32) * 32)
+            # 高煙囪／煉油塔／高爐／井架等超高產業一律給 400px 畫布，杜絕 y=-129 切頂
+            if max(info["heights"]) >= 85 or vanilla in ("BREWERY", "CHEMWORK", "FACTORY", "OILREFIN", "OILRIG", "OILWELL", "STEELMIL"):
+                cfg["size"] = 400
+            else:
+                cfg["size"] = max(256, -(-2 * max(tall, 80) // 32) * 32)
     elif "port_recipe" in cfg:
         model_json = port_recipes.make_model(cfg["port_recipe"], info)
         (folder / "model.json").write_text(json.dumps(model_json, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
@@ -282,10 +286,13 @@ def build(vanilla: str, cfg: dict) -> None:
         model = REPO / "tools" / "blender" / "models" / "ops.py"
         env["MODEL_CONFIG"] = str(folder / "model.json")
         model_desc = "`tools/gen/building_table.py` 的配方 → `tools/gen/building_recipes.py` 產生 `model.json`（幾何指令）→ `tools/blender/models/ops.py`"
-        if "size" not in cfg:                       # 畫布：容得下最高的部件與地面菱形
+        if "size" not in cfg:                       # 畫布：容得下最高的部件與地面菱形（超高燈塔／電塔給 400px）
             tall = max(info["heights"]) + 12
-            base = 72 if info.get("large") else 40
-            cfg["size"] = max(128 if not info.get("large") else 256, -(-2 * max(tall, base) // 32) * 32)
+            if max(info["heights"]) >= 85 or vanilla in ("BLDLIGHT", "BLDTRANS"):
+                cfg["size"] = 400
+            else:
+                base = 72 if info.get("large") else 40
+                cfg["size"] = max(128 if not info.get("large") else 256, -(-2 * max(tall, base) // 32) * 32)
     elif obj.type_name == "building":
         model = REPO / "tools" / "blender" / "models" / "building.py"
         env["MODEL_CONFIG"] = str(folder / "model.json")

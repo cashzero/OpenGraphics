@@ -283,6 +283,7 @@ OpenLoco fork（D2）
 決策（2026-11-23，使用者確認）：標題畫面是**精心設計的場景**（不是 AI 公司隨意建造），參考 vanilla `title.dat` 的做法（多個小場景、鏡頭依序停留）；OG 範例情境做少量（3–5 個）；ScenarioText 先不做；教學在缺檔時停用。
 
 - [x] 美術調整（2026-11-23）：對照 vanilla 截圖後，樹木改用點雲渲染器 `tools/gen/tree3d.py`（39 個 Tree 物件全部重建）；Blender 物件改用 vanilla 風格的燈光、顆粒與磚紋（`OG_RENDER_STYLE=vanilla`，預設），fork 自製的建築、產業、機場、碼頭 100 個與火車站 3 個全部重新渲染。見 `PIPELINE.md`「美術風格」。
+- [x] 寫實地形／水面／懸崖覆寫與樹木建築比例校正（2026-11-26–27）：以程序化無縫 3D PBR 產生器 `tools/gen/terrain.py` 覆寫全部 8 個地形／水面／懸崖物件（`GRASS1`、`GRASSBR`、`SAND1`、`ROCK1`、`ROCK2`、`WATER1`、`LSBROWN`、`LSROCK`，附 `FORK.md`）；全部 39 種樹木同步縮放至 0.45×（低矮沙漠植物 0.62×／0.50×）以對齊真實建築比例。
 - [x] OpenLoco fork：場景建造器 `build-scene <scene.yml> -o <存檔>`（`SceneBuilder.cpp`）：依 YAML 腳本生成地形（PNG 高度圖）、放城鎮／產業／建築、鋪軌道與道路（含橋、隧道、車站、號誌、齒軌／架空線）、機場、碼頭、車輛與路線，模擬後存檔。格式見 `base/title/README.md`。
 - [x] 標題畫面存檔（只用 OG 物件）（2026-11-25）：`base/title/`：10 個小場景（河谷高架橋、河港吊橋與渡輪、市中心、機場、礦業線、農村、阿爾卑斯齒軌鐵道、林場、海岸鐵路與燈塔、郊區）＋鏡頭清單（fork 的 `Title.cpp` 讀 `Data/title.yml`，可設旋轉與縮放）。`python3 tools/title.py build` 重建、`install` 安裝；`install_test_env.py --with-base` 會自動安裝。標題畫面實際執行、10 個鏡頭的截圖都已檢視。
 - [ ] CI：把 `base/title/title.dat` 與 `camera.yml`（`tools/title.py install`）打包進 `base.zip`（修改 CI 需要使用者同意）
@@ -290,13 +291,23 @@ OpenLoco fork（D2）
 - [ ] ScenarioText 45 個（先不做）
 - [x] 教學（2026-11-23）：fork 在找不到教學檔（`tut1024_1..3`、`boulderBreakers`）時隱藏標題選單的教學按鈕，其餘三個按鈕置中；原本缺檔時會 crash（`throw;`）
 
+### M7 — 美術品質精進（追平並超越原版）
+
+完整實測結論、等軸測像素尺度原則與驗收標準見 [`ART_DIRECTION.md`](ART_DIRECTION.md)（2026-11-27 經三方 1:1 遊戲內對照驗證更新）。
+
+- [x] 地形／斜坡／地表過渡與機場跑道修復（2026-11-27）：`ROCK1` 實拍高山灰岩（`textures/pbr/ground_rock`）、`g1.py` 草地有機羽化遮罩（`band_w=5.8`）＋協調 `GRASS1`/`GRASSBR` 色溫、`terrain.py` 16 次二分法斜坡求解徹底根除 `slope 15` 條碼破圖；`ops.py` 共面去重、無縫機場跑道／滑行道／中灰停機坪與 `TRSTAT4` 深色鋼架；並完成 Cycles + PBR 三方實證（確認 64 px 等軸測 3D 建築仍以 EEVEE 4 燈＋`Standard`＋像素尺度程序材質最明快銳利）。
+- [ ] 住宅建築多樣化（`BLDHOUS*`、`BLDHOU10–25`、`BLDALP*`）：拉開屋型、屋瓦配色、外牆材質與庭院細節差異，消除複製貼上感（須先過小規模三方對照門檻）
+- [ ] 地標產業與城鎮中心輪廓辨識度強化
+- [ ] 落葉樹與森林冠層自然度（`tools/gen/tree3d.py`，維持 0.45× 寫實建築比例）
+- [ ] 車輛（`vehicle_rig.py`）與橋梁／道路細節精修
+
 ---
 
 ## 建議執行順序
 
 ```
 M0 ──┬─> M1（引擎 + g1 placeholder）──┐
-     └─> M2（必選物件）───────────────┴─> M3 ─> M4 ─> M5 ─> M6
+     └─> M2（必選物件）───────────────┴─> M3 ─> M4 ─> M5 ─> M6 ─> M7
 ```
 
 M1 與 M2 可以平行：M1 以 OpenLoco fork 的程式碼為主，M2 以本 repo 的素材為主。
